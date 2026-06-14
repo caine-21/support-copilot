@@ -12,6 +12,7 @@ Metrics reported:
 import sys
 import os
 import json
+import datetime
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -126,7 +127,7 @@ def compute_metrics(results: list[dict], cases: list[dict], tag: str = "") -> di
     }
 
 
-def run_eval():
+def run_eval(tag: str = "latest"):
     cases = load_test_cases()
     baseline = [c for c in cases if not c.get("attack_type")]
     adversarial = [c for c in cases if c.get("attack_type")]
@@ -140,6 +141,7 @@ def run_eval():
 
     passed = 0
     results_list = []
+    report_cases = []   # structured records for JSON report
 
     for tc in cases:
         ticket_id = tc["id"]
@@ -169,15 +171,41 @@ def run_eval():
         if ok:
             passed += 1
 
-    # split results
-    base_results = results_list[:len(baseline)]
-    adv_results  = results_list[len(baseline):]
+        report_cases.append({
+            "id":              ticket_id,
+            "text":            text,
+            "difficulty":      difficulty,
+            "attack_type":     tc.get("attack_type"),
+            "routing_reason":  tc.get("expected", {}).get("routing_reason"),
+            "expected_action": expected.get("action"),
+            "result": {
+                "action":           result.get("action"),
+                "intent":           result.get("intent"),
+                "intent_set":       result.get("intent_set", []),
+                "grounding":        result.get("grounding"),
+                "routing_signals":  result.get("routing_signals", []),
+                "confidence":       result.get("confidence"),
+                "tone":             result.get("tone"),
+                "churn_risk":       result.get("churn_risk"),
+                "kb_grounding":     result.get("kb_grounding", []),
+                "draft_reply":      result.get("draft_reply", ""),
+                "grounding_check":  result.get("grounding_check", {}),
+            },
+            "pass":     ok,
+            "failures": failures,
+        })
+
+    # split results by ticket_id — positional slicing is wrong when adversarial
+    # cases are interspersed (e.g. T-021 to T-035 among baseline T-001 to T-100)
+    results_by_id = {r.get("ticket_id"): r for r in results_list}
+    base_results  = [results_by_id[c["id"]] for c in baseline   if c["id"] in results_by_id]
+    adv_results   = [results_by_id[c["id"]] for c in adversarial if c["id"] in results_by_id]
 
     base_metrics = compute_metrics(base_results, baseline)
     adv_metrics  = compute_metrics(adv_results, adversarial) if adversarial else {}
 
-    base_passed = sum(1 for r, c in zip(base_results, baseline) if score_case(r, c["expected"])[0])
-    adv_passed  = sum(1 for r, c in zip(adv_results, adversarial) if score_case(r, c["expected"])[0]) if adversarial else 0
+    base_passed = sum(1 for r, c in zip(base_results, baseline)    if score_case(r, c["expected"])[0])
+    adv_passed  = sum(1 for r, c in zip(adv_results,  adversarial) if score_case(r, c["expected"])[0]) if adversarial else 0
 
     def _pct(m, key): return f"{m.get(key, 0)*100:.0f}%"
 
@@ -185,7 +213,7 @@ def run_eval():
     print(f"OVERALL: {passed}/{len(cases)} passed ({100 * passed // len(cases)}%)")
     print("=" * 70)
 
-    print(f"\n── BASELINE (T-001–T-020): {base_passed}/{len(baseline)} passed ──")
+    print(f"\n── BASELINE ({len(baseline)} cases): {base_passed}/{len(baseline)} passed ──")
     print(f"  Action accuracy        : {_pct(base_metrics,'action_accuracy')}")
     print(f"  L2 recall              : {_pct(base_metrics,'l2_recall')}   ← safety gate")
     print(f"  Unsafe AUTO_REPLY rate : {_pct(base_metrics,'unsafe_auto_reply_rate')}   ← hallucination risk")
@@ -198,7 +226,7 @@ def run_eval():
             ok, _ = score_case(r, c["expected"])
             adv_by_type.setdefault(t, []).append(ok)
 
-        print(f"\n── ADVERSARIAL (T-021–T-035): {adv_passed}/{len(adversarial)} passed ──")
+        print(f"\n── ADVERSARIAL ({len(adversarial)} cases): {adv_passed}/{len(adversarial)} passed ──")
         print(f"  Action accuracy        : {_pct(adv_metrics,'action_accuracy')}")
         print(f"  L2 recall              : {_pct(adv_metrics,'l2_recall')}   ← safety gate")
         print(f"  Unsafe AUTO_REPLY rate : {_pct(adv_metrics,'unsafe_auto_reply_rate')}   ← hallucination risk")
@@ -210,9 +238,48 @@ def run_eval():
             print(f"  [{attack_type}] {label:<20}: {p}/{n} passed")
     print("=" * 70)
 
+    # ── structured JSON report (P0) ───────────────────────────────────────────
+    # Overall metrics across all 100 cases (baseline + adversarial)
+    all_metrics = compute_metrics(results_list, cases)
+    _emit_report(
+        tag=tag,
+        cases=cases,
+        report_cases=report_cases,
+        passed=passed,
+        all_metrics=all_metrics,
+        base_metrics=base_metrics,
+        adv_metrics=adv_metrics,
+    )
+
     return passed == len(cases)
 
 
+def _emit_report(tag, cases, report_cases, passed, all_metrics, base_metrics, adv_metrics):
+    """Write data/reports/report_<tag>.json with structured per-case results."""
+    reports_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'reports')
+    os.makedirs(reports_dir, exist_ok=True)
+
+    report = {
+        "tag":       tag,
+        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        "summary": {
+            "total":  len(cases),
+            "passed": passed,
+            "pct":    round(100 * passed / max(len(cases), 1), 1),
+        },
+        "metrics":      all_metrics,   # all 100 cases
+        "base_metrics": base_metrics,  # baseline only
+        "adv_metrics":  adv_metrics,   # adversarial only
+        "cases":        report_cases,
+    }
+
+    out_path = os.path.join(reports_dir, f"report_{tag}.json")
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
+    print(f"\n[Report] written → {out_path}")
+
+
 if __name__ == "__main__":
-    success = run_eval()
+    tag = sys.argv[1] if len(sys.argv) > 1 else "latest"
+    success = run_eval(tag=tag)
     sys.exit(0 if success else 1)

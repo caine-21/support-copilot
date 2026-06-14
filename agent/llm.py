@@ -6,15 +6,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 from dotenv import load_dotenv
 
-_env_candidates = [
-    os.path.join(os.path.dirname(__file__), '..', '.env'),
-    os.path.join(os.path.dirname(__file__), '..', '..', 'rag-demo', '.env'),
-    os.path.join(os.path.dirname(__file__), '..', '..', 'content-agent', '.env'),
-]
-for _p in _env_candidates:
-    if os.path.exists(_p):
-        load_dotenv(dotenv_path=_p)
-        break
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 
 class LLMRouter:
@@ -53,6 +45,10 @@ class LLMRouter:
             )
         return self._groq_client
 
+    # Per-provider timeouts (seconds). DeepSeek is primary — short timeout so Groq fallback
+    # kicks in quickly when the API hangs (common during eval runs).
+    _TIMEOUTS = {"deepseek": 30, "groq": 60}
+
     def call(
         self,
         messages: list[dict],
@@ -78,6 +74,7 @@ class LLMRouter:
                     messages=messages,
                     max_tokens=800,
                     temperature=temperature,
+                    timeout=self._TIMEOUTS[name],
                 )
                 if json_mode:
                     kwargs["response_format"] = {"type": "json_object"}
@@ -108,6 +105,7 @@ def call_llm(system: str, user: str, provider: str = "auto", json_mode: bool = T
             messages=messages,
             max_tokens=800,
             temperature=0.3,
+            timeout=60,
         )
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}

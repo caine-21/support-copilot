@@ -174,5 +174,40 @@
     "question": "Can I use Acme Collab for clients or customers outside my organization?",
     "answer": "Yes, with conditions. Guest access is available: Workspace Admins can invite external users as Guests (Viewer or Commenter role only — Guests cannot be Editors). Guest seats are included at a ratio of 5:1 (5 guests per paid seat). Exceeding this ratio requires purchasing additional Guest Packs. Guests cannot create Spaces or invite other members. Using Acme Collab to resell access to end-customers (i.e., white-labeling) requires an OEM agreement — contact sales@acmecollab.io.",
     "tags": ["guest", "external", "client", "access", "resell", "white-label"]
+  },
+  {
+    "id": "FAQ-billing-06",
+    "category": "billing",
+    "question": "What payment methods does Acme Collab accept or support? Which payment options are available?",
+    "answer": "Acme Collab accepts the following payment methods: credit cards (Visa, Mastercard, American Express, Discover), debit cards, and ACH bank transfer (US accounts only). We do not accept PayPal, wire transfer, or cryptocurrency. To update or add a payment method, go to Settings → Billing → Payment Methods. All payments are processed securely via Stripe. If you need to pay by invoice (NET-30), this is available for annual Enterprise plans — contact sales@acmecollab.io.",
+    "tags": ["payment methods", "credit card", "visa", "mastercard", "ach", "billing", "stripe", "accepted"]
+  },
+  {
+    "id": "FAQ-billing-07",
+    "category": "billing",
+    "question": "Is there a cancellation fee or early termination fee? How do I cancel my subscription?",
+    "answer": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and you will not be charged for the next cycle. Annual plans can also be cancelled at any time, but are non-refundable after the 14-day refund window (see our refund policy). There are no early termination fees for either plan. To cancel: go to Settings → Billing → Subscription → Cancel Plan. After cancellation, your workspace remains active until the end of the paid period. You can reactivate anytime before expiry.",
+    "tags": ["cancel", "cancellation", "termination", "fee", "cancel subscription", "end subscription", "billing", "annual", "monthly"]
+  },
+  {
+    "id": "FAQ-billing-08",
+    "category": "billing",
+    "question": "When am I eligible for a refund? What situations qualify for a refund? In which situations can I request a refund for my subscription?",
+    "answer": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have occurred — full refund issued. (2) Billing errors (duplicate charge, charge after cancellation) — full refund regardless of timing, contact billing@acmecollab.io. Monthly plans are not eligible for refunds. Downgrading a plan mid-cycle results in a credit toward your next invoice, not a cash refund. To request a refund, contact support@acmecollab.io with your invoice number and reason.",
+    "tags": ["refund", "eligible", "refund policy", "situations", "qualify", "annual", "billing error", "money back"]
+  },
+  {
+    "id": "FAQ-account-01",
+    "category": "account",
+    "question": "How do I reset my password? I forgot my password and can't log in.",
+    "answer": "To reset your password: go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will receive a password reset link within 2 minutes — check your spam folder if you don't see it. Click the link in the email and set a new password. The reset link expires after 1 hour. If you log in via SSO (Single Sign-On), you cannot reset your password through Acme Collab — contact your IT administrator to reset your SSO credentials.",
+    "tags": ["password", "reset", "forgot password", "can't log in", "login", "access", "account"]
+  },
+  {
+    "id": "FAQ-account-02",
+    "category": "account",
+    "question": "How do I upgrade, downgrade, or change my subscription plan? How do I switch plans?",
+    "answer": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ seats, custom pricing). Upgrading takes effect immediately and is prorated. Downgrading takes effect at the next billing cycle — your current plan features remain active until then. To upgrade to Enterprise, contact sales@acmecollab.io. Note: plan names shown in Settings may differ from promotional names — if you are unsure which plan you are on, check Settings → Billing → Current Plan.",
+    "tags": ["upgrade", "downgrade", "change plan", "switch plan", "personal", "team", "enterprise", "subscription", "plan change"]
   }
 ]

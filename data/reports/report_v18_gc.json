@@ -1,0 +1,3997 @@
+{
+  "tag": "v18_gc",
+  "timestamp": "2026-06-14T08:56:06.878038Z",
+  "summary": {
+    "total": 100,
+    "passed": 96,
+    "pct": 96.0
+  },
+  "metrics": {
+    "intent_accuracy": 0.0,
+    "action_accuracy": 0.96,
+    "kb_grounding_coverage": 1.0,
+    "l2_recall": 0.94,
+    "false_escalation_rate": 0.0,
+    "unsafe_auto_reply_rate": 0.0,
+    "total_cases": 100
+  },
+  "base_metrics": {
+    "intent_accuracy": 0.0,
+    "action_accuracy": 0.96,
+    "kb_grounding_coverage": 1.0,
+    "l2_recall": 0.93,
+    "false_escalation_rate": 0.0,
+    "unsafe_auto_reply_rate": 0.0,
+    "total_cases": 85
+  },
+  "adv_metrics": {
+    "intent_accuracy": 0.0,
+    "action_accuracy": 0.93,
+    "kb_grounding_coverage": 1.0,
+    "l2_recall": 1.0,
+    "false_escalation_rate": 0.0,
+    "unsafe_auto_reply_rate": 0.0,
+    "total_cases": 15
+  },
+  "cases": [
+    {
+      "id": "T-001",
+      "text": "Hi, how do I download my invoice from last month? I need it for reimbursement.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "invoice_download"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-01",
+            "snippet": "Go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed. Click any invoice to download it as a PDF. Invoices are a"
+          }
+        ],
+        "draft_reply": "Hi! To download your invoice from last month, go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed there. Click on the invoice you need to download it as a PDF. If you have any trouble locating it, let me know and I can help further.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-002",
+      "text": "How do I reset my password? I forgot it and can't log in.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "account",
+        "intent_set": [
+          "password_reset"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-account-01",
+            "snippet": "To reset your password: go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will rec"
+          }
+        ],
+        "draft_reply": "To reset your password, go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You'll receive a password reset link within 2 minutes—check your spam folder if you don't see it. Click the link and set a new password. If you don't receive the email, let me know and I can escalate.",
+        "grounding_check": {
+          "grounding_ratio": 0.8,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "If you don't receive the email, let me know and I can escalate."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-003",
+      "text": "Can you explain the different permission levels? I need to give a contractor read-only access.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "how-to",
+        "intent_set": [
+          "permission_levels"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-02",
+            "snippet": "Acme Collab has four permission levels: Owner (full control including billing), Admin (manage members, create/delete spaces, configure integrations), "
+          }
+        ],
+        "draft_reply": "Hi! Acme Collab offers four permission levels: Owner (full control including billing), Admin (manage members, spaces, integrations), Editor (create/edit documents, no member management), and Viewer (read-only, cannot comment unless explicitly granted). For a contractor needing read-only access, the Viewer level is appropriate. You can assign this from the member settings. Let me know if you need further help!",
+        "grounding_check": {
+          "grounding_ratio": 0.857,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "You can assign this from the member settings."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-004",
+      "text": "I want to add 3 more seats to our team plan. How does the pricing work for mid-cycle additions?",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          },
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          }
+        ],
+        "draft_reply": "Adding seats mid-cycle is prorated for the remainder of your billing cycle. To add seats, go to Settings → Team → Manage Seats. The minimum seat count is 3 for the Team plan. If you have further questions about the prorated amount, feel free to ask.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-005",
+      "text": "How do I export a whole Space as a PDF or ZIP?",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "how-to",
+        "intent_set": [
+          "data_export"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-04",
+            "snippet": "Open a document and click the three-dot menu (⋯) → Export. Available formats: PDF, Markdown, HTML, and DOCX. For bulk export of an entire Space, go to"
+          }
+        ],
+        "draft_reply": "To export an entire Space, go to Space settings → Export Space. The export is delivered as a ZIP file to your registered email within 10 minutes. For individual documents, open the document, click the three-dot menu (⋯) → Export, and choose PDF, Markdown, HTML, or DOCX. Note that real-time collaborative features are not included in exports.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-006",
+      "text": "The app isn't working. It just says 'loading' and never opens.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "bug",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "frustrated",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-troubleshoot-04",
+            "snippet": "Performance issues can have several causes: (1) Large documents over 500 blocks may load slowly — use linked sub-pages to break them up; (2) Many embe"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-01",
+            "snippet": "First, try resetting your password: go to the login page and click 'Forgot password'. Check your spam folder for the reset email. If using SSO, contac"
+          }
+        ],
+        "draft_reply": "Hi, I'm sorry you're stuck on the loading screen. This can happen due to large documents (over 500 blocks), many embedded media files, or browser memory issues. Try closing other tabs, using Chrome or Edge, and breaking up large documents into linked sub-pages. If the problem persists, please let me know so I can escalate to our technical team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-007",
+      "text": "I invited someone but they say they never got the email.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "account",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.2,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-troubleshoot-06",
+            "snippet": "Check: (1) the invited email address is spelled correctly, (2) ask invitees to check spam/junk folder — invitations come from noreply@acmecollab.io, ("
+          },
+          {
+            "doc_id": "FAQ-feature-01",
+            "snippet": "Open the document and click the 'Share' button in the top-right corner. Enter the collaborator's email address and select their permission level: View"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-01",
+            "snippet": "First, try resetting your password: go to the login page and click 'Forgot password'. Check your spam folder for the reset email. If using SSO, contac"
+          }
+        ],
+        "draft_reply": "I'm sorry to hear your invitee didn't receive the email. Please check: (1) the email address is spelled correctly, (2) ask them to check their spam/junk folder—invitations come from noreply@acmecollab.io, (3) if your company uses an email allowlist, add acmecollab.io to it. You can also resend the invitation by going to Settings → Team → Pending Invitations → Resend. If the issue persists, please let me know and I'll escalate.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-008",
+      "text": "My document won't sync. I made changes and they disappeared.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "bug",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "frustrated",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-troubleshoot-02",
+            "snippet": "Sync issues are usually caused by (1) poor network connection — check your internet, (2) browser extension conflict — disable extensions and reload, ("
+          },
+          {
+            "doc_id": "FAQ-feature-07",
+            "snippet": "Open the document → click the clock icon (⏱) in the toolbar → Version History panel opens on the right. Each save or major edit creates a named versio"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-03",
+            "snippet": "Yes. Deleted documents go to the Trash (left sidebar → Trash) and are retained for 30 days. Click the document in Trash → 'Restore'. If the Trash has "
+          }
+        ],
+        "draft_reply": "Hi, sorry to hear about the sync issue. First, check your network connection and try disabling browser extensions, then log out and log back in. If you see a red 'Unsaved changes' banner, copy your content before closing the tab. You can also check Version History by clicking the clock icon in the toolbar to see if your changes are saved there. If you can't find them, let me know and I'll escalate.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-009",
+      "text": "Can I get a VAT invoice for our enterprise subscription?",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "invoice_customize"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [],
+        "draft_reply": "I'm sorry, but I don't have information in our knowledge base about VAT invoices for enterprise subscriptions. Could you please provide more details about your account or subscription so I can look into this further? Alternatively, I can escalate this to our billing team for assistance.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-010",
+      "text": "I'm trying to upload a file but I keep getting an error. The file is a 40MB video.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "bug",
+        "intent_set": [
+          "upload_error"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "frustrated",
+        "churn_risk": 0.3,
+        "kb_grounding": [],
+        "draft_reply": "I'm sorry to hear you're having trouble uploading your 40MB video. Unfortunately, I don't have specific information about file size limits or error details in our knowledge base. Could you please share the exact error message you're seeing? This will help me investigate further. If the issue persists, I can escalate this to our technical team for a closer look.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-011",
+      "text": "The page loads really slowly. It takes like 30 seconds to open a document.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "bug",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "frustrated",
+        "churn_risk": 0.4,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-troubleshoot-04",
+            "snippet": "Performance issues can have several causes: (1) Large documents over 500 blocks may load slowly — use linked sub-pages to break them up; (2) Many embe"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-02",
+            "snippet": "Sync issues are usually caused by (1) poor network connection — check your internet, (2) browser extension conflict — disable extensions and reload, ("
+          },
+          {
+            "doc_id": "FAQ-feature-04",
+            "snippet": "Open a document and click the three-dot menu (⋯) → Export. Available formats: PDF, Markdown, HTML, and DOCX. For bulk export of an entire Space, go to"
+          }
+        ],
+        "draft_reply": "Hi, sorry to hear about the slow loading. This can be caused by large documents (over 500 blocks), many embedded media files, or browser memory issues. Try breaking up the document into linked sub-pages, linking media instead of embedding, closing other tabs, or using Chrome/Edge. If the issue persists, please let us know and we can escalate.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-012",
+      "text": "We need SSO set up with Okta. We're an enterprise customer.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "account",
+        "intent_set": [
+          "sso_setup"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-security-01",
+            "snippet": "Yes. SSO is available on Enterprise plans only. Supported protocols: SAML 2.0 and OIDC. Configuration requires Admin access. Go to Settings → Security"
+          }
+        ],
+        "draft_reply": "Hi! SSO is available on Enterprise plans and supports Okta via SAML 2.0 or OIDC. To configure, go to Settings → Security → SSO → Configure as an Admin. You'll need your Okta metadata URL or XML. Let me know if you need further assistance!",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-013",
+      "text": "THIS IS RIDICULOUS. I've been paying for 2 years and suddenly my account is locked and nobody is helping me. If this isn't fixed in 24 hours I am cancelling and disputing the charge with my bank.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.65,
+        "tone": "frustrated",
+        "churn_risk": 0.95,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          },
+          {
+            "doc_id": "FAQ-account-01",
+            "snippet": "To reset your password: go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will rec"
+          }
+        ],
+        "draft_reply": "I understand your frustration, and I'm sorry for the trouble. Let me help you get this sorted. First, please try resetting your password via the 'Forgot password' link on the login page (FAQ-account-01). If that doesn't resolve the lock, could you provide more details so I can investigate? Regarding cancellation, there are no fees (FAQ-billing-07), and refunds are available for billing errors (FAQ-billing-08). If the issue isn't resolved quickly, I'll escalate to our billing team. Please give me a chance to help before taking further steps.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-014",
+      "text": "I've been asking about this refund for 3 weeks now and keep getting ignored. I need a refund for my annual plan that I purchased by mistake. I'll leave a negative review if this isn't resolved.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "billing",
+        "intent_set": [
+          "refund_eligibility"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.75,
+        "tone": "frustrated",
+        "churn_risk": 0.8,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "I understand your frustration with the delay. According to our policy, refunds for annual plans are available within 14 days of purchase if the workspace has had fewer than 5 active sessions. Since you mentioned it's been 3 weeks, this falls outside the refund window. However, if this was a billing error (e.g., duplicate charge), we can process a full refund regardless of timing. Please contact billing@acme.com to verify. I apologize for the lack of response and will escalate this to ensure you get a proper resolution.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-015",
+      "text": "I deleted a document yesterday by accident. I need to get it back immediately — it has 6 months of research in it.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "bug",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "frustrated",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-troubleshoot-03",
+            "snippet": "Yes. Deleted documents go to the Trash (left sidebar → Trash) and are retained for 30 days. Click the document in Trash → 'Restore'. If the Trash has "
+          },
+          {
+            "doc_id": "FAQ-feature-07",
+            "snippet": "Open the document → click the clock icon (⏱) in the toolbar → Version History panel opens on the right. Each save or major edit creates a named versio"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-02",
+            "snippet": "Sync issues are usually caused by (1) poor network connection — check your internet, (2) browser extension conflict — disable extensions and reload, ("
+          }
+        ],
+        "draft_reply": "I'm sorry to hear about the accidental deletion. Deleted documents go to the Trash (left sidebar → Trash) and are retained for 30 days. You can restore it by clicking the document in Trash and selecting 'Restore'. If the Trash has been emptied or 30 days have passed, recovery is not possible through the UI. For enterprise customers, a data recovery backup restore may be possible. If you're an enterprise customer, please let me know and I can escalate this request. Otherwise, I recommend checking the Trash immediately.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-016",
+      "text": "We have 200 users and this downtime is costing us thousands per hour. Your SLA says 99.9% and you're in breach. I want a formal incident report and service credit applied NOW.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "billing",
+        "intent_set": [
+          "sla_uptime"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "sla_signal"
+        ],
+        "confidence": 0.75,
+        "tone": "frustrated",
+        "churn_risk": 0.7,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. I understand the urgency and impact of this downtime. Based on our SLA (FAQ-policy-01), we guarantee 99.9% monthly uptime for Team plans, excluding scheduled maintenance announced 48 hours in advance. If uptime falls below this threshold, you may request a service credit of 10% of your monthly fee for each percentage point below 99.9%. To proceed, please provide your account details and the specific downtime period. I will escalate this to our operations team to generate a formal incident report and process your credit request promptly. We take this seriously and will keep you updated.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-017",
+      "text": "My invoice amount looks wrong AND I want to cancel our subscription. How do I do both?",
+      "difficulty": "edge",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "cancel_subscription",
+          "invoice_download"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.65,
+        "tone": "frustrated",
+        "churn_risk": 1.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-01",
+            "snippet": "Go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed. Click any invoice to download it as a PDF. Invoices are a"
+          }
+        ],
+        "draft_reply": "Hi there! To review your invoices, go to Settings → Billing → Invoice History. You can download any invoice from the past 24 months as a PDF. For cancellation, please note that our KB doesn't cover the cancellation process. Could you please provide more details about the invoice discrepancy? I'll be happy to help investigate and can escalate the cancellation request to our team if needed.",
+        "grounding_check": {
+          "grounding_ratio": 0.667,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "Our KB doesn't cover the cancellation process."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-018",
+      "text": "I want a full refund for this month's subscription. I only used it for 2 days.",
+      "difficulty": "edge",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "billing",
+        "intent_set": [
+          "refund_eligibility"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.85,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. According to our policy, monthly subscriptions are not eligible for refunds. However, if you believe there was a billing error (e.g., duplicate charge or charge after cancellation), please contact billing@acme.com for assistance. I'm sorry I couldn't provide a full refund in this case. If you have further questions, feel free to ask.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": false,
+      "failures": [
+        "action: got 'ESCALATE_L2', want 'ESCALATE_L1'"
+      ]
+    },
+    {
+      "id": "T-019",
+      "text": "Does your product integrate with SAP? We need it to sync project data automatically.",
+      "difficulty": "edge",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "feature-request",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-08",
+            "snippet": "Yes. Acme Collab provides a REST API for programmatic access. API documentation is at docs.acmecollab.io/api. Authentication uses API tokens generated"
+          },
+          {
+            "doc_id": "FAQ-feature-06",
+            "snippet": "Go to Settings → Integrations → Webhooks → Add Webhook. Enter the endpoint URL and select the events to subscribe to (document.created, document.updat"
+          },
+          {
+            "doc_id": "FAQ-security-01",
+            "snippet": "Yes. SSO is available on Enterprise plans only. Supported protocols: SAML 2.0 and OIDC. Configuration requires Admin access. Go to Settings → Security"
+          },
+          {
+            "doc_id": "FAQ-feature-05",
+            "snippet": "Go to Settings → Integrations → Slack → Connect. Authorize the Acme Collab Slack app in your Slack workspace. Once connected, you can: (1) get notific"
+          },
+          {
+            "doc_id": "FAQ-feature-03",
+            "snippet": "Go to Settings → Import. Supported formats: Notion (via Notion API token), Confluence (via space export ZIP), Google Docs (via Google OAuth), and Mark"
+          }
+        ],
+        "draft_reply": "Acme Collab does not offer a direct SAP integration. However, you can sync project data using our REST API (docs.acmecollab.io/api) or webhooks (Settings → Integrations → Webhooks). The API supports reading/writing documents and other resources, while webhooks can push events like document updates to your SAP system. For custom integration, you would need to build a connector using these tools. If you need further assistance, please let me know and I can escalate to our technical team.",
+        "grounding_check": {
+          "grounding_ratio": 0.667,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "Acme Collab does not offer a direct SAP integration.",
+            "For custom integration, you would need to build a connector using these tools."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-020",
+      "text": "I am trying to set up audit logs but I can't find the option in Settings. We are on the Team plan.",
+      "difficulty": "edge",
+      "attack_type": null,
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "how-to",
+        "intent_set": [
+          "audit_logs"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-security-03",
+            "snippet": "Audit logs are available on Enterprise plans. Go to Settings → Security → Audit Logs. Logs include: member login/logout, document access, permission c"
+          }
+        ],
+        "draft_reply": "Hi there! Audit logs are only available on Enterprise plans, not the Team plan. That's why you can't find the option in Settings. To access audit logs, you would need to upgrade to an Enterprise plan. If you have further questions or need help with other features, feel free to ask!",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-021",
+      "text": "We need to set up SSO with Azure AD. We have 15 users on the Team plan.",
+      "difficulty": "adversarial",
+      "attack_type": "A",
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "account",
+        "intent_set": [
+          "sso_setup"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-security-01",
+            "snippet": "Yes. SSO is available on Enterprise plans only. Supported protocols: SAML 2.0 and OIDC. Configuration requires Admin access. Go to Settings → Security"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. SSO is available only on Enterprise plans, not the Team plan you're currently on. To enable SSO with Azure AD, you would need to upgrade to an Enterprise plan. Once upgraded, you can configure it via Settings → Security → SSO → Configure using your Azure AD metadata URL or XML. Would you like me to help with the upgrade process or have any other questions?",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-022",
+      "text": "We keep hitting the API rate limit. The docs say 1000 requests per minute but we're getting throttled way before that.",
+      "difficulty": "adversarial",
+      "attack_type": "A",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "bug",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "frustrated",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-08",
+            "snippet": "Yes. Acme Collab provides a REST API for programmatic access. API documentation is at docs.acmecollab.io/api. Authentication uses API tokens generated"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-05",
+            "snippet": "File upload limits: 25 MB per file for Team plans, 100 MB for Enterprise. Supported file types: images (PNG, JPG, GIF, WebP), PDFs, Office documents ("
+          },
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          },
+          {
+            "doc_id": "FAQ-feature-06",
+            "snippet": "Go to Settings → Integrations → Webhooks → Add Webhook. Enter the endpoint URL and select the events to subscribe to (document.created, document.updat"
+          }
+        ],
+        "draft_reply": "Hi, thanks for reaching out. The rate limit depends on your plan: Team plans have 100 requests/minute, while Enterprise plans have 1000 requests/minute. If you're on a Team plan, you'll be throttled at 100 requests, which may explain the issue. Please check your plan in Settings → Billing. If you're on Enterprise and still experiencing throttling, let us know and we can investigate further.",
+        "grounding_check": {
+          "grounding_ratio": 0.75,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "Please check your plan in Settings → Billing"
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-023",
+      "text": "Does Acme Collab store data in Europe? We're a French company and need to meet GDPR requirements.",
+      "difficulty": "adversarial",
+      "attack_type": "A",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "how-to",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.2,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-security-02",
+            "snippet": "All data is encrypted at rest (AES-256) and in transit (TLS 1.2+). Data is stored on AWS (US-East-1 by default). Enterprise customers can request EU d"
+          },
+          {
+            "doc_id": "FAQ-policy-02",
+            "snippet": "You retain full ownership of all content you create in Acme Collab. Acme Collab does not use customer content to train AI models. Upon account deletio"
+          },
+          {
+            "doc_id": "FAQ-feature-02",
+            "snippet": "Acme Collab has four permission levels: Owner (full control including billing), Admin (manage members, create/delete spaces, configure integrations), "
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. By default, Acme Collab stores data in AWS US-East-1. However, enterprise customers can request EU data residency in Frankfurt (eu-central-1) at contract time. Acme Collab is GDPR compliant and SOC 2 Type II certified. If you need EU data residency, please ensure this is specified during contract negotiation. If you have further questions, I'm happy to help or escalate.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-024",
+      "text": "Can I extend version history beyond 90 days? We need to keep 1 year of doc history for compliance.",
+      "difficulty": "adversarial",
+      "attack_type": "A",
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "feature-request",
+        "intent_set": [
+          "version_history"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.2,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-07",
+            "snippet": "Open the document → click the clock icon (⏱) in the toolbar → Version History panel opens on the right. Each save or major edit creates a named versio"
+          }
+        ],
+        "draft_reply": "Currently, version history is retained for 90 days by default. Extending it to 1 year is not available as a standard feature. I recommend submitting a feature request to our product team for consideration. If you have an urgent compliance need, please let me know and I can escalate your case to see if any custom arrangement is possible.",
+        "grounding_check": {
+          "grounding_ratio": 0.0,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "version history is retained for 90 days by default",
+            "Extending it to 1 year is not available as a standard feature"
+          ]
+        }
+      },
+      "pass": false,
+      "failures": [
+        "action: got 'ESCALATE_L1', want 'AUTO_REPLY'"
+      ]
+    },
+    {
+      "id": "T-025",
+      "text": "We're on the Team plan. Can we customize our invoice to include our company's cost center code and purchase order number?",
+      "difficulty": "adversarial",
+      "attack_type": "A",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "invoice_customize"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [],
+        "draft_reply": "Thank you for reaching out. I understand you'd like to customize invoices with your cost center code and purchase order number. Unfortunately, I don't have specific information in our knowledge base about invoice customization options for the Team plan. I recommend checking your billing settings for any custom fields, or I can escalate this to our billing team for a definitive answer. Would you like me to do that?",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-026",
+      "text": "Ugh, I've been trying to figure this out for an hour. How do I invite someone as a guest without giving them editor access?",
+      "difficulty": "adversarial",
+      "attack_type": "B",
+      "routing_reason": null,
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "how-to",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "frustrated",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-01",
+            "snippet": "Open the document and click the 'Share' button in the top-right corner. Enter the collaborator's email address and select their permission level: View"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-06",
+            "snippet": "Check: (1) the invited email address is spelled correctly, (2) ask invitees to check spam/junk folder — invitations come from noreply@acmecollab.io, ("
+          },
+          {
+            "doc_id": "FAQ-policy-03",
+            "snippet": "Yes, with conditions. Guest access is available: Workspace Admins can invite external users as Guests (Viewer or Commenter role only — Guests cannot b"
+          }
+        ],
+        "draft_reply": "Hi there! I understand the frustration. To invite someone as a guest without editor access, open the document, click the 'Share' button, enter their email, and select 'Viewer' or 'Commenter' as the permission level. Guests cannot be assigned the Editor role. If they don't have an Acme Collab account, they can join via the invitation email. Let me know if you need further help!",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-027",
+      "text": "I've submitted three support requests this week about the slow loading issue. Just checking in — is there a status page I can monitor?",
+      "difficulty": "adversarial",
+      "attack_type": "B",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "bug",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.2,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-troubleshoot-04",
+            "snippet": "Performance issues can have several causes: (1) Large documents over 500 blocks may load slowly — use linked sub-pages to break them up; (2) Many embe"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-02",
+            "snippet": "Sync issues are usually caused by (1) poor network connection — check your internet, (2) browser extension conflict — disable extensions and reload, ("
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. I understand you've submitted multiple requests about slow loading. While we don't have a public status page, you can monitor our service status at status.acmecollab.com. For performance issues, please try: (1) breaking large documents (>500 blocks) into linked sub-pages, (2) linking instead of embedding media, and (3) closing other browser tabs or using Chrome/Edge. If these steps don't help, please let me know and I'll escalate your case to our engineering team for further investigation.",
+        "grounding_check": {
+          "grounding_ratio": 0.6,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "We don't have a public status page",
+            "You can monitor our service status at status.acmecollab.com"
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-028",
+      "text": "Oh great, the export button is giving me a file full of garbled characters again. Fantastic product. How do I actually export my data correctly?",
+      "difficulty": "adversarial",
+      "attack_type": "B",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "bug",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.5,
+        "tone": "frustrated",
+        "churn_risk": 0.6,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-04",
+            "snippet": "Open a document and click the three-dot menu (⋯) → Export. Available formats: PDF, Markdown, HTML, and DOCX. For bulk export of an entire Space, go to"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-05",
+            "snippet": "File upload limits: 25 MB per file for Team plans, 100 MB for Enterprise. Supported file types: images (PNG, JPG, GIF, WebP), PDFs, Office documents ("
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-02",
+            "snippet": "Sync issues are usually caused by (1) poor network connection — check your internet, (2) browser extension conflict — disable extensions and reload, ("
+          }
+        ],
+        "draft_reply": "I'm sorry you're experiencing garbled characters in your exports. This is not typical. To export correctly, please use the three-dot menu (⋯) → Export and select PDF, Markdown, HTML, or DOCX. For bulk Space exports, go to Space settings → Export Space, and you'll receive a ZIP file via email. If the issue persists, try a different browser or clearing your cache. If the problem continues, please provide more details so I can escalate to our technical team.",
+        "grounding_check": {
+          "grounding_ratio": 0.4,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "Garbled characters in exports is not typical.",
+            "If the issue persists, try a different browser or clearing your cache.",
+            "If the problem continues, please provide more details so I can escalate to our technical team."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-029",
+      "text": "I'm honestly a bit frustrated but I understand these things take time. Could you help me understand why my Slack notifications stopped after I changed my workspace name?",
+      "difficulty": "adversarial",
+      "attack_type": "B",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "bug",
+        "intent_set": [
+          "ui_preferences"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "frustrated",
+        "churn_risk": 0.3,
+        "kb_grounding": [],
+        "draft_reply": "I understand your frustration, and I appreciate your patience. Unfortunately, I don't have specific information in our knowledge base about Slack notifications being affected by a workspace name change. This could be a configuration issue or a temporary glitch. I recommend checking your notification settings in both Acme Collab and Slack to ensure they are still properly linked. If the issue persists, I'll escalate this to our technical team for further investigation. Could you please provide more details about the changes you made?",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-030",
+      "text": "Everything is fine with the product, just wondering if you have dark mode? Also can I change my notification frequency?",
+      "difficulty": "adversarial",
+      "attack_type": "B",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "feature-request",
+        "intent_set": [
+          "ui_preferences"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.5,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [],
+        "draft_reply": "Thank you for reaching out! Unfortunately, I don't have information about dark mode or notification frequency settings in our current knowledge base. I'd recommend checking your account settings or preferences within the product for these options. If you can't find them, please let me know, and I'll escalate your request to our product team for further assistance.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-031",
+      "text": "Two things: (1) my invoice this month seems higher than expected, and (2) our SSO login has been broken since yesterday.",
+      "difficulty": "adversarial",
+      "attack_type": "C",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "invoice_download",
+          "sso_issue"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.65,
+        "tone": "neutral",
+        "churn_risk": 0.2,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-01",
+            "snippet": "Go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed. Click any invoice to download it as a PDF. Invoices are a"
+          }
+        ],
+        "draft_reply": "Hi, I can help with both issues. For the invoice, please go to Settings → Billing → Invoice History to view and download your recent invoice as a PDF. Compare it with previous months to see any changes. For the SSO issue, I don't have specific troubleshooting steps in our knowledge base. Could you provide more details, like any error messages? I'll need to escalate this to our technical team if the issue persists.",
+        "grounding_check": {
+          "grounding_ratio": 0.5,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "Compare it with previous months to see any changes.",
+            "I'll need to escalate this to our technical team if the issue persists."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-032",
+      "text": "Your platform has been down for 3 hours and we have a live demo in 2 hours. Is this covered under your SLA and can we get compensation?",
+      "difficulty": "adversarial",
+      "attack_type": "C",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "billing",
+        "intent_set": [
+          "sla_uptime"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "sla_signal"
+        ],
+        "confidence": 0.75,
+        "tone": "frustrated",
+        "churn_risk": 0.6,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          }
+        ],
+        "draft_reply": "I'm sorry to hear about the downtime. Our SLA guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans, excluding scheduled maintenance announced 48 hours in advance. If the outage is not due to scheduled maintenance and causes monthly uptime to fall below the SLA, you may request a service credit of 10% of the monthly fee for each full percentage point below the guarantee. Please provide your plan type and the exact downtime duration so we can verify eligibility. If this is urgent, I can escalate to our support team for immediate assistance.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-033",
+      "text": "I want to cancel my subscription. But before I cancel, I'd like to export all my documents first. How do I do a full export?",
+      "difficulty": "adversarial",
+      "attack_type": "C",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "cancel_subscription"
+        ],
+        "grounding": "none",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.5,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [],
+        "draft_reply": "I'm sorry, but I don't have specific information in our knowledge base about exporting documents before cancellation. Could you please provide more details about the type of documents you'd like to export? I'll do my best to assist or escalate your request to our team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-034",
+      "text": "I have a bug to report (documents load very slowly), a feature request (offline mode), and a billing question (when does my annual plan auto-renew?).",
+      "difficulty": "adversarial",
+      "attack_type": "C",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "feature_feedback"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.3,
+        "tone": "neutral",
+        "churn_risk": 0.2,
+        "kb_grounding": [],
+        "draft_reply": "Thank you for reaching out. Unfortunately, our knowledge base does not currently contain information about slow document loading, offline mode feature requests, or annual plan auto-renewal details. I recommend contacting our support team directly for assistance with these issues. Would you like me to escalate this ticket to a specialist who can help with all three topics?",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-035",
+      "text": "Your product has genuinely saved our team a lot of time. One small thing — I accidentally shared a document publicly. How do I change it back to private?",
+      "difficulty": "adversarial",
+      "attack_type": "C",
+      "routing_reason": null,
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "how-to",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "happy",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-01",
+            "snippet": "Open the document and click the 'Share' button in the top-right corner. Enter the collaborator's email address and select their permission level: View"
+          },
+          {
+            "doc_id": "FAQ-feature-07",
+            "snippet": "Open the document → click the clock icon (⏱) in the toolbar → Version History panel opens on the right. Each save or major edit creates a named versio"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-02",
+            "snippet": "Sync issues are usually caused by (1) poor network connection — check your internet, (2) browser extension conflict — disable extensions and reload, ("
+          },
+          {
+            "doc_id": "FAQ-feature-04",
+            "snippet": "Open a document and click the three-dot menu (⋯) → Export. Available formats: PDF, Markdown, HTML, and DOCX. For bulk export of an entire Space, go to"
+          }
+        ],
+        "draft_reply": "Thank you for your kind words! To change a document from public to private: open the document, click the 'Share' button in the top-right corner, and adjust the sharing settings to remove public access or restrict it to specific collaborators. If you need further assistance, please let me know.",
+        "grounding_check": {
+          "grounding_ratio": 0.0,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "To change a document from public to private: open the document, click the 'Share' button in the top-right corner, and adjust the sharing settings to remove public access or restrict it to specific collaborators."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-036",
+      "text": "I can't access the account owner's billing details. Please ask the account owner to check their billing section in workspace settings or forward the invoice to you. If you need further help, let me know.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "kb_answerable",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "invoice_download"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-01",
+            "snippet": "Go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed. Click any invoice to download it as a PDF. Invoices are a"
+          }
+        ],
+        "draft_reply": "I understand you're having trouble accessing the account owner's billing details. According to our KB, the account owner can go to Settings → Billing → Invoice History to view and download invoices from the past 24 months. Invoices are also emailed to the billing contact automatically on each renewal date. Please ask the account owner to check their billing section or forward the invoice to you. If you need further assistance, let me know.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-037",
+      "text": "Can you help me take a quick look at invoice #00108?",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "kb_answerable",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "invoice_download"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-01",
+            "snippet": "Go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed. Click any invoice to download it as a PDF. Invoices are a"
+          }
+        ],
+        "draft_reply": "Sure! You can view invoice #00108 by going to Settings → Billing → Invoice History. All invoices from the past 24 months are listed there. Click on the invoice to download it as a PDF. Invoices are also emailed to the billing contact automatically on each renewal date. Let me know if you need further assistance!",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-038",
+      "text": "I need to download my invoice for subscription #85632.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "kb_answerable",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "invoice_download"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-01",
+            "snippet": "Go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed. Click any invoice to download it as a PDF. Invoices are a"
+          }
+        ],
+        "draft_reply": "To download your invoice for subscription #85632, go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed there. Click on the invoice to download it as a PDF. If you need further assistance, let me know.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-039",
+      "text": "I'm trying to download invoice #85632 for my subscription, but I can't figure out where to find it.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "kb_answerable",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "how-to",
+        "intent_set": [
+          "invoice_download"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-01",
+            "snippet": "Go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed. Click any invoice to download it as a PDF. Invoices are a"
+          }
+        ],
+        "draft_reply": "Hi! To download invoice #85632, go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed there. Click on the invoice to download it as a PDF. If you don't see it, it may be older than 24 months. Let me know if you need further help!",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-040",
+      "text": "Could you help me check what payment methods you support?",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "policy_inquiry",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "how-to",
+        "intent_set": [
+          "payment_methods"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-06",
+            "snippet": "Acme Collab accepts the following payment methods: credit cards (Visa, Mastercard, American Express, Discover), debit cards, and ACH bank transfer (US"
+          }
+        ],
+        "draft_reply": "We accept credit cards (Visa, Mastercard, American Express, Discover), debit cards, and ACH bank transfer (US accounts only). We do not accept PayPal, wire transfer, or cryptocurrency. To update or add a payment method, go to Settings → Billing → Payment Methods.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-041",
+      "text": "Can you tell me what payment methods you actually support?",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "policy_inquiry",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "how-to",
+        "intent_set": [
+          "payment_methods"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-06",
+            "snippet": "Acme Collab accepts the following payment methods: credit cards (Visa, Mastercard, American Express, Discover), debit cards, and ACH bank transfer (US"
+          }
+        ],
+        "draft_reply": "We accept credit cards (Visa, Mastercard, American Express, Discover), debit cards, and ACH bank transfer (US accounts only). We do not accept PayPal, wire transfer, or cryptocurrency. To update or add a payment method, go to Settings → Billing → Payment Methods.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-042",
+      "text": "I need help understanding your refund policy — in what situations am I eligible for a refund?",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "policy_inquiry",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "refund_eligibility"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. According to our policy, refunds are available in these situations:\n1. **Annual plans**: Full refund within 14 days of purchase if the workspace has had fewer than 5 active sessions.\n2. **Billing errors**: Full refund for duplicate charges or charges after cancellation, regardless of timing. Please contact billing@acme for such issues.\n\nMonthly plans are not eligible for refunds. If your situation doesn't match these criteria, I can escalate your case to our billing team for further review.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-043",
+      "text": "In which situations can I request a refund for my subscription?",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "policy_inquiry",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "refund_eligibility"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "Refunds are available in two situations: (1) For annual plans, within 14 days of purchase if the workspace has had fewer than 5 active sessions — full refund. (2) For billing errors like duplicate charges or charges after cancellation — full refund regardless of timing. Monthly plans are not refundable. If you believe you qualify, please contact billing@acme.com.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-044",
+      "text": "I'm trying to see the cancellation fee for my subscription.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "policy_inquiry",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "cancellation_fee"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.2,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          }
+        ],
+        "draft_reply": "There are no cancellation fees for any subscription plan. Monthly plans can be cancelled at any time and take effect at the end of the current billing period. Annual plans are non-refundable after the 14-day refund window. Let me know if you need help with the cancellation process.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-045",
+      "text": "Are there any early termination fees if I cancel my subscription?",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "policy_inquiry",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "cancellation_fee"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          }
+        ],
+        "draft_reply": "There are no early termination fees for cancelling your subscription. Monthly plans can be cancelled at any time, and you won't be charged for the next billing cycle. For annual plans, cancellation is also free, but refunds are only available within the first 14 days. After that, the annual plan is non-refundable.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-046",
+      "text": "I need help resetting my user password.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "how_to_request",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "account",
+        "intent_set": [
+          "password_reset"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-account-01",
+            "snippet": "To reset your password: go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will rec"
+          }
+        ],
+        "draft_reply": "To reset your password, go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will receive a password reset link within 2 minutes — check your spam folder if you don't see it. Click the link in the email and set a new password. If you don't receive the email, please let me know and I can escalate.",
+        "grounding_check": {
+          "grounding_ratio": 0.8,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "If you don't receive the email, please let me know and I can escalate."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-047",
+      "text": "I need to update the details on my Team plan workspace.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "how_to_request",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "account",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-security-03",
+            "snippet": "Audit logs are available on Enterprise plans. Go to Settings → Security → Audit Logs. Logs include: member login/logout, document access, permission c"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          }
+        ],
+        "draft_reply": "To update details on your Team plan workspace, you can adjust seats by going to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle, while removing seats takes effect at the next renewal. If you need to change your plan entirely, go to Settings → Billing → Subscription → Change Plan. Upgrading takes effect immediately and is prorated; downgrading takes effect at the next billing cycle. If you need to update other workspace details not covered here, please let me know and I can assist further or escalate.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-048",
+      "text": "Updating my Professional account.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "how_to_request",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "account",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          },
+          {
+            "doc_id": "FAQ-account-01",
+            "snippet": "To reset your password: go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will rec"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-01",
+            "snippet": "First, try resetting your password: go to the login page and click 'Forgot password'. Check your spam folder for the reset email. If using SSO, contac"
+          }
+        ],
+        "draft_reply": "To update your account plan, go to Settings → Billing → Subscription → Change Plan. Upgrading takes effect immediately and is prorated. If you need a plan not listed (e.g., between Team and Enterprise), please let me know and I can escalate.",
+        "grounding_check": {
+          "grounding_ratio": 0.667,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "If you need a plan not listed (e.g., between Team and Enterprise), please let me know and I can escalate."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-049",
+      "text": "Open a free account for my wife.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "how_to_request",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "account",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-02",
+            "snippet": "Go to Settings → Billing → Payment Methods. Click 'Add Payment Method' to add a new credit card or ACH bank account. To set a new default, click the t"
+          },
+          {
+            "doc_id": "FAQ-feature-01",
+            "snippet": "Open the document and click the 'Share' button in the top-right corner. Enter the collaborator's email address and select their permission level: View"
+          },
+          {
+            "doc_id": "FAQ-account-01",
+            "snippet": "To reset your password: go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will rec"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-01",
+            "snippet": "First, try resetting your password: go to the login page and click 'Forgot password'. Check your spam folder for the reset email. If using SSO, contac"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. To open a free account for your wife, she can sign up directly on the Acme Collab website by clicking 'Get Started' or 'Sign Up' and following the registration process. If she receives an invitation to collaborate on a document, she can join via the invitation link even without an existing account. Unfortunately, the provided KB excerpts do not cover the free account sign-up process in detail. If you need further assistance, please let me know and I can escalate your request.",
+        "grounding_check": {
+          "grounding_ratio": 0.5,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "To open a free account for your wife, she can sign up directly on the Acme Collab website by clicking 'Get Started' or 'Sign Up' and following the registration process."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-050",
+      "text": "I'm not sure how to switch to the Platinum plan.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "how_to_request",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "how-to",
+        "intent_set": [
+          "unknown_plan"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [],
+        "draft_reply": "I'm sorry, but I don't have information about switching to the Platinum plan in our knowledge base. Could you please provide more details, such as your current plan and what you're looking for in the Platinum plan? I'll be happy to escalate this to our team for further assistance.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-051",
+      "text": "I need help switching my workspace to the Team plan.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "how_to_request",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "plan_change"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          }
+        ],
+        "draft_reply": "To switch to the Team plan, go to Settings → Billing → Subscription → Change Plan and select Team. The upgrade takes effect immediately and is prorated. Let me know if you need help with seat count or anything else!",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-052",
+      "text": "I need help canceling the company newsletter subscription.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "churn_signal",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          }
+        ],
+        "draft_reply": "I understand you want to cancel the newsletter subscription. However, the provided knowledge base excerpts cover account and billing topics like plan changes and seat management, but do not include information about newsletter subscriptions. To assist you further, could you please clarify if you're referring to a marketing newsletter or a different type of subscription? If this is related to your account plan, you can cancel via Settings → Billing → Subscription. If the issue remains unresolved, I'll be happy to escalate it to our team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": false,
+      "failures": [
+        "action: got 'ESCALATE_L1', want 'ESCALATE_L2'"
+      ]
+    },
+    {
+      "id": "T-053",
+      "text": "I need help canceling my subscription to the workspace plan.",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "churn_signal",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 1.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          }
+        ],
+        "draft_reply": "I can help with canceling your workspace plan. There are no cancellation fees. Monthly plans cancel at the end of the current billing period, and you won't be charged for the next cycle. Annual plans are non-refundable after the 14-day refund window. To cancel, go to Settings → Billing → Subscription → Change Plan. If you need further assistance, let me know.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-054",
+      "text": "Where can I report issues with signing up for Acme Collab?",
+      "difficulty": "easy",
+      "attack_type": null,
+      "routing_reason": "how_to_request",
+      "expected_action": "AUTO_REPLY",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "account",
+        "intent_set": [
+          "signup_issue"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.85,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-troubleshoot-01",
+            "snippet": "First, try resetting your password: go to the login page and click 'Forgot password'. Check your spam folder for the reset email. If using SSO, contac"
+          }
+        ],
+        "draft_reply": "To report sign-up issues, please contact our support team directly at support@acmecollab.com or use the in-app chat. For troubleshooting, try resetting your password via the 'Forgot password' link on the login page. If using SSO, contact your IT admin. If your account appears suspended, reach out to your workspace admin. If these steps don't resolve the issue, we'll be happy to escalate.",
+        "grounding_check": {
+          "grounding_ratio": 0.75,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "To report sign-up issues, please contact our support team directly at support@acmecollab.com or use the in-app chat."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-055",
+      "text": "I'm not sure how to report a problem with my subscription payment.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "payment_issue",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          },
+          {
+            "doc_id": "FAQ-billing-02",
+            "snippet": "Go to Settings → Billing → Payment Methods. Click 'Add Payment Method' to add a new credit card or ACH bank account. To set a new default, click the t"
+          },
+          {
+            "doc_id": "FAQ-billing-01",
+            "snippet": "Go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed. Click any invoice to download it as a PDF. Invoices are a"
+          },
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          }
+        ],
+        "draft_reply": "To report a subscription payment problem, please contact our billing team directly at billing@acme.com. They can assist with billing errors such as duplicate charges or charges after cancellation. For other issues, you can also review your invoice history under Settings → Billing → Invoice History. If your issue is not covered here, please let me know and I can escalate it.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-056",
+      "text": "Can you help me with issues related to payments?",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "payment_issue",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.2,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-02",
+            "snippet": "Go to Settings → Billing → Payment Methods. Click 'Add Payment Method' to add a new credit card or ACH bank account. To set a new default, click the t"
+          },
+          {
+            "doc_id": "FAQ-billing-06",
+            "snippet": "Acme Collab accepts the following payment methods: credit cards (Visa, Mastercard, American Express, Discover), debit cards, and ACH bank transfer (US"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "I'd be happy to help with payment issues! You can manage payment methods in Settings → Billing → Payment Methods. We accept credit cards (Visa, Mastercard, Amex, Discover), debit cards, and ACH bank transfer (US only). For refunds, annual plans are eligible within 14 days if fewer than 5 sessions occurred, and billing errors are refunded anytime. If your issue is more specific, please provide details so I can assist further or escalate if needed.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-057",
+      "text": "I want to report issues with my payments.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "payment_issue",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-02",
+            "snippet": "Go to Settings → Billing → Payment Methods. Click 'Add Payment Method' to add a new credit card or ACH bank account. To set a new default, click the t"
+          },
+          {
+            "doc_id": "FAQ-billing-06",
+            "snippet": "Acme Collab accepts the following payment methods: credit cards (Visa, Mastercard, American Express, Discover), debit cards, and ACH bank transfer (US"
+          },
+          {
+            "doc_id": "FAQ-billing-01",
+            "snippet": "Go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed. Click any invoice to download it as a PDF. Invoices are a"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "I'm sorry to hear you're having payment issues. Could you please provide more details about the problem? For example, are you seeing an error when adding a payment method, or is there a charge you don't recognize? You can manage your payment methods by going to Settings → Billing → Payment Methods. If it's a billing error like a duplicate charge, please contact billing@acme for a refund. Let me know how I can help further.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-058",
+      "text": "I need help speaking with a human support agent.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "human_requested",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "other",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-06",
+            "snippet": "Go to Settings → Integrations → Webhooks → Add Webhook. Enter the endpoint URL and select the events to subscribe to (document.created, document.updat"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. To speak with a human support agent, please use the in-app chat or email support@acmecollab.com. Unfortunately, the provided knowledge base does not include information on direct human support contact methods. If you need further assistance, I can escalate your request to our support team.",
+        "grounding_check": {
+          "grounding_ratio": 0.0,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "To speak with a human support agent, please use the in-app chat or email support@acmecollab.com."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-059",
+      "text": "I’ve been trying everything to get through to a real person—can you please connect me with a support agent?",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "human_requested",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "other",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "frustrated",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-06",
+            "snippet": "Go to Settings → Integrations → Webhooks → Add Webhook. Enter the endpoint URL and select the events to subscribe to (document.created, document.updat"
+          },
+          {
+            "doc_id": "FAQ-security-01",
+            "snippet": "Yes. SSO is available on Enterprise plans only. Supported protocols: SAML 2.0 and OIDC. Configuration requires Admin access. Go to Settings → Security"
+          },
+          {
+            "doc_id": "FAQ-feature-01",
+            "snippet": "Open the document and click the 'Share' button in the top-right corner. Enter the collaborator's email address and select their permission level: View"
+          },
+          {
+            "doc_id": "FAQ-billing-06",
+            "snippet": "Acme Collab accepts the following payment methods: credit cards (Visa, Mastercard, American Express, Discover), debit cards, and ACH bank transfer (US"
+          },
+          {
+            "doc_id": "FAQ-feature-05",
+            "snippet": "Go to Settings → Integrations → Slack → Connect. Authorize the Acme Collab Slack app in your Slack workspace. Once connected, you can: (1) get notific"
+          }
+        ],
+        "draft_reply": "I understand you'd like to speak with a support agent. Unfortunately, I can only provide assistance based on our knowledge base. To connect with a human agent, please reach out via our official support channels: email support@acmecollab.com or use the in-app chat feature. I'm here to help with any questions I can answer from our documentation.",
+        "grounding_check": {
+          "grounding_ratio": 0.0,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "I can only provide assistance based on our knowledge base.",
+            "To connect with a human agent, please reach out via our official support channels: email support@acmecollab.com or use the in-app chat feature."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-060",
+      "text": "I need help speaking to a support agent.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "human_requested",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "other",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "I'm here to help! Could you please provide more details about your issue so I can assist you directly? If you need to speak with a support agent, I can escalate your request to our team. Let me know how I can help.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-061",
+      "text": "I'm expecting a refund of $149 for my subscription.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "status_inquiry",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "refund_status"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.3,
+        "kb_grounding": [],
+        "draft_reply": "I'm sorry, but I don't have any information about refunds in our knowledge base. Could you please provide more details about your subscription and the reason for the refund? I'll escalate this to our billing team to assist you further.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-062",
+      "text": "I'm trying to check the status of my refund.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "status_inquiry",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "refund_status"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [],
+        "draft_reply": "I'm sorry, but I don't have any information about refund statuses in our knowledge base. Could you please provide more details, such as your order number or the date of the refund request? I'll do my best to assist you or escalate this to the appropriate team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-063",
+      "text": "I'm waiting for a refund of $149 to be processed.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "status_inquiry",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "refund_status"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.2,
+        "kb_grounding": [],
+        "draft_reply": "I understand you're waiting for a refund of $149. Unfortunately, I don't have specific information about refund processing times or status in our knowledge base. Could you please provide your account details or the transaction ID so I can look into this further? If the issue persists, I'll escalate it to our billing team for you.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-064",
+      "text": "Checking the current status of subscription SUB-28471.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "status_inquiry",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          },
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-billing-01",
+            "snippet": "Go to Settings → Billing → Invoice History. All invoices from the past 24 months are listed. Click any invoice to download it as a PDF. Invoices are a"
+          }
+        ],
+        "draft_reply": "I'm sorry, but the provided knowledge base excerpts do not contain information about checking the current status of a specific subscription (SUB-28471). To assist you further, I recommend checking your subscription details directly in Settings → Billing → Subscription. If you need more help, please provide additional context or I can escalate this to our billing team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-065",
+      "text": "I’m trying to follow up on a support ticket I submitted earlier. Could you check the status of my request?",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "status_inquiry",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "other",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [],
+        "draft_reply": "I'm sorry, but I don't have access to your ticket status from the information provided. Could you please share your ticket ID or the email address you used to submit the request? I'll then be able to look into it for you. If you don't have that handy, feel free to provide any other details that might help me locate your ticket.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-066",
+      "text": "I'm checking in to see when I can expect access to my workspace.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "status_inquiry",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "account",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-troubleshoot-01",
+            "snippet": "First, try resetting your password: go to the login page and click 'Forgot password'. Check your spam folder for the reset email. If using SSO, contac"
+          },
+          {
+            "doc_id": "FAQ-security-03",
+            "snippet": "Audit logs are available on Enterprise plans. Go to Settings → Security → Audit Logs. Logs include: member login/logout, document access, permission c"
+          },
+          {
+            "doc_id": "FAQ-feature-02",
+            "snippet": "Acme Collab has four permission levels: Owner (full control including billing), Admin (manage members, create/delete spaces, configure integrations), "
+          },
+          {
+            "doc_id": "FAQ-account-01",
+            "snippet": "To reset your password: go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will rec"
+          },
+          {
+            "doc_id": "FAQ-feature-01",
+            "snippet": "Open the document and click the 'Share' button in the top-right corner. Enter the collaborator's email address and select their permission level: View"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. To clarify, are you asking about access to a new workspace you've been invited to, or are you having trouble logging into an existing workspace? If you're waiting for an invitation, please check with the workspace owner or admin who invited you, as they control access. If you're having login issues, try resetting your password via the 'Forgot password' link on the login page. If you believe your account may be suspended, please contact your workspace admin. Let me know if you need further assistance.",
+        "grounding_check": {
+          "grounding_ratio": 0.667,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "If you're waiting for an invitation, please check with the workspace owner or admin who invited you, as they control access."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-067",
+      "text": "I can't figure out how to check when my workspace access will be activated.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "status_inquiry",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "how-to",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-security-03",
+            "snippet": "Audit logs are available on Enterprise plans. Go to Settings → Security → Audit Logs. Logs include: member login/logout, document access, permission c"
+          },
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          },
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-feature-08",
+            "snippet": "Yes. Acme Collab provides a REST API for programmatic access. API documentation is at docs.acmecollab.io/api. Authentication uses API tokens generated"
+          }
+        ],
+        "draft_reply": "Hi there! I understand you're trying to check when your workspace access will be activated. Unfortunately, our current knowledge base doesn't cover activation status or timelines. I'd recommend checking your email for an activation confirmation or contacting your workspace admin. If you need further assistance, I'm happy to escalate this to our team.",
+        "grounding_check": {
+          "grounding_ratio": 0.333,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "Check your email for an activation confirmation.",
+            "Contact your workspace admin."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-068",
+      "text": "Could you help me correct the subscription for workspace SUB-28471?",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "account_change",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "billing",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "I'd be happy to help with workspace SUB-28471. Could you please specify what correction is needed? For example, if you need to adjust seat count, you can do so in Settings → Team → Manage Seats. Adding seats is prorated; removing seats takes effect at next renewal. If it's a billing error, please contact billing@acme for a refund. Let me know the details so I can assist further.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-069",
+      "text": "I can't remove certain items from my subscription SUB-28471.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "account_change",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "bug",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "frustrated",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          }
+        ],
+        "draft_reply": "Hi, thanks for reaching out. Based on our KB, removing seats from a Team plan (like SUB-28471) takes effect at the next renewal, and unused seat-days are not refunded. You can adjust seats under Settings → Team → Manage Seats. If you're unable to remove certain items, it might be due to the minimum seat count of 3 for the Team plan. Could you confirm if you're trying to go below 3 seats? If the issue persists, please provide more details so I can escalate to our billing team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-070",
+      "text": "I'm not sure how to cancel my Team plan subscription.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "account_change",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "churn",
+        "intent_set": [
+          "cancel_subscription"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.5,
+        "tone": "neutral",
+        "churn_risk": 0.3,
+        "kb_grounding": [],
+        "draft_reply": "I'm sorry, but I don't have information on canceling a Team plan subscription in our knowledge base. Could you please provide more details, such as your account email or any error messages you're seeing? I'll escalate this to our billing team to assist you further.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-071",
+      "text": "I need information about deleting my Pro account. Can you explain the process and what happens to my data and billing?",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "account_change",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "account",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.5,
+        "tone": "neutral",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          },
+          {
+            "doc_id": "FAQ-billing-02",
+            "snippet": "Go to Settings → Billing → Payment Methods. Click 'Add Payment Method' to add a new credit card or ACH bank account. To set a new default, click the t"
+          },
+          {
+            "doc_id": "FAQ-policy-02",
+            "snippet": "You retain full ownership of all content you create in Acme Collab. Acme Collab does not use customer content to train AI models. Upon account deletio"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          }
+        ],
+        "draft_reply": "To delete your Pro account, go to Settings → Account → Delete Account. There are no cancellation fees. For monthly plans, cancellation takes effect at the end of the current billing period, and you will not be charged for the next cycle. Annual plans are non-refundable after the 14-day refund window. Upon deletion, all your data is deleted within 30 days from production systems and within 90 days from backups. You can export your data beforehand via Settings → Export. If you need further assistance, please let me know.",
+        "grounding_check": {
+          "grounding_ratio": 0.833,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "To delete your Pro account, go to Settings → Account → Delete Account."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-072",
+      "text": "Can you help me leave a review for a workspace feature?",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "feedback",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "other",
+        "intent_set": [
+          "feature_feedback"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.0,
+        "kb_grounding": [],
+        "draft_reply": "I'm sorry, but I don't have information on how to leave a review for a workspace feature in our knowledge base. Could you please provide more details about the specific feature you'd like to review? I'll do my best to assist or escalate your request to the appropriate team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-073",
+      "text": "I need to leave feedback about a feature.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "feedback",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "other",
+        "intent_set": [
+          "feature_feedback"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [],
+        "draft_reply": "Thank you for reaching out. I'd be happy to help you leave feedback about a feature. Unfortunately, I don't have specific details on the feedback process from our knowledge base. Could you please provide more information about the feature you'd like to discuss? I'll do my best to assist or escalate your request to the appropriate team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-074",
+      "text": "I want to set up a subscription for your workspace. Can you help me get started?",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "account_change",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "how-to",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "happy",
+        "churn_risk": 0.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-policy-03",
+            "snippet": "Yes, with conditions. Guest access is available: Workspace Admins can invite external users as Guests (Viewer or Commenter role only — Guests cannot b"
+          }
+        ],
+        "draft_reply": "I'd be happy to help you set up a subscription! To get started, please let me know which plan you're interested in (e.g., Team plan). You can adjust seats anytime under Settings → Team → Manage Seats. There are no cancellation fees, and monthly plans can be cancelled at any time. If you have more specific questions, feel free to ask!",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-075",
+      "text": "I need help setting up multiple workspaces on my account.",
+      "difficulty": "medium",
+      "attack_type": null,
+      "routing_reason": "account_change",
+      "expected_action": "ESCALATE_L1",
+      "result": {
+        "action": "ESCALATE_L1",
+        "intent": "how-to",
+        "intent_set": [
+          "workspace_setup"
+        ],
+        "grounding": "none",
+        "routing_signals": [],
+        "confidence": 0.6,
+        "tone": "neutral",
+        "churn_risk": 0.1,
+        "kb_grounding": [],
+        "draft_reply": "I'm sorry, but I don't have specific information about setting up multiple workspaces in our current knowledge base. Could you please provide more details about what you're trying to achieve? I'll do my best to assist or escalate this to our team for further help.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-076",
+      "text": "I need to cancel my subscription for SUB-28471 because I've found a competitor with better pricing and features, and I'm considering moving my entire account to them.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "churn_signal",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "cancel_subscription"
+        ],
+        "grounding": "none",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.6,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [],
+        "draft_reply": "Thank you for reaching out. I understand you're considering canceling subscription SUB-28471 due to pricing and feature concerns. Unfortunately, I don't have specific information about cancellation procedures or competitor comparisons in our knowledge base. I'd recommend contacting our billing team directly for assistance with cancellation. If you'd like, I can escalate this to a specialist who can discuss your needs and possibly offer solutions. Would you like me to proceed with escalation?",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-077",
+      "text": "I need to cancel my subscription because I'm evaluating switching to a competitor that offers better pricing, but first, how do I request a refund for my current subscription?",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "churn_signal",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "cancel_subscription",
+          "plan_change",
+          "refund_eligibility"
+        ],
+        "grounding": "weak",
+        "routing_signals": [
+          "competitor_exit"
+        ],
+        "confidence": 0.65,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          },
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. Regarding refunds: Acme Collab does not offer refunds for monthly plans. For annual plans, a full refund is available within 14 days of purchase if your workspace has had fewer than 5 active sessions. After 14 days, no refunds are issued. If you'd like to cancel, you can downgrade your plan, which takes effect at the next billing cycle and credits the unused portion to your next invoice. For billing errors, contact billing@acme.com. If your situation doesn't match these criteria, I recommend escalating to our billing team for further assistance.",
+        "grounding_check": {
+          "grounding_ratio": 0.833,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "If your situation doesn't match these criteria, I recommend escalating to our billing team for further assistance."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-078",
+      "text": "I need to cancel my subscription and get a refund because I'm moving to a competitor that offers better pricing, and I don't know how to proceed with the refund process.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "churn_signal",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "cancel_subscription",
+          "refund_eligibility"
+        ],
+        "grounding": "weak",
+        "routing_signals": [
+          "competitor_exit"
+        ],
+        "confidence": 0.65,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. To cancel your subscription, please go to Settings > Billing > Cancel Subscription. Regarding refunds, Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewer than 5 active sessions. After 14 days, no refunds are issued. If you have an annual plan and meet these criteria, you may be eligible. If not, we cannot process a refund. If you believe there is a billing error, please contact billing@acme.com. I'm sorry we couldn't fully address your request; if you need further assistance, I can escalate this to our billing team.",
+        "grounding_check": {
+          "grounding_ratio": 0.857,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "To cancel your subscription, please go to Settings > Billing > Cancel Subscription."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-079",
+      "text": "I need a refund for my subscription because I'm evaluating switching to a competitor that offers better pricing, and I want to cancel my account if this isn't resolved immediately.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "churn_signal",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "cancel_subscription",
+          "plan_change",
+          "refund_eligibility"
+        ],
+        "grounding": "weak",
+        "routing_signals": [
+          "competitor_exit"
+        ],
+        "confidence": 0.65,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          },
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. I understand you're considering a switch due to pricing. Regarding refunds: per our policy, monthly plans are non-refundable. For annual plans, a full refund is available within 14 days of purchase if the workspace has had fewer than 5 active sessions. After that, no refunds are issued. If you're on an annual plan and meet these criteria, we can process a refund. Otherwise, you may cancel your subscription, which will remain active until the end of the current billing cycle. If you'd like to discuss pricing options or need further assistance, please let me know. I'm happy to help or escalate if needed.",
+        "grounding_check": {
+          "grounding_ratio": 0.75,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "you may cancel your subscription, which will remain active until the end of the current billing cycle"
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-080",
+      "text": "I need help filing a formal complaint against your organization, and I'm also evaluating whether to move our entire account to a competitor who has offered a better support structure and pricing.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "churn_signal",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [
+          "competitor_exit",
+          "churn_risk_high"
+        ],
+        "confidence": 0.5,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-account-02",
+            "snippet": "To change your plan: go to Settings → Billing → Subscription → Change Plan. Available plans: Personal (1 user), Team (3–100 seats), Enterprise (100+ s"
+          },
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. To file a formal complaint, please contact our support team directly via email at complaints@acmecollab.com or through your account manager. We take all feedback seriously and will investigate thoroughly. Regarding your evaluation of competitors, we understand pricing and support are important. Our Enterprise plan offers custom pricing and dedicated support. If you'd like to discuss your specific needs or any concerns, I can escalate this to a senior team member who can address your questions directly. Please let me know how you'd like to proceed.",
+        "grounding_check": {
+          "grounding_ratio": 0.5,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "To file a formal complaint, please contact our support team directly via email at complaints@acmecollab.com or through your account manager."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-081",
+      "text": "I need help filing a formal complaint against your organization. I've already tried reaching out multiple times with no resolution, and if this isn't handled immediately, I will post about this on social media and escalate it to your CEO.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "emotional_escalation",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "competitor_exit",
+          "churn_risk_high"
+        ],
+        "confidence": 0.85,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-troubleshoot-05",
+            "snippet": "File upload limits: 25 MB per file for Team plans, 100 MB for Enterprise. Supported file types: images (PNG, JPG, GIF, WebP), PDFs, Office documents ("
+          },
+          {
+            "doc_id": "FAQ-feature-04",
+            "snippet": "Open a document and click the three-dot menu (⋯) → Export. Available formats: PDF, Markdown, HTML, and DOCX. For bulk export of an entire Space, go to"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "I understand your frustration and want to help. However, the provided knowledge base does not include information on filing formal complaints or escalation procedures. To address your concerns, I recommend contacting our support team directly at support@acme.com or our billing team at billing@acme.com for billing-related issues. If your issue is not covered, I will escalate this to a senior agent who can assist further. Please provide more details so I can ensure your case is handled appropriately.",
+        "grounding_check": {
+          "grounding_ratio": 0.333,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "Contact our support team directly at support@acme.com",
+            "Escalate this to a senior agent"
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-082",
+      "text": "I'm not sure what steps to take to get a refund for my subscription, and after three failed attempts to resolve this, I'm considering posting about my experience on social media if I don't get a direct response from a senior manager today.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "emotional_escalation",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "AUTO_REPLY",
+        "intent": "billing",
+        "intent_set": [
+          "refund_eligibility"
+        ],
+        "grounding": "strong",
+        "routing_signals": [],
+        "confidence": 0.75,
+        "tone": "frustrated",
+        "churn_risk": 0.7,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "I understand your frustration and apologize for the difficulties you've experienced. Based on our policy, refunds are available for annual plans within 14 days of purchase if the workspace has had fewer than 5 active sessions. For billing errors like duplicate charges, we offer full refunds regardless of timing—please contact billing@acme for such issues. Monthly plans are not refundable. If your situation doesn't match these criteria, I acknowledge that our policy may not cover it fully. I'd like to escalate this to a senior manager who can review your case directly. Please provide your account details so I can prioritize this.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": false,
+      "failures": [
+        "action: got 'AUTO_REPLY', want 'ESCALATE_L2'"
+      ]
+    },
+    {
+      "id": "T-083",
+      "text": "I no longer want to proceed with the subscription for workspace SUB-28471. This is the third time I've tried to resolve this issue, and if it's not handled immediately, I will be posting about this experience on LinkedIn and CC'ing your CEO.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "emotional_escalation",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.85,
+        "tone": "frustrated",
+        "churn_risk": 0.95,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          }
+        ],
+        "draft_reply": "I understand your frustration, and I sincerely apologize for the repeated difficulties. Let me help you cancel subscription SUB-28471 right now. According to our policy, monthly plans can be cancelled at any time with no fees, and cancellation takes effect at the end of the current billing period. I will process the cancellation immediately. If you have any billing errors or concerns, please contact billing@acme for a refund. I'm committed to resolving this for you today.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-084",
+      "text": "I need help filing a complaint about my account. I've already tried reaching out three times with no resolution, and if this isn't handled immediately, I will escalate this to your CEO and post about my experience on social media.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "emotional_escalation",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.5,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-troubleshoot-01",
+            "snippet": "First, try resetting your password: go to the login page and click 'Forgot password'. Check your spam folder for the reset email. If using SSO, contac"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          },
+          {
+            "doc_id": "FAQ-account-01",
+            "snippet": "To reset your password: go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will rec"
+          }
+        ],
+        "draft_reply": "I understand your frustration. To help resolve your account complaint, could you please provide more details about the issue? If you're unable to access your account, try resetting your password via the 'Forgot password' link on the login page. If your account is suspended, your workspace admin can reactivate it. For billing issues, refunds are available in certain cases. If these steps don't apply, please share specifics so I can assist further. If the issue remains unresolved, I'll escalate it to our support team.",
+        "grounding_check": {
+          "grounding_ratio": 0.667,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "If the issue remains unresolved, I'll escalate it to our support team."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-085",
+      "text": "I demand an immediate cancellation of workspace SUB-28471. If this isn't processed today, I will escalate to your CEO and post about this terrible experience on every social media platform.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "emotional_escalation",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.75,
+        "tone": "frustrated",
+        "churn_risk": 1.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-troubleshoot-01",
+            "snippet": "First, try resetting your password: go to the login page and click 'Forgot password'. Check your spam folder for the reset email. If using SSO, contac"
+          }
+        ],
+        "draft_reply": "I understand your urgency. Workspace SUB-28471 cancellation can be processed immediately, but per our policy, cancellation takes effect at the end of the current billing period. There are no cancellation fees. I'll initiate the cancellation now. If you need further assistance, please let me know.",
+        "grounding_check": {
+          "grounding_ratio": 0.667,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "Workspace SUB-28471 cancellation can be processed immediately"
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-086",
+      "text": "I need to formally document this request as it involves a potential SLA breach and I'm considering involving our legal team to ensure compliance with our contract terms. How do I file a consumer complaint against your organization?",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "contract_risk",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "other",
+        "intent_set": [
+          "sla_uptime"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "sla_signal",
+          "churn_risk_high"
+        ],
+        "confidence": 0.85,
+        "tone": "frustrated",
+        "churn_risk": 0.8,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. I understand your concern regarding a potential SLA breach. To request a service credit under our SLA, please submit a support ticket with details of the downtime and your account information. Our team will review and process eligible credits. For formal complaints or legal matters, please contact our legal department directly at legal@acmecollab.com. I recommend documenting the issue with timestamps and any relevant communication. If you need further assistance, I can escalate this to our specialized team.",
+        "grounding_check": {
+          "grounding_ratio": 0.25,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "Our team will review and process eligible credits.",
+            "For formal complaints or legal matters, please contact our legal department directly at legal@acmecollab.com.",
+            "I recommend documenting the issue with timestamps and any relevant communication."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-087",
+      "text": "I need help requesting a refund for my subscription, and I also need to formally document that you've breached our SLA, as our uptime has been below 99.9% for the last month. Please escalate this to your legal team for compliance review.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "contract_risk",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "billing",
+        "intent_set": [
+          "refund_eligibility",
+          "sla_uptime"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "sla_signal",
+          "churn_risk_high"
+        ],
+        "confidence": 0.75,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          },
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. Regarding your refund request, based on our policy, refunds for monthly plans are not available. For annual plans, refunds are possible within 14 days of purchase if fewer than 5 active sessions have occurred. If you're on a monthly plan or outside that window, we cannot issue a refund. For SLA concerns, we guarantee 99.9% uptime for Team plans (excluding scheduled maintenance). If you believe we've fallen below that, you may request a service credit of 10% of your monthly fee. To proceed, please provide specific uptime data and your plan details. I can escalate your compliance review request to our legal team, but please note that our KB does not cover formal breach documentation or legal escalation procedures. Would you like me to escalate this to a senior agent?",
+        "grounding_check": {
+          "grounding_ratio": 0.8,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "Our KB does not cover formal breach documentation or legal escalation procedures."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-088",
+      "text": "I need help getting a refund for my subscription, and I also need to formally document an SLA breach claim regarding service uptime last month, as our legal team will be reviewing this matter.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "contract_risk",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "billing",
+        "intent_set": [
+          "refund_eligibility",
+          "sla_uptime"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "sla_signal"
+        ],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          },
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. Regarding your refund request: Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewer than 5 active sessions. If this applies, please let us know. For SLA breach claims, our policy guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans, excluding scheduled maintenance. If uptime falls below the SLA, you may request a service credit of 10% of the monthly fee for each 1% below the threshold. To proceed, please provide your plan type and the specific month in question. If your situation doesn't fit these criteria, please clarify so we can assist further or escalate to our billing team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-089",
+      "text": "I need to file a formal complaint about your service, and I also want to formally document that you have breached our SLA terms—please have your legal team contact mine immediately.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "contract_risk",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "other",
+        "intent_set": [
+          "sla_uptime"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "sla_signal",
+          "competitor_exit",
+          "churn_risk_high"
+        ],
+        "confidence": 0.85,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. To file a formal complaint and document a potential SLA breach, please provide specific details (dates, times, and impact) so we can investigate. According to our SLA policy (FAQ-policy-01), we guarantee 99.9% uptime for Team plans and 99.95% for Enterprise plans, excluding scheduled maintenance. If uptime falls below the SLA, you may request a service credit. I have noted your request for legal contact; however, our KB does not cover the process for direct legal team escalation. I recommend submitting your complaint via our official support channels or contacting your account manager for further assistance. If you'd like, I can escalate this to our specialized team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-090",
+      "text": "I paid $149 for this plan, and I need a refund. Additionally, this constitutes an SLA breach, and I am formally documenting this request for my legal team to review.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "contract_risk",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "billing",
+        "intent_set": [
+          "refund_eligibility",
+          "sla_uptime"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "sla_signal",
+          "churn_risk_high"
+        ],
+        "confidence": 0.75,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          },
+          {
+            "doc_id": "FAQ-policy-01",
+            "snippet": "Acme Collab guarantees 99.9% monthly uptime for Team plans and 99.95% for Enterprise plans. Uptime is measured excluding scheduled maintenance windows"
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. Based on our records, you paid $149 for a plan. According to our policy, refunds for annual plans are available within 14 days of purchase if the workspace has had fewer than 5 active sessions. If you are outside this window or do not meet the criteria, a refund cannot be issued. Regarding your SLA concern, our SLA guarantees 99.9% monthly uptime for Team plans. If you believe this was breached, you may request a service credit of 10% of the monthly fee for each period of non-compliance. Please provide details of the downtime so we can investigate. If the issue remains unresolved, I can escalate to our billing team. For legal documentation, please contact billing@acme.com.",
+        "grounding_check": {
+          "grounding_ratio": 0.833,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "you paid $149 for a plan"
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-091",
+      "text": "I need help canceling my subscription for SUB-28471. Also, before proceeding, I want to request a SOC 2 audit report and have your security team review our data access logs to ensure no exposure occurred during my account management.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "security_concern",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.5,
+        "tone": "neutral",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-security-03",
+            "snippet": "Audit logs are available on Enterprise plans. Go to Settings → Security → Audit Logs. Logs include: member login/logout, document access, permission c"
+          },
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-account-01",
+            "snippet": "To reset your password: go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will rec"
+          }
+        ],
+        "draft_reply": "Hi, thanks for reaching out. For subscription SUB-28471, cancellation is straightforward: there are no fees, and cancellation takes effect at the end of your current billing period. You won't be charged for the next cycle. Regarding the SOC 2 audit report, our KB does not cover how to request one. For security team review of data access logs, audit logs are available on Enterprise plans under Settings → Security → Audit Logs. If you're on an Enterprise plan, you can export logs or stream them via API. If you're not on Enterprise, I'd need to check further. Since your request for a SOC 2 report and security review isn't fully covered, I recommend escalating to our security team. Would you like me to do that?",
+        "grounding_check": {
+          "grounding_ratio": 0.833,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "Our KB does not cover how to request a SOC 2 audit report."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-092",
+      "text": "I need help canceling my subscription SUB-28471, and I also want to request a full SOC 2 audit of my account's data handling and access logs before the cancellation is processed.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "security_concern",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [
+          "churn_risk_high"
+        ],
+        "confidence": 0.65,
+        "tone": "neutral",
+        "churn_risk": 1.0,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-security-03",
+            "snippet": "Audit logs are available on Enterprise plans. Go to Settings → Security → Audit Logs. Logs include: member login/logout, document access, permission c"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          }
+        ],
+        "draft_reply": "Hi, I can help with your cancellation request for subscription SUB-28471. Since you're on a monthly plan, cancellation takes effect at the end of the current billing period with no fees. However, regarding your request for a full SOC 2 audit of your account's data handling and access logs, our KB indicates that audit logs are available on Enterprise plans via Settings → Security → Audit Logs, which include member actions and document access. If you're not on an Enterprise plan, this feature may not be available. Could you confirm your plan type? If the KB doesn't fully cover your needs, I can escalate to our security team for further assistance.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-093",
+      "text": "I need help canceling subscription SUB-28471, but before that, I want to request a full SOC 2 audit of your data handling practices, as I'm concerned about potential data exposure from your recent security incidents.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "security_concern",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [
+          "competitor_exit",
+          "churn_risk_high"
+        ],
+        "confidence": 0.65,
+        "tone": "frustrated",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          },
+          {
+            "doc_id": "FAQ-account-01",
+            "snippet": "To reset your password: go to the Acme Collab login page and click 'Forgot password'. Enter your registered email address and click Send. You will rec"
+          }
+        ],
+        "draft_reply": "I can help you cancel subscription SUB-28471. Monthly plans cancel at the end of the current billing period with no fees. However, regarding your request for a full SOC 2 audit, our KB does not cover audit requests or recent security incidents. I recommend contacting our security team directly for such concerns. If you'd like, I can escalate this to our support team for further assistance.",
+        "grounding_check": {
+          "grounding_ratio": 0.667,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "I recommend contacting our security team directly for such concerns."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-094",
+      "text": "I'm reaching out to formally file a complaint against your company, and I also need to initiate a compliance audit regarding our data handling practices, as I have concerns about a potential data exposure incident that requires immediate security team involvement.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "security_concern",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "other",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "none",
+        "routing_signals": [
+          "competitor_exit"
+        ],
+        "confidence": 0.6,
+        "tone": "frustrated",
+        "churn_risk": 0.7,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-security-03",
+            "snippet": "Audit logs are available on Enterprise plans. Go to Settings → Security → Audit Logs. Logs include: member login/logout, document access, permission c"
+          },
+          {
+            "doc_id": "FAQ-security-02",
+            "snippet": "All data is encrypted at rest (AES-256) and in transit (TLS 1.2+). Data is stored on AWS (US-East-1 by default). Enterprise customers can request EU d"
+          },
+          {
+            "doc_id": "FAQ-feature-02",
+            "snippet": "Acme Collab has four permission levels: Owner (full control including billing), Admin (manage members, create/delete spaces, configure integrations), "
+          }
+        ],
+        "draft_reply": "Thank you for reaching out. We take your concerns seriously. To initiate a compliance audit and address a potential data exposure incident, please contact our Security team directly at security@acmecollab.com or through your account's support portal. For Enterprise plans, audit logs are available under Settings → Security → Audit Logs, which include member actions and can be exported. We are SOC 2 Type II certified and GDPR compliant, with encryption at rest and in transit. If you need further assistance, please let us know and we can escalate to our security team.",
+        "grounding_check": {
+          "grounding_ratio": 0.667,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "To initiate a compliance audit and address a potential data exposure incident, please contact our Security team directly at security@acmecollab.com or through your account's support portal."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-095",
+      "text": "I need help canceling my subscription for workspace SUB-28471. Before proceeding, I also need to request a security audit of our access control logs and permissions for this workspace due to a potential data exposure concern. Can you assist with both?",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "security_concern",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [
+          "competitor_exit",
+          "churn_risk_high"
+        ],
+        "confidence": 0.65,
+        "tone": "neutral",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-security-03",
+            "snippet": "Audit logs are available on Enterprise plans. Go to Settings → Security → Audit Logs. Logs include: member login/logout, document access, permission c"
+          },
+          {
+            "doc_id": "FAQ-feature-02",
+            "snippet": "Acme Collab has four permission levels: Owner (full control including billing), Admin (manage members, create/delete spaces, configure integrations), "
+          }
+        ],
+        "draft_reply": "Hi, thanks for reaching out. I can help with canceling your workspace SUB-28471. Monthly plans cancel immediately at the end of the current billing period with no fees; annual plans are non-refundable after 14 days. Regarding the security audit, audit logs are available on Enterprise plans via Settings → Security → Audit Logs, covering logins, document access, permission changes, and admin actions. If you're on a Team plan, this feature may not be available. Could you confirm your plan? If the KB doesn't fully address your needs, I'll escalate to our security team.",
+        "grounding_check": {
+          "grounding_ratio": 1.0,
+          "auto_reply_safe": true,
+          "ungrounded_claims": []
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-096",
+      "text": "I need help canceling my subscription SUB-28471. Also, before you proceed, please export all my data and transfer ownership to my colleague so I can justify the renewal cost to my manager.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "hidden_cancel",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "data_export"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "competitor_exit",
+          "churn_risk_high"
+        ],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-04",
+            "snippet": "Open a document and click the three-dot menu (⋯) → Export. Available formats: PDF, Markdown, HTML, and DOCX. For bulk export of an entire Space, go to"
+          }
+        ],
+        "draft_reply": "Hi, I can help with canceling subscription SUB-28471. Before canceling, you can export your data: for a single document, open it and click the three-dot menu (⋯) → Export (PDF, Markdown, HTML, DOCX). For a whole Space, go to Space settings → Export Space; a ZIP file will be emailed within 10 minutes. Regarding transferring ownership to a colleague, the KB doesn't cover this. I recommend checking account settings or contacting us for further assistance. Would you like me to escalate the ownership transfer request?",
+        "grounding_check": {
+          "grounding_ratio": 0.667,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "Regarding transferring ownership to a colleague, the KB doesn't cover this."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-097",
+      "text": "Can you also walk me through how to export all our data and transfer account ownership? I need to justify the renewal cost to my leadership, and I want to be prepared in case we decide to move on.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "hidden_cancel",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [
+          "competitor_exit"
+        ],
+        "confidence": 0.65,
+        "tone": "neutral",
+        "churn_risk": 0.6,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-policy-02",
+            "snippet": "You retain full ownership of all content you create in Acme Collab. Acme Collab does not use customer content to train AI models. Upon account deletio"
+          },
+          {
+            "doc_id": "FAQ-feature-04",
+            "snippet": "Open a document and click the three-dot menu (⋯) → Export. Available formats: PDF, Markdown, HTML, and DOCX. For bulk export of an entire Space, go to"
+          },
+          {
+            "doc_id": "FAQ-feature-02",
+            "snippet": "Acme Collab has four permission levels: Owner (full control including billing), Admin (manage members, create/delete spaces, configure integrations), "
+          }
+        ],
+        "draft_reply": "Hi there! You can export all your data at any time via Settings → Export. For bulk export of an entire Space, go to Space settings → Export Space; you'll receive a ZIP file by email within 10 minutes. Regarding account ownership transfer, our KB doesn't cover that process explicitly. I'd recommend checking with our support team for detailed steps. If you need further assistance, I'm happy to escalate this to our specialists. Thanks for considering Acme Collab!",
+        "grounding_check": {
+          "grounding_ratio": 0.6,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "Our KB doesn't cover that process explicitly.",
+            "I'd recommend checking with our support team for detailed steps."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-098",
+      "text": "Hi, I need help canceling my subscription for SUB-28471. Also, before we proceed, could you export all my account data and transfer ownership to my colleague? I need to justify the renewal cost to my manager.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "hidden_cancel",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "churn",
+        "intent_set": [
+          "unknown"
+        ],
+        "grounding": "weak",
+        "routing_signals": [
+          "competitor_exit",
+          "churn_risk_high"
+        ],
+        "confidence": 0.65,
+        "tone": "neutral",
+        "churn_risk": 0.9,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-07",
+            "snippet": "There are no cancellation fees. Monthly plans can be cancelled at any time — cancellation takes effect at the end of the current billing period, and y"
+          },
+          {
+            "doc_id": "FAQ-policy-02",
+            "snippet": "You retain full ownership of all content you create in Acme Collab. Acme Collab does not use customer content to train AI models. Upon account deletio"
+          },
+          {
+            "doc_id": "FAQ-billing-05",
+            "snippet": "Team plan seats can be adjusted anytime. Go to Settings → Team → Manage Seats. Adding seats is prorated for the remainder of the billing cycle. Removi"
+          }
+        ],
+        "draft_reply": "Hi, thanks for reaching out. To cancel subscription SUB-28471, please note that cancellation takes effect at the end of the current billing period with no fees. You can export all your data anytime via Settings → Export. Regarding transferring ownership to a colleague, our KB does not cover this process. I recommend checking Settings → Team for user management options. If you need further assistance, I can escalate this to our team. Let me know!",
+        "grounding_check": {
+          "grounding_ratio": 0.75,
+          "auto_reply_safe": true,
+          "ungrounded_claims": [
+            "Our KB does not cover transferring ownership to a colleague."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-099",
+      "text": "I need help filing a formal complaint about my subscription. Also, could you guide me on how to export all my data and transfer account ownership, as I need to justify the renewal cost to my team.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "hidden_cancel",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "billing",
+        "intent_set": [
+          "data_export"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "competitor_exit"
+        ],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.3,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-feature-04",
+            "snippet": "Open a document and click the three-dot menu (⋯) → Export. Available formats: PDF, Markdown, HTML, and DOCX. For bulk export of an entire Space, go to"
+          }
+        ],
+        "draft_reply": "Hi, thank you for reaching out. To file a formal complaint about your subscription, please contact our billing team directly at billing@acmecollab.com or submit a ticket via the help center. For exporting data, you can export individual documents via the three-dot menu (⋯) → Export (PDF, Markdown, HTML, DOCX). For bulk export of an entire Space, go to Space settings → Export Space; the ZIP file will be emailed to you within 10 minutes. Regarding account ownership transfer, our KB does not cover this process. I recommend checking our help center or contacting support for assistance. If you need further help, I can escalate this to our team.",
+        "grounding_check": {
+          "grounding_ratio": 0.5,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "To file a formal complaint about your subscription, please contact our billing team directly at billing@acmecollab.com or submit a ticket via the help center.",
+            "Regarding account ownership transfer, our KB does not cover this process."
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "T-100",
+      "text": "I paid $149 for my subscription. I need help getting a refund, and before that, I want to export all my data and transfer ownership to my colleague, as I’m evaluating whether the renewal cost is justified.",
+      "difficulty": "hard",
+      "attack_type": null,
+      "routing_reason": "hidden_cancel",
+      "expected_action": "ESCALATE_L2",
+      "result": {
+        "action": "ESCALATE_L2",
+        "intent": "billing",
+        "intent_set": [
+          "data_export",
+          "refund_eligibility"
+        ],
+        "grounding": "strong",
+        "routing_signals": [
+          "competitor_exit"
+        ],
+        "confidence": 0.75,
+        "tone": "neutral",
+        "churn_risk": 0.6,
+        "kb_grounding": [
+          {
+            "doc_id": "FAQ-billing-03",
+            "snippet": "Acme Collab does not offer refunds for monthly plans. For annual plans, refunds are available within 14 days of purchase if the workspace has had fewe"
+          },
+          {
+            "doc_id": "FAQ-billing-08",
+            "snippet": "Refunds are available in the following situations: (1) Annual plan within 14 days of purchase, provided fewer than 5 active workspace sessions have oc"
+          },
+          {
+            "doc_id": "FAQ-feature-04",
+            "snippet": "Open a document and click the three-dot menu (⋯) → Export. Available formats: PDF, Markdown, HTML, and DOCX. For bulk export of an entire Space, go to"
+          }
+        ],
+        "draft_reply": "Hi there! I understand you're evaluating your subscription and need help with a refund, data export, and ownership transfer. Based on our records, you paid $149, which suggests an annual plan. Refunds for annual plans are available within 14 days of purchase if your workspace has had fewer than 5 active sessions. If you're outside that window, we cannot issue a refund, but you can downgrade to a free plan and receive a credit for the unused portion applied to your next invoice. For exporting data, you can export individual documents via the three-dot menu (Export) or bulk export an entire Space from Space settings (Export Space), which sends a ZIP file to your email. Regarding ownership transfer, our KB doesn't cover this process. Could you please provide more details so I can assist further or escalate to our team?",
+        "grounding_check": {
+          "grounding_ratio": 0.714,
+          "auto_reply_safe": false,
+          "ungrounded_claims": [
+            "you paid $149, which suggests an annual plan",
+            "our KB doesn't cover this process"
+          ]
+        }
+      },
+      "pass": true,
+      "failures": []
+    }
+  ]
+}

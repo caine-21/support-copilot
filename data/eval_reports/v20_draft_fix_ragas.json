@@ -1,0 +1,908 @@
+{
+  "tag": "v20_draft_fix",
+  "source_report": "report_v20_draft_fix.json",
+  "retrieval_recall": {
+    "metric": "retrieval_recall",
+    "note": "Consistency proxy (INL→INTENT_FAQ_MAP), not ground-truth recall",
+    "avg_recall": 1.0,
+    "n_scored": 39,
+    "skipped_no_faq": 16,
+    "skipped_unknown": 45,
+    "per_case": [
+      {
+        "id": "T-001",
+        "intent_set": [
+          "invoice_download"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-01"
+        ],
+        "hits": [
+          "FAQ-billing-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-002",
+        "intent_set": [
+          "password_reset"
+        ],
+        "expected_faqs": [
+          "FAQ-account-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-account-01"
+        ],
+        "hits": [
+          "FAQ-account-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-003",
+        "intent_set": [
+          "permission_levels"
+        ],
+        "expected_faqs": [
+          "FAQ-feature-02"
+        ],
+        "retrieved_docs": [
+          "FAQ-feature-02"
+        ],
+        "hits": [
+          "FAQ-feature-02"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-005",
+        "intent_set": [
+          "data_export"
+        ],
+        "expected_faqs": [
+          "FAQ-feature-04"
+        ],
+        "retrieved_docs": [
+          "FAQ-feature-04"
+        ],
+        "hits": [
+          "FAQ-feature-04"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-012",
+        "intent_set": [
+          "sso_setup"
+        ],
+        "expected_faqs": [
+          "FAQ-security-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-security-01"
+        ],
+        "hits": [
+          "FAQ-security-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-014",
+        "intent_set": [
+          "refund_eligibility"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "hits": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-016",
+        "intent_set": [
+          "sla_uptime"
+        ],
+        "expected_faqs": [
+          "FAQ-policy-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-policy-01"
+        ],
+        "hits": [
+          "FAQ-policy-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-017",
+        "intent_set": [
+          "cancel_subscription",
+          "invoice_download"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-01"
+        ],
+        "hits": [
+          "FAQ-billing-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-018",
+        "intent_set": [
+          "refund_eligibility"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "hits": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-020",
+        "intent_set": [
+          "audit_logs"
+        ],
+        "expected_faqs": [
+          "FAQ-security-03"
+        ],
+        "retrieved_docs": [
+          "FAQ-security-03"
+        ],
+        "hits": [
+          "FAQ-security-03"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-021",
+        "intent_set": [
+          "sso_setup"
+        ],
+        "expected_faqs": [
+          "FAQ-security-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-security-01"
+        ],
+        "hits": [
+          "FAQ-security-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-024",
+        "intent_set": [
+          "version_history"
+        ],
+        "expected_faqs": [
+          "FAQ-feature-07"
+        ],
+        "retrieved_docs": [
+          "FAQ-feature-07"
+        ],
+        "hits": [
+          "FAQ-feature-07"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-031",
+        "intent_set": [
+          "invoice_download",
+          "sso_issue"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-01"
+        ],
+        "hits": [
+          "FAQ-billing-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-032",
+        "intent_set": [
+          "sla_uptime"
+        ],
+        "expected_faqs": [
+          "FAQ-policy-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-policy-01"
+        ],
+        "hits": [
+          "FAQ-policy-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-036",
+        "intent_set": [
+          "invoice_download"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-01"
+        ],
+        "hits": [
+          "FAQ-billing-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-037",
+        "intent_set": [
+          "invoice_download"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-01"
+        ],
+        "hits": [
+          "FAQ-billing-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-038",
+        "intent_set": [
+          "invoice_download"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-01"
+        ],
+        "hits": [
+          "FAQ-billing-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-039",
+        "intent_set": [
+          "invoice_download"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-01"
+        ],
+        "hits": [
+          "FAQ-billing-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-040",
+        "intent_set": [
+          "payment_methods"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-06"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-06"
+        ],
+        "hits": [
+          "FAQ-billing-06"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-041",
+        "intent_set": [
+          "payment_methods"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-06"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-06"
+        ],
+        "hits": [
+          "FAQ-billing-06"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-042",
+        "intent_set": [
+          "refund_eligibility"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "hits": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-043",
+        "intent_set": [
+          "refund_eligibility"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "hits": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-044",
+        "intent_set": [
+          "cancellation_fee"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-07"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-07"
+        ],
+        "hits": [
+          "FAQ-billing-07"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-045",
+        "intent_set": [
+          "cancellation_fee"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-07"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-07"
+        ],
+        "hits": [
+          "FAQ-billing-07"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-046",
+        "intent_set": [
+          "password_reset"
+        ],
+        "expected_faqs": [
+          "FAQ-account-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-account-01"
+        ],
+        "hits": [
+          "FAQ-account-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-051",
+        "intent_set": [
+          "plan_change"
+        ],
+        "expected_faqs": [
+          "FAQ-account-02"
+        ],
+        "retrieved_docs": [
+          "FAQ-account-02"
+        ],
+        "hits": [
+          "FAQ-account-02"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-054",
+        "intent_set": [
+          "signup_issue"
+        ],
+        "expected_faqs": [
+          "FAQ-troubleshoot-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-troubleshoot-01"
+        ],
+        "hits": [
+          "FAQ-troubleshoot-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-077",
+        "intent_set": [
+          "cancel_subscription",
+          "plan_change",
+          "refund_eligibility"
+        ],
+        "expected_faqs": [
+          "FAQ-account-02",
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "retrieved_docs": [
+          "FAQ-account-02",
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "hits": [
+          "FAQ-account-02",
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-078",
+        "intent_set": [
+          "cancel_subscription",
+          "refund_eligibility"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "hits": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-079",
+        "intent_set": [
+          "cancel_subscription",
+          "plan_change",
+          "refund_eligibility"
+        ],
+        "expected_faqs": [
+          "FAQ-account-02",
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "retrieved_docs": [
+          "FAQ-account-02",
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "hits": [
+          "FAQ-account-02",
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-082",
+        "intent_set": [
+          "refund_eligibility"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "hits": [
+          "FAQ-billing-03",
+          "FAQ-billing-08"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-086",
+        "intent_set": [
+          "sla_uptime"
+        ],
+        "expected_faqs": [
+          "FAQ-policy-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-policy-01"
+        ],
+        "hits": [
+          "FAQ-policy-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-087",
+        "intent_set": [
+          "refund_eligibility",
+          "sla_uptime"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-policy-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-policy-01"
+        ],
+        "hits": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-policy-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-088",
+        "intent_set": [
+          "refund_eligibility",
+          "sla_uptime"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-policy-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-policy-01"
+        ],
+        "hits": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-policy-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-089",
+        "intent_set": [
+          "sla_uptime"
+        ],
+        "expected_faqs": [
+          "FAQ-policy-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-policy-01"
+        ],
+        "hits": [
+          "FAQ-policy-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-090",
+        "intent_set": [
+          "refund_eligibility",
+          "sla_uptime"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-policy-01"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-policy-01"
+        ],
+        "hits": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-policy-01"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-096",
+        "intent_set": [
+          "data_export"
+        ],
+        "expected_faqs": [
+          "FAQ-feature-04"
+        ],
+        "retrieved_docs": [
+          "FAQ-feature-04"
+        ],
+        "hits": [
+          "FAQ-feature-04"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-099",
+        "intent_set": [
+          "data_export"
+        ],
+        "expected_faqs": [
+          "FAQ-feature-04"
+        ],
+        "retrieved_docs": [
+          "FAQ-feature-04"
+        ],
+        "hits": [
+          "FAQ-feature-04"
+        ],
+        "recall": 1.0
+      },
+      {
+        "id": "T-100",
+        "intent_set": [
+          "data_export",
+          "refund_eligibility"
+        ],
+        "expected_faqs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-feature-04"
+        ],
+        "retrieved_docs": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-feature-04"
+        ],
+        "hits": [
+          "FAQ-billing-03",
+          "FAQ-billing-08",
+          "FAQ-feature-04"
+        ],
+        "recall": 1.0
+      }
+    ]
+  },
+  "grounding_score": {
+    "metric": "grounding_score",
+    "overall": {
+      "strong": 41,
+      "weak": 23,
+      "none": 36,
+      "strong_pct": 0.41
+    },
+    "by_action": {
+      "AUTO_REPLY": {
+        "strong": 22,
+        "weak": 0,
+        "none": 0
+      },
+      "ESCALATE_L1": {
+        "strong": 4,
+        "weak": 12,
+        "none": 29
+      },
+      "ESCALATE_L2": {
+        "strong": 15,
+        "weak": 11,
+        "none": 7
+      }
+    },
+    "unsafe_auto_reply": 0
+  },
+  "faithfulness": {
+    "metric": "faithfulness",
+    "n_auto_reply": 22,
+    "faithfulness_rate": 0.727,
+    "unfaithful_count": 6,
+    "flagged_cases": [
+      {
+        "id": "T-002",
+        "faithful": false,
+        "flagged_sentence": "You will receive a password reset link within 2 minutes — check your spam folder if you don't see it.",
+        "reason": "The KB excerpt does not mention a 2-minute delivery time or checking the spam folder."
+      },
+      {
+        "id": "T-005",
+        "faithful": false,
+        "flagged_sentence": "The bulk export is delivered as a ZIP file to your registered email within 10 minutes.",
+        "reason": "The KB excerpt mentions bulk export but does not specify delivery method (email) or time (10 minutes)."
+      },
+      {
+        "id": "T-042",
+        "faithful": false,
+        "flagged_sentence": "Full refunds are available for issues like duplicate charges or charges after cancellation, regardless of timing.",
+        "reason": "The draft mentions refunds for billing errors, but the KB excerpts do not contain any information about refunds for billing errors."
+      },
+      {
+        "id": "T-043",
+        "faithful": false,
+        "flagged_sentence": "For billing errors such as duplicate charges or charges after cancellation, a full refund is available regardless of timing.",
+        "reason": "The KB excerpts do not mention refunds for billing errors; this detail is unsupported."
+      },
+      {
+        "id": "T-044",
+        "faithful": false,
+        "flagged_sentence": "Annual plans can also be cancelled at any time, but are non-refundable after the 14-day refund window.",
+        "reason": "The KB excerpt does not mention annual plans or a 14-day refund window."
+      },
+      {
+        "id": "T-046",
+        "faithful": false,
+        "flagged_sentence": "You will receive a password reset link within 2 minutes — check your spam folder if you don't see it.",
+        "reason": "The KB excerpt does not mention a 2-minute delivery time or checking the spam folder."
+      }
+    ],
+    "per_case": [
+      {
+        "id": "T-001",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-002",
+        "faithful": false,
+        "flagged_sentence": "You will receive a password reset link within 2 minutes — check your spam folder if you don't see it.",
+        "reason": "The KB excerpt does not mention a 2-minute delivery time or checking the spam folder."
+      },
+      {
+        "id": "T-003",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-004",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-005",
+        "faithful": false,
+        "flagged_sentence": "The bulk export is delivered as a ZIP file to your registered email within 10 minutes.",
+        "reason": "The KB excerpt mentions bulk export but does not specify delivery method (email) or time (10 minutes)."
+      },
+      {
+        "id": "T-007",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-012",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-020",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-021",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-026",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-036",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-037",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-038",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-039",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-040",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-041",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-042",
+        "faithful": false,
+        "flagged_sentence": "Full refunds are available for issues like duplicate charges or charges after cancellation, regardless of timing.",
+        "reason": "The draft mentions refunds for billing errors, but the KB excerpts do not contain any information about refunds for billing errors."
+      },
+      {
+        "id": "T-043",
+        "faithful": false,
+        "flagged_sentence": "For billing errors such as duplicate charges or charges after cancellation, a full refund is available regardless of timing.",
+        "reason": "The KB excerpts do not mention refunds for billing errors; this detail is unsupported."
+      },
+      {
+        "id": "T-044",
+        "faithful": false,
+        "flagged_sentence": "Annual plans can also be cancelled at any time, but are non-refundable after the 14-day refund window.",
+        "reason": "The KB excerpt does not mention annual plans or a 14-day refund window."
+      },
+      {
+        "id": "T-045",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      },
+      {
+        "id": "T-046",
+        "faithful": false,
+        "flagged_sentence": "You will receive a password reset link within 2 minutes — check your spam folder if you don't see it.",
+        "reason": "The KB excerpt does not mention a 2-minute delivery time or checking the spam folder."
+      },
+      {
+        "id": "T-051",
+        "faithful": true,
+        "flagged_sentence": "",
+        "reason": ""
+      }
+    ]
+  }
+}

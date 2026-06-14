@@ -1,0 +1,34 @@
+﻿
+============================================================
+RAGAS EVAL — report=v18_gc  (100 cases)
+============================================================
+
+── Retrieval Recall (consistency proxy) ──
+  avg recall  : 1.0 (39 cases scored)
+  skipped (no FAQ coverage): 16
+  skipped (unknown intent):  45
+
+── Grounding Score ──
+  strong: 42  weak: 23  none: 35  (42% strong)
+  unsafe AUTO_REPLY (non-strong): 0
+  AUTO_REPLY          : strong=24 weak=0 none=0
+  ESCALATE_L1         : strong=3 weak=13 none=29
+  ESCALATE_L2         : strong=15 weak=10 none=6
+
+── Faithfulness (LLM judge, AUTO_REPLY only) ──
+  rate        : 54%  (13/24 faithful)
+  flagged cases:
+    T-002: The KB excerpt does not mention a specific time frame of 2 minutes or checking the spam folder.
+    T-005: The KB excerpt does not mention delivery method or time for the export.
+    T-021: The KB excerpt only mentions 'Settings → Security' without specifying 'SSO' or 'Configure' or details about Azure AD metadata URL/XML.
+    T-037: The KB excerpt does not mention invoices being emailed automatically on renewal dates.
+    T-042: The KB excerpt says 'Acme Collab does not offer refunds for monthly plans', but the draft adds 'Monthly plans are not eligible for refunds' which is a direct statement not present in the KB; the KB only states the policy for annual plans and does not explicitly state that monthly plans are ineligible.
+    T-043: The KB excerpts do not mention refunds for billing errors or duplicate charges.
+    T-044: The KB excerpt does not mention annual plans or a 14-day refund window.
+    T-046: The KB excerpt does not mention a specific time frame (2 minutes) or checking the spam folder.
+    T-051: The KB excerpt does not mention immediate effect or proration.
+    T-054: The KB excerpts do not mention anything about account suspension or contacting a workspace admin.
+    T-082: The KB excerpts do not mention refunds for billing errors or duplicate charges, nor do they provide a contact email.
+
+[RAGAS] written → D:\ehe\support-copilot\agent\..\data\eval_reports\v18_gc_ragas.json
+============================================================

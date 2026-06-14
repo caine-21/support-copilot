@@ -23,13 +23,17 @@ from llm import call_llm, safe_json_parse
 # These do not change with model updates — only change when FAQ policy changes.
 
 _ENTERPRISE_ONLY = {
-    "FAQ-security-01": "SSO (SAML/OIDC)",
-    "FAQ-security-03": "Audit logs",
+    # FAQs here must NOT include a self-redirect for Team users.
+    # If the FAQ already says "Team plan can't access this, here's your alternative",
+    # remove it from this list — AUTO_REPLY with that FAQ is safe and informative.
+    # (FAQ-security-01 SSO and FAQ-security-03 Audit Logs were removed: both FAQs
+    # include explicit Team-plan redirect language, making AUTO_REPLY correct.)
     "FAQ-billing-04":  "Custom invoice (cost center / PO number)",
 }
 
 _PLAN_DEPENDENT = {
-    "FAQ-feature-07": "Version history retention (90d Team / indefinite Enterprise)",
+    # FAQ-feature-07 removed: FAQ states "90d Team / indefinite Enterprise" explicitly —
+    # AUTO_REPLY safely informs any user of both limits, regardless of unknown plan.
     "FAQ-feature-08": "API rate limits (100/min Team / 1000/min Enterprise)",
     "FAQ-security-02": "EU data residency (Enterprise contract only)",
     "FAQ-troubleshoot-03": "Trash recovery after Trash empty (Enterprise CSM only)",

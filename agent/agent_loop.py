@@ -11,6 +11,7 @@ from planner import create_plan
 from tools import tool_registry
 from reasoner import synthesize
 from memory import AgentMemory
+from grounding_compiler import compile_grounding
 
 DEBUG = True
 MAX_ITER = 2
@@ -59,13 +60,14 @@ def run_tool_loop(
     plan: list[dict],
     memory: AgentMemory,
 ) -> dict:
-    """Execute all 5 tool steps; return observations dict."""
+    """Execute tool steps + grounding compiler; return observations dict."""
     obs = {
-        "classification": {},
-        "kb_results": [],
-        "history": {},
-        "draft": {},
-        "tone": {},
+        "classification":  {},
+        "kb_results":      [],
+        "history":         {},
+        "draft":           {},
+        "tone":            {},
+        "grounding_check": {},  # Milestone D: claim graph + KB support mapping
     }
     obs_keys = ["classification", "kb_results", "history", "draft", "tone"]
 
@@ -79,9 +81,8 @@ def run_tool_loop(
         if tool_name == "classify_intent":
             inp = {"ticket_text": ticket_text}
         elif tool_name == "kb_search":
-            # Use ticket text as query; if classification known, augment with intent
-            intent_label = obs["classification"].get("intent", "")
-            query = f"{ticket_text}" if not intent_label else f"{intent_label}: {ticket_text}"
+            # Pass raw ticket text — INL handles classification internally; intent prefix corrupts keyword rules
+            query = ticket_text
             cached = memory.get_cached_kb(query)
             if cached is not None:
                 log("Memory", f"KB cache hit for: {query[:50]}")
@@ -107,6 +108,17 @@ def run_tool_loop(
         obs[obs_keys[i]] = data
         log("Obs", f"{tool_name} → {str(data)[:120]}")
 
+        # After draft_reply: run grounding compiler to enforce KB closure (Milestone D)
+        if tool_name == "draft_reply" and result["success"]:
+            draft_text = data.get("reply", "")
+            gc = compile_grounding(draft_text, obs["kb_results"])
+            obs["grounding_check"] = gc
+            log("Grounding", (
+                f"ratio={gc['grounding_ratio']:.2f} "
+                f"safe={gc['auto_reply_safe']} "
+                f"ungrounded={gc['ungrounded_claims'][:2]}"
+            ))
+
     return obs
 
 
@@ -126,6 +138,7 @@ def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", me
         history=obs["history"],
         draft=obs["draft"],
         tone=obs["tone"],
+        grounding_check=obs.get("grounding_check"),
     )
     result["ticket_id"] = ticket_id
 
@@ -139,8 +152,7 @@ def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", me
         log("Reflect", f"iter {iteration}/{MAX_ITER} — {strategy['reason']}")
 
         if strategy["tool"] == "kb_search":
-            intent_label = obs["classification"].get("intent", "")
-            new_query = f"{strategy['query_modifier']} {intent_label} {ticket_text}"
+            new_query = f"{strategy['query_modifier']} {ticket_text}"
             new_inp = {"query": new_query.strip(), "top_k": 5}
             r = tool_registry["kb_search"].execute(new_inp)
             if r["success"] and r["data"]:
@@ -152,6 +164,10 @@ def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", me
                 )
                 if draft_r["success"]:
                     obs["draft"] = draft_r["data"]
+                    # Re-run grounding compiler with new draft + KB
+                    obs["grounding_check"] = compile_grounding(
+                        obs["draft"].get("reply", ""), obs["kb_results"]
+                    )
 
         elif strategy["tool"] == "classify_intent":
             r = tool_registry["classify_intent"].execute({"ticket_text": ticket_text})
@@ -165,6 +181,7 @@ def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", me
             history=obs["history"],
             draft=obs["draft"],
             tone=obs["tone"],
+            grounding_check=obs.get("grounding_check"),
         )
         result["ticket_id"] = ticket_id
         log("Reflect", f"after iter {iteration}: confidence={result['confidence']}, action={result['action']}")

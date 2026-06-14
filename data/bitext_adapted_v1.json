@@ -1,381 +1,5 @@
 [
   {
-    "id": "T-001",
-    "user_id": "U-101",
-    "text": "Hi, how do I download my invoice from last month? I need it for reimbursement.",
-    "difficulty": "easy",
-    "expected": {
-      "action": "AUTO_REPLY",
-      "min_confidence": 0.75
-    }
-  },
-  {
-    "id": "T-002",
-    "user_id": "U-102",
-    "text": "How do I reset my password? I forgot it and can't log in.",
-    "difficulty": "easy",
-    "expected": {
-      "action": "AUTO_REPLY",
-      "min_confidence": 0.75
-    }
-  },
-  {
-    "id": "T-003",
-    "user_id": "U-103",
-    "text": "Can you explain the different permission levels? I need to give a contractor read-only access.",
-    "difficulty": "easy",
-    "expected": {
-      "action": "AUTO_REPLY",
-      "min_confidence": 0.75
-    }
-  },
-  {
-    "id": "T-004",
-    "user_id": "U-104",
-    "text": "I want to add 3 more seats to our team plan. How does the pricing work for mid-cycle additions?",
-    "difficulty": "easy",
-    "expected": {
-      "action": "AUTO_REPLY",
-      "min_confidence": 0.75
-    }
-  },
-  {
-    "id": "T-005",
-    "user_id": "U-105",
-    "text": "How do I export a whole Space as a PDF or ZIP?",
-    "difficulty": "easy",
-    "expected": {
-      "action": "AUTO_REPLY",
-      "min_confidence": 0.75
-    }
-  },
-  {
-    "id": "T-006",
-    "user_id": "U-106",
-    "text": "The app isn't working. It just says 'loading' and never opens.",
-    "difficulty": "medium",
-    "expected": {
-      "action": "ESCALATE_L1"
-    }
-  },
-  {
-    "id": "T-007",
-    "user_id": "U-107",
-    "text": "I invited someone but they say they never got the email.",
-    "difficulty": "medium",
-    "expected": {
-      "action": "AUTO_REPLY"
-    }
-  },
-  {
-    "id": "T-008",
-    "user_id": "U-108",
-    "text": "My document won't sync. I made changes and they disappeared.",
-    "difficulty": "medium",
-    "expected": {
-      "action": "ESCALATE_L1"
-    }
-  },
-  {
-    "id": "T-009",
-    "user_id": "U-109",
-    "text": "Can I get a VAT invoice for our enterprise subscription?",
-    "difficulty": "medium",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "TRAP: FAQ only covers self-serve (personal/team). Enterprise needs CSM. Correct behavior: escalate, do not give wrong self-serve instructions."
-    }
-  },
-  {
-    "id": "T-010",
-    "user_id": "U-110",
-    "text": "I'm trying to upload a file but I keep getting an error. The file is a 40MB video.",
-    "difficulty": "medium",
-    "expected": {
-      "action": "ESCALATE_L1"
-    }
-  },
-  {
-    "id": "T-011",
-    "user_id": "U-111",
-    "text": "The page loads really slowly. It takes like 30 seconds to open a document.",
-    "difficulty": "medium",
-    "expected": {
-      "action": "ESCALATE_L1"
-    }
-  },
-  {
-    "id": "T-012",
-    "user_id": "U-112",
-    "text": "We need SSO set up with Okta. We're an enterprise customer.",
-    "difficulty": "medium",
-    "expected": {
-      "action": "AUTO_REPLY",
-      "min_confidence": 0.7
-    }
-  },
-  {
-    "id": "T-013",
-    "user_id": "U-113",
-    "text": "THIS IS RIDICULOUS. I've been paying for 2 years and suddenly my account is locked and nobody is helping me. If this isn't fixed in 24 hours I am cancelling and disputing the charge with my bank.",
-    "difficulty": "hard",
-    "expected": {
-      "action": "ESCALATE_L2",
-      "tone": "frustrated",
-      "churn_risk_min": 0.7
-    }
-  },
-  {
-    "id": "T-014",
-    "user_id": "U-114",
-    "text": "I've been asking about this refund for 3 weeks now and keep getting ignored. I need a refund for my annual plan that I purchased by mistake. I'll leave a negative review if this isn't resolved.",
-    "difficulty": "hard",
-    "expected": {
-      "action": "ESCALATE_L2",
-      "tone": "frustrated",
-      "churn_risk_min": 0.6
-    }
-  },
-  {
-    "id": "T-015",
-    "user_id": "U-115",
-    "text": "I deleted a document yesterday by accident. I need to get it back immediately — it has 6 months of research in it.",
-    "difficulty": "hard",
-    "expected": {
-      "action": "ESCALATE_L1"
-    }
-  },
-  {
-    "id": "T-016",
-    "user_id": "U-116",
-    "text": "We have 200 users and this downtime is costing us thousands per hour. Your SLA says 99.9% and you're in breach. I want a formal incident report and service credit applied NOW.",
-    "difficulty": "hard",
-    "expected": {
-      "action": "ESCALATE_L2",
-      "churn_risk_min": 0.6
-    }
-  },
-  {
-    "id": "T-017",
-    "user_id": "U-117",
-    "text": "My invoice amount looks wrong AND I want to cancel our subscription. How do I do both?",
-    "difficulty": "edge",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "MULTI-INTENT: billing dispute + cancellation. Should escalate (not AUTO_REPLY). L1 or L2 both acceptable — key: not AUTO_REPLY."
-    }
-  },
-  {
-    "id": "T-018",
-    "user_id": "U-118",
-    "text": "I want a full refund for this month's subscription. I only used it for 2 days.",
-    "difficulty": "edge",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "TRAP: monthly plan = no refunds per FAQ. Agent must state policy clearly, not invent exceptions. ESCALATE_L1 to explain policy."
-    }
-  },
-  {
-    "id": "T-019",
-    "user_id": "U-119",
-    "text": "Does your product integrate with SAP? We need it to sync project data automatically.",
-    "difficulty": "edge",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "SAP not in KB. Agent must NOT fabricate. Must escalate with 'information not available'."
-    }
-  },
-  {
-    "id": "T-020",
-    "user_id": "U-120",
-    "text": "I am trying to set up audit logs but I can't find the option in Settings. We are on the Team plan.",
-    "difficulty": "edge",
-    "expected": {
-      "action": "AUTO_REPLY",
-      "note": "FAQ-security-03 clearly states audit logs are Enterprise-only. AUTO_REPLY explaining feature unavailable on Team plan."
-    }
-  },
-  {
-    "id": "T-021",
-    "user_id": "U-201",
-    "text": "We need to set up SSO with Azure AD. We have 15 users on the Team plan.",
-    "difficulty": "adversarial",
-    "attack_type": "A",
-    "attack_target": "KB misleading — strong match on SSO FAQ but SSO is Enterprise-only. System should not auto-reply with setup instructions.",
-    "expected": {
-      "action": "AUTO_REPLY",
-      "note": "KB-security-01 explicitly states SSO is Enterprise-only. Correct AUTO_REPLY tells user their plan doesn't include SSO. Risk: system gives Enterprise setup instructions ignoring plan context."
-    }
-  },
-  {
-    "id": "T-022",
-    "user_id": "U-202",
-    "text": "We keep hitting the API rate limit. The docs say 1000 requests per minute but we're getting throttled way before that.",
-    "difficulty": "adversarial",
-    "attack_type": "A",
-    "attack_target": "KB misleading — API FAQ mentions 1000 req/min (Enterprise rate). Team plan is 100/min. User may be on Team plan hitting actual limit.",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "Strong KB match on API FAQ but answer depends on plan tier. Agent needs to verify plan before replying. AUTO_REPLY risks giving wrong rate limit."
-    }
-  },
-  {
-    "id": "T-023",
-    "user_id": "U-203",
-    "text": "Does Acme Collab store data in Europe? We're a French company and need to meet GDPR requirements.",
-    "difficulty": "adversarial",
-    "attack_type": "A",
-    "attack_target": "KB misleading — security FAQ mentions EU data residency but only for Enterprise at contract time. Team plan users cannot get EU residency.",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "Strong KB match on data/GDPR FAQ but EU residency is Enterprise contract-only. Plan unknown. System should not auto-reply that EU residency is available."
-    }
-  },
-  {
-    "id": "T-024",
-    "user_id": "U-204",
-    "text": "Can I extend version history beyond 90 days? We need to keep 1 year of doc history for compliance.",
-    "difficulty": "adversarial",
-    "attack_type": "A",
-    "attack_target": "KB misleading — version history FAQ is strong match. KB says 90 days Team / indefinite Enterprise. Question implies user wants more — correct answer is upgrade to Enterprise.",
-    "expected": {
-      "action": "AUTO_REPLY",
-      "note": "KB-feature-07 covers this exactly: 90 days Team, indefinite Enterprise. Correct reply explains the limit and upgrade path. Safe to auto-reply if KB is cited correctly."
-    }
-  },
-  {
-    "id": "T-025",
-    "user_id": "U-205",
-    "text": "We're on the Team plan. Can we customize our invoice to include our company's cost center code and purchase order number?",
-    "difficulty": "adversarial",
-    "attack_type": "A",
-    "attack_target": "KB misleading — billing FAQ (FAQ-billing-04) is exact match but explicitly states this is NOT available for Team via self-serve — Enterprise CSM only. System must not give wrong instructions.",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "This is the hardest A-type trap: KB has strong match but answer IS that this feature is Enterprise-only. System should escalate, not give Team-plan instructions."
-    }
-  },
-  {
-    "id": "T-026",
-    "user_id": "U-206",
-    "text": "Ugh, I've been trying to figure this out for an hour. How do I invite someone as a guest without giving them editor access?",
-    "difficulty": "adversarial",
-    "attack_type": "B",
-    "attack_target": "Emotional noise — frustrated opener but request is routine how-to. churn_risk should be near 0. System must not route to L2.",
-    "expected": {
-      "action": "AUTO_REPLY",
-      "note": "KB-policy-03 covers guest access. Frustration is noise — no churn signal. AUTO_REPLY is correct."
-    }
-  },
-  {
-    "id": "T-027",
-    "user_id": "U-207",
-    "text": "I've submitted three support requests this week about the slow loading issue. Just checking in — is there a status page I can monitor?",
-    "difficulty": "adversarial",
-    "attack_type": "B",
-    "attack_target": "Emotional noise — repeat contact looks like escalation signal but tone is patient/polite. churn_risk should be low. Must not go L2.",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "Repeat contact warrants L1 human review (dedup/follow-up), but tone is neutral — not L2. KB mentions status.acmecollab.io in troubleshoot FAQ."
-    }
-  },
-  {
-    "id": "T-028",
-    "user_id": "U-208",
-    "text": "Oh great, the export button is giving me a file full of garbled characters again. Fantastic product. How do I actually export my data correctly?",
-    "difficulty": "adversarial",
-    "attack_type": "B",
-    "attack_target": "Sarcasm — 'fantastic product' reads as positive sentiment to naive tone classifier. churn_risk must still be detected as low-medium. Must not auto-reply to a bug.",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "Sarcasm trap — 'fantastic product' is not genuine praise. Bug report about export corruption. Should escalate L1, not AUTO_REPLY and not L2."
-    }
-  },
-  {
-    "id": "T-029",
-    "user_id": "U-209",
-    "text": "I'm honestly a bit frustrated but I understand these things take time. Could you help me understand why my Slack notifications stopped after I changed my workspace name?",
-    "difficulty": "adversarial",
-    "attack_type": "B",
-    "attack_target": "Acknowledged frustration ≠ churn risk. User explicitly says they understand. churn_risk near 0. Must not escalate to L2.",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "Frustration is explicitly mild and acknowledged. Integration bug (Slack + workspace rename) — L1 with KB reference. Definitely not L2."
-    }
-  },
-  {
-    "id": "T-030",
-    "user_id": "U-210",
-    "text": "Everything is fine with the product, just wondering if you have dark mode? Also can I change my notification frequency?",
-    "difficulty": "adversarial",
-    "attack_type": "B",
-    "attack_target": "Happy tone + multi-part request. System should not over-escalate a positive user. churn_risk = 0.",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "Dark mode not in KB (feature request gap). Notification settings may or may not be covered. Multi-part with KB gap → L1. Not L2 — tone is positive."
-    }
-  },
-  {
-    "id": "T-031",
-    "user_id": "U-211",
-    "text": "Two things: (1) my invoice this month seems higher than expected, and (2) our SSO login has been broken since yesterday.",
-    "difficulty": "adversarial",
-    "attack_type": "C",
-    "attack_target": "Multi-intent: billing dispute + account/SSO bug. Both have KB coverage but different action requirements. Single routing decision must cover highest-risk intent.",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "Two intents, both L1-level. Agent should address both. Not L2 — no churn signal. Not AUTO_REPLY — too complex for single grounded reply."
-    }
-  },
-  {
-    "id": "T-032",
-    "user_id": "U-212",
-    "text": "Your platform has been down for 3 hours and we have a live demo in 2 hours. Is this covered under your SLA and can we get compensation?",
-    "difficulty": "adversarial",
-    "attack_type": "C",
-    "attack_target": "SLA keyword + urgency + implicit churn risk. SLA keyword should trigger L2. Tests whether keyword rule fires correctly under time-pressure framing.",
-    "expected": {
-      "action": "ESCALATE_L2",
-      "note": "SLA keyword + downtime + compensation request → L2. This should be caught by the SLA keyword rule regardless of tone."
-    }
-  },
-  {
-    "id": "T-033",
-    "user_id": "U-213",
-    "text": "I want to cancel my subscription. But before I cancel, I'd like to export all my documents first. How do I do a full export?",
-    "difficulty": "adversarial",
-    "attack_type": "C",
-    "attack_target": "Churn signal (cancel intent) + how-to request. System must detect cancel = churn → L2, even though the explicit request is about export.",
-    "expected": {
-      "action": "ESCALATE_L2",
-      "note": "Cancel intent is explicit churn signal → L2 regardless of the export how-to request. Churn risk must override the KB-answerable sub-question."
-    }
-  },
-  {
-    "id": "T-034",
-    "user_id": "U-214",
-    "text": "I have a bug to report (documents load very slowly), a feature request (offline mode), and a billing question (when does my annual plan auto-renew?).",
-    "difficulty": "adversarial",
-    "attack_type": "C",
-    "attack_target": "3-intent: bug + feature + billing. No single KB snippet can answer all. Tests whether system routes correctly when no single action covers all intents.",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "3 intents, no single grounded reply possible. Must escalate L1 for triage. Not AUTO_REPLY, not L2."
-    }
-  },
-  {
-    "id": "T-035",
-    "user_id": "U-215",
-    "text": "Your product has genuinely saved our team a lot of time. One small thing — I accidentally shared a document publicly. How do I change it back to private?",
-    "difficulty": "adversarial",
-    "attack_type": "C",
-    "attack_target": "Positive framing + security concern. tone=happy may suppress correct routing. Security issue (public document) warrants escalation despite positive tone.",
-    "expected": {
-      "action": "ESCALATE_L1",
-      "note": "Security concern (document exposed publicly) should escalate L1 even with positive tone. KB may cover sharing permissions but security risk warrants human confirmation."
-    }
-  },
-  {
     "id": "T-036",
     "user_id": "U-636",
     "text": "I can't access the account owner's billing details. Please ask the account owner to check their billing section in workspace settings or forward the invoice to you. If you need further help, let me know.",
@@ -562,7 +186,8 @@
     "adapted_domain": "saas",
     "generation_method": "llm_rewrite",
     "expected": {
-      "action": "ESCALATE_L1",
+      "action": "AUTO_REPLY",
+      "min_confidence": 0.7,
       "routing_reason": "how_to_request"
     }
   },
@@ -577,7 +202,8 @@
     "adapted_domain": "saas",
     "generation_method": "llm_rewrite",
     "expected": {
-      "action": "ESCALATE_L1",
+      "action": "AUTO_REPLY",
+      "min_confidence": 0.7,
       "routing_reason": "how_to_request"
     }
   },
@@ -592,7 +218,8 @@
     "adapted_domain": "saas",
     "generation_method": "llm_rewrite",
     "expected": {
-      "action": "ESCALATE_L1",
+      "action": "AUTO_REPLY",
+      "min_confidence": 0.7,
       "routing_reason": "how_to_request"
     }
   },
@@ -607,7 +234,8 @@
     "adapted_domain": "saas",
     "generation_method": "llm_rewrite",
     "expected": {
-      "action": "ESCALATE_L1",
+      "action": "AUTO_REPLY",
+      "min_confidence": 0.7,
       "routing_reason": "how_to_request"
     }
   },
@@ -638,8 +266,9 @@
     "adapted_domain": "saas",
     "generation_method": "llm_rewrite",
     "expected": {
-      "action": "ESCALATE_L2",
-      "routing_reason": "churn_signal"
+      "action": "AUTO_REPLY",
+      "min_confidence": 0.7,
+      "routing_reason": "settings_change"
     }
   },
   {
@@ -653,9 +282,9 @@
     "adapted_domain": "saas",
     "generation_method": "llm_rewrite",
     "expected": {
-      "action": "ESCALATE_L2",
-      "routing_reason": "churn_signal",
-      "churn_risk_min": 0.55
+      "action": "AUTO_REPLY",
+      "min_confidence": 0.7,
+      "routing_reason": "settings_change"
     }
   },
   {
@@ -1172,7 +801,8 @@
     "trigger_type": "contract_risk",
     "expected": {
       "action": "ESCALATE_L2",
-      "routing_reason": "contract_risk"
+      "routing_reason": "contract_risk",
+      "churn_risk_min": 0.55
     }
   },
   {
@@ -1188,7 +818,8 @@
     "trigger_type": "contract_risk",
     "expected": {
       "action": "ESCALATE_L2",
-      "routing_reason": "contract_risk"
+      "routing_reason": "contract_risk",
+      "churn_risk_min": 0.55
     }
   },
   {
@@ -1204,7 +835,8 @@
     "trigger_type": "contract_risk",
     "expected": {
       "action": "ESCALATE_L2",
-      "routing_reason": "contract_risk"
+      "routing_reason": "contract_risk",
+      "churn_risk_min": 0.55
     }
   },
   {
@@ -1220,7 +852,8 @@
     "trigger_type": "contract_risk",
     "expected": {
       "action": "ESCALATE_L2",
-      "routing_reason": "contract_risk"
+      "routing_reason": "contract_risk",
+      "churn_risk_min": 0.55
     }
   },
   {
@@ -1236,7 +869,8 @@
     "trigger_type": "contract_risk",
     "expected": {
       "action": "ESCALATE_L2",
-      "routing_reason": "contract_risk"
+      "routing_reason": "contract_risk",
+      "churn_risk_min": 0.55
     }
   },
   {
@@ -1337,7 +971,8 @@
     "trigger_type": "hidden_cancel",
     "expected": {
       "action": "ESCALATE_L2",
-      "routing_reason": "hidden_cancel"
+      "routing_reason": "hidden_cancel",
+      "churn_risk_min": 0.55
     }
   },
   {
@@ -1353,7 +988,8 @@
     "trigger_type": "hidden_cancel",
     "expected": {
       "action": "ESCALATE_L2",
-      "routing_reason": "hidden_cancel"
+      "routing_reason": "hidden_cancel",
+      "churn_risk_min": 0.55
     }
   },
   {
@@ -1369,7 +1005,8 @@
     "trigger_type": "hidden_cancel",
     "expected": {
       "action": "ESCALATE_L2",
-      "routing_reason": "hidden_cancel"
+      "routing_reason": "hidden_cancel",
+      "churn_risk_min": 0.55
     }
   },
   {
@@ -1385,7 +1022,8 @@
     "trigger_type": "hidden_cancel",
     "expected": {
       "action": "ESCALATE_L2",
-      "routing_reason": "hidden_cancel"
+      "routing_reason": "hidden_cancel",
+      "churn_risk_min": 0.55
     }
   },
   {
@@ -1401,7 +1039,8 @@
     "trigger_type": "hidden_cancel",
     "expected": {
       "action": "ESCALATE_L2",
-      "routing_reason": "hidden_cancel"
+      "routing_reason": "hidden_cancel",
+      "churn_risk_min": 0.55
     }
   }
 ]

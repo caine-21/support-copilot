@@ -1,3 +1,15 @@
+---
+title: AI Support Triage
+emoji: 🎯
+colorFrom: blue
+colorTo: green
+sdk: gradio
+sdk_version: 4.44.0
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # Support Copilot — SaaS Ticket Triage Agent
 
 ## One-line pitch

@@ -6,26 +6,72 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "age
 from agent_loop import run_agent
 
 SAMPLES = [
-    "My bill last month was wrong — I was overcharged by $20.",
-    "I can't log in. My password keeps failing.",
+    "How do I download my invoice from last month?",
     "I want to cancel my subscription immediately and get a refund.",
-    "Your product is terrible. I want to file a complaint!",
-    "How do I add a new team member to my workspace?",
-    "我上个月的账单金额不对，多收了200元",
-    "账号登不进去了，密码一直报错",
-    "我要立刻取消订阅并申请退款",
+    "Our SSO login has been broken since this morning and we may breach SLA.",
+    "Can Team plan users set up SSO with Okta?",
+    "I need help canceling the company newsletter subscription.",
 ]
 
 ACTION_LABEL = {
-    "AUTO_REPLY":  "🟢 AUTO_REPLY — Automated response / 自动回复",
-    "ESCALATE_L1": "🟡 ESCALATE_L1 — Human agent / 转人工一线",
-    "ESCALATE_L2": "🔴 ESCALATE_L2 — Senior escalation + churn alert / 升级高级客服 + 流失预警",
+    "AUTO_REPLY":  "AUTO_REPLY — safe automated response",
+    "ESCALATE_L1": "ESCALATE_L1 — human review",
+    "ESCALATE_L2": "ESCALATE_L2 — senior escalation / churn or risk review",
 }
+
+
+def _value(value, default="unavailable"):
+    return default if value in (None, "", [], {}) else value
+
+
+def _format_kb_docs(result):
+    docs = result.get("kb_grounding") or []
+    if not docs:
+        return "unavailable"
+    lines = []
+    for item in docs[:3]:
+        doc_id = item.get("doc_id", "unknown")
+        snippet = (item.get("snippet") or "").replace("\n", " ")
+        if len(snippet) > 220:
+            snippet = snippet[:220] + "..."
+        lines.append(f"- `{doc_id}`: {snippet}")
+    return "\n".join(lines)
+
+
+def _format_grounding(result):
+    gc = result.get("grounding_check") or {}
+    if not gc:
+        return "unavailable"
+    claims = gc.get("ungrounded_claims") or []
+    lines = [
+        f"- grounding level: `{_value(result.get('grounding'))}`",
+        f"- claim support ratio: `{gc.get('grounding_ratio', 'unavailable')}`",
+        f"- auto-reply safe by compiler: `{gc.get('auto_reply_safe', 'unavailable')}`",
+    ]
+    if claims:
+        lines.append("- ungrounded claims:")
+        lines.extend(f"  - {claim}" for claim in claims[:3])
+    else:
+        lines.append("- ungrounded claims: none")
+    return "\n".join(lines)
+
+
+def _format_trace(result):
+    trace = result.get("assumption_trace") or {}
+    replay = result.get("assumption_replay") or {}
+    if not trace and not replay:
+        return "unavailable"
+    lines = [
+        f"- assumption risk: `{_value(trace.get('max_assumption_risk'))}`",
+        f"- replay verdict: `{_value(replay.get('verdict'))}`",
+        f"- load-bearing assumptions: `{_value(replay.get('load_bearing_assumptions'))}`",
+    ]
+    return "\n".join(lines)
 
 
 def analyze(ticket_text, user_id):
     if not ticket_text.strip():
-        return "Please enter a support ticket. / 请输入工单内容", "", ""
+        return "Please enter a support ticket.", "", "", "", ""
     try:
         result = run_agent(
             ticket_text.strip(),
@@ -39,65 +85,81 @@ def analyze(ticket_text, user_id):
         draft      = result.get("draft_reply", "")
         reason     = result.get("reason", "")
         missing    = result.get("missing_info", [])
+        routing_signals = result.get("routing_signals", [])
 
         routing_md = (
             f"**{ACTION_LABEL.get(action, action)}**\n\n"
-            f"**Confidence / 置信度：** {confidence:.0%}　"
-            f"**Intent / 意图：** `{intent}`"
+            f"- confidence: `{confidence:.0%}`\n"
+            f"- intent: `{intent}`\n"
+            f"- intent set: `{_value(result.get('intent_set'))}`\n"
+            f"- priority: `{_value(result.get('priority'))}`\n"
+            f"- tone: `{_value(result.get('tone'))}`\n"
+            f"- churn risk: `{_value(result.get('churn_risk'))}`\n"
+            f"- routing signals: `{_value(routing_signals)}`"
         )
         if reason:
-            routing_md += f"\n\n**Reason / 原因：** {reason}"
+            routing_md += f"\n\n**Reason:** {reason}"
 
-        missing_md = "\n".join(f"- {m}" for m in missing) if missing else "None / 无缺失信息"
+        missing_md = "\n".join(f"- {m}" for m in missing) if missing else "None"
 
-        return routing_md, draft or "(No draft reply / 无草稿回复)", missing_md
+        evidence_md = (
+            "### Matched FAQ / KB evidence\n"
+            f"{_format_kb_docs(result)}\n\n"
+            "### Grounding check\n"
+            f"{_format_grounding(result)}\n\n"
+            "### Assumption trace / replay\n"
+            f"{_format_trace(result)}"
+        )
+
+        return routing_md, draft or "(No draft reply)", missing_md, evidence_md, result
 
     except Exception as e:
         return (
-            f"❌ Error / 运行出错：{e}\n\n"
+            f"Error: {e}\n\n"
             "Please check that `DEEPSEEK_API_KEY` or `GROQ_API_KEY` is configured.",
-            "", ""
+            "", "", "", {}
         )
 
 
-with gr.Blocks(title="AI Support Triage / 客服智能分诊", theme=gr.themes.Soft()) as demo:
+with gr.Blocks(title="AI Support Triage", theme=gr.themes.Soft()) as demo:
     gr.Markdown(
-        "# 🎯 AI Customer Support Triage &nbsp;·&nbsp; 客服智能分诊\n"
+        "# AI Support Copilot: Ticket Routing Decision System\n"
         "Enter a support ticket. The agent classifies intent, searches the knowledge base, "
-        "drafts a reply, and routes the ticket — using **KB similarity score** (not LLM "
-        "self-reported confidence) to decide between auto-reply, L1, or L2 escalation.\n\n"
-        "输入用户工单，系统自动分诊（自动回复 / 转人工 / 升级），并生成草稿回复。"
-        "路由基于 **知识库相似度分数**（非 LLM 置信度），可审计、可复现。"
+        "drafts a reply, and routes the ticket. The point is not chat; the point is "
+        "whether there is enough evidence to allow autonomous reply.\n\n"
+        "**Latest eval snapshot:** 100 cases, 95/100 pass, action accuracy 96%, "
+        "L2 recall 100%, unsafe AUTO_REPLY rate 0%."
     )
     with gr.Row():
         with gr.Column(scale=1):
             ticket  = gr.Textbox(
-                label="Support Ticket / 工单内容",
-                placeholder="Describe the customer's issue… / 输入用户投诉或咨询…",
+                label="Support Ticket",
+                placeholder="Describe the customer's issue...",
                 lines=5,
             )
-            user_id = gr.Textbox(label="User ID (optional / 可选)", value="U-demo")
-            btn     = gr.Button("Analyze / 分析", variant="primary", size="lg")
-            gr.Examples(SAMPLES, inputs=ticket, label="Sample tickets / 示例工单")
+            user_id = gr.Textbox(label="User ID (optional)", value="U-demo")
+            btn     = gr.Button("Analyze", variant="primary", size="lg")
+            gr.Examples(SAMPLES, inputs=ticket, label="Sample tickets")
         with gr.Column(scale=1):
-            routing = gr.Markdown(label="Routing Decision / 路由决策")
+            routing = gr.Markdown(label="Routing Decision")
             draft   = gr.Textbox(
-                label="Draft Reply / 草稿回复",
+                label="Draft Reply",
                 lines=6,
                 interactive=False,
             )
-            missing = gr.Markdown(label="Missing Info / 缺失信息")
+            missing = gr.Markdown(label="Missing Info")
+            evidence = gr.Markdown(label="Evidence")
+            raw_json = gr.JSON(label="Raw result")
 
     gr.Markdown(
         "---\n"
-        "**How routing works / 路由逻辑：** "
-        "KB similarity ≥ 0.60 → eligible for auto-reply · "
-        "churn risk → L2 always · "
-        "no grounding → L1. "
-        "Eval: 35 cases (20 baseline + 15 adversarial) · L2 recall 100% · unsafe auto-reply 0%.\n\n"
-        "📂 [GitHub](https://github.com/caine-21/support-copilot)"
+        "**How routing works:** AUTO_REPLY requires strong KB grounding and compiler-safe claims. "
+        "Weak/no grounding routes to L1. SLA, hidden cancellation, security, or churn-like risk routes to L2. "
+        "Assumption replay marks whether a decision stands on verified facts or LLM-inferred assumptions.\n\n"
+        "[GitHub](https://github.com/caine-21/support-copilot)"
     )
 
-    btn.click(analyze, inputs=[ticket, user_id], outputs=[routing, draft, missing])
+    btn.click(analyze, inputs=[ticket, user_id], outputs=[routing, draft, missing, evidence, raw_json])
 
-demo.launch()
+if __name__ == "__main__":
+    demo.launch()

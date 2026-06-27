@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import agent_loop
 from agent_loop import run_agent
 from memory import AgentMemory
+from run_ledger import RunLedger
 
 
 def load_test_cases() -> list[dict]:
@@ -84,11 +85,11 @@ def score_case(result: dict, expected: dict) -> tuple[bool, list[str]]:
 def compute_metrics(results: list[dict], cases: list[dict], tag: str = "") -> dict:
     n = len(cases)
 
+    intent_total = sum(1 for c in cases if "intent" in c["expected"])
     intent_correct = sum(
         1 for r, c in zip(results, cases)
         if "intent" in c["expected"] and r["intent"] == c["expected"]["intent"]
     )
-    intent_total = sum(1 for c in cases if "intent" in c["expected"])
 
     action_correct = sum(
         1 for r, c in zip(results, cases)
@@ -116,8 +117,20 @@ def compute_metrics(results: list[dict], cases: list[dict], tag: str = "") -> di
     unsafe_auto = sum(1 for r in all_auto if r.get("grounding") != "strong")
     unsafe_auto_rate = unsafe_auto / max(len(all_auto), 1)
 
+    intent_accuracy = (
+        round(intent_correct / intent_total, 2)
+        if intent_total
+        else None
+    )
+
     return {
-        "intent_accuracy":        round(intent_correct / max(intent_total, 1), 2),
+        "intent_accuracy":        intent_accuracy,
+        "intent_scored":          intent_total,
+        "intent_note": (
+            f"scored on {intent_total} cases with expected intent"
+            if intent_total
+            else "not_scored: test_tickets.json does not label expected intent"
+        ),
         "action_accuracy":        round(action_correct / max(action_total, 1), 2),
         "kb_grounding_coverage":  round(kb_grounding_rate, 2),
         "l2_recall":              round(l2_recall, 2),
@@ -131,6 +144,16 @@ def run_eval(tag: str = "latest"):
     cases = load_test_cases()
     baseline = [c for c in cases if not c.get("attack_type")]
     adversarial = [c for c in cases if c.get("attack_type")]
+
+    ledger = RunLedger(tag=tag, meta={
+        "total_cases": len(cases),
+        "baseline":    len(baseline),
+        "adversarial": len(adversarial),
+        "dataset":     "data/test_tickets.json",
+        "note":        "steps.jsonl holds parsed per-step observations; "
+                       "prompt/raw_response/model_id reserved for part (b)",
+    })
+    print(f"[Ledger] run_id = {ledger.run_id}")
 
     print("=" * 70)
     print(f"SUPPORT COPILOT EVAL — {len(cases)} total ({len(baseline)} baseline + {len(adversarial)} adversarial)")
@@ -151,13 +174,14 @@ def run_eval(tag: str = "latest"):
         difficulty = tc.get("difficulty", "?")
 
         try:
-            result = run_agent(ticket_id=ticket_id, ticket_text=text, user_id=user_id, memory=memory)
+            result = run_agent(ticket_id=ticket_id, ticket_text=text, user_id=user_id, memory=memory, ledger=ledger)
         except Exception as e:
             print(f"\n[{ticket_id}] ERROR: {e}")
             results_list.append({"intent": "error", "action": "error", "confidence": 0, "kb_grounding": []})
             continue
 
         results_list.append(result)
+        ledger.log_output(ticket_id, result)
         ok, failures = score_case(result, expected)
         status = "PASS" if ok else "FAIL"
         note = tc.get("note", "")
@@ -190,6 +214,10 @@ def run_eval(tag: str = "latest"):
                 "kb_grounding":     result.get("kb_grounding", []),
                 "draft_reply":      result.get("draft_reply", ""),
                 "grounding_check":  result.get("grounding_check", {}),
+                # epistemic layer (Fact-Grounded Reasoning Protocol)
+                "assumption_risk":           result.get("assumption_trace", {}).get("max_assumption_risk"),
+                "assumption_verdict":        result.get("assumption_replay", {}).get("verdict"),
+                "load_bearing_assumptions":  result.get("assumption_replay", {}).get("load_bearing_assumptions", []),
             },
             "pass":     ok,
             "failures": failures,
@@ -207,7 +235,9 @@ def run_eval(tag: str = "latest"):
     base_passed = sum(1 for r, c in zip(base_results, baseline)    if score_case(r, c["expected"])[0])
     adv_passed  = sum(1 for r, c in zip(adv_results,  adversarial) if score_case(r, c["expected"])[0]) if adversarial else 0
 
-    def _pct(m, key): return f"{m.get(key, 0)*100:.0f}%"
+    def _pct(m, key):
+        value = m.get(key)
+        return "not_scored" if value is None else f"{value*100:.0f}%"
 
     print("\n" + "=" * 70)
     print(f"OVERALL: {passed}/{len(cases)} passed ({100 * passed // len(cases)}%)")
@@ -238,10 +268,21 @@ def run_eval(tag: str = "latest"):
             print(f"  [{attack_type}] {label:<20}: {p}/{n} passed")
     print("=" * 70)
 
+    # ── epistemic layer: assumption-driven decisions ─────────────────────────
+    auto_assum = [rc for rc in report_cases
+                  if rc["result"].get("action") == "AUTO_REPLY"
+                  and rc["result"].get("assumption_verdict") == "assumption_driven"]
+    print(f"\n── EPISTEMIC ({len(report_cases)} cases) ──")
+    print(f"  AUTO_REPLY that are assumption-driven : {len(auto_assum)}   ← held up only by an LLM guess")
+    for rc in auto_assum:
+        print(f"    {rc['id']}: risk={rc['result'].get('assumption_risk')} "
+              f"load-bearing={rc['result'].get('load_bearing_assumptions')}")
+    print("=" * 70)
+
     # ── structured JSON report (P0) ───────────────────────────────────────────
     # Overall metrics across all 100 cases (baseline + adversarial)
     all_metrics = compute_metrics(results_list, cases)
-    _emit_report(
+    report = _emit_report(
         tag=tag,
         cases=cases,
         report_cases=report_cases,
@@ -250,6 +291,9 @@ def run_eval(tag: str = "latest"):
         base_metrics=base_metrics,
         adv_metrics=adv_metrics,
     )
+    # The report is a DERIVED VIEW over the ledger — regenerable, disposable.
+    run_dir = ledger.finalize(report)
+    print(f"[Ledger] finalized → {run_dir}")
 
     return passed == len(cases)
 
@@ -258,6 +302,29 @@ def _emit_report(tag, cases, report_cases, passed, all_metrics, base_metrics, ad
     """Write data/reports/report_<tag>.json with structured per-case results."""
     reports_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'reports')
     os.makedirs(reports_dir, exist_ok=True)
+
+    # ── epistemic summary: which decisions hold only via LLM assumptions ──────
+    # The headline risk: an AUTO_REPLY that is assumption_driven (no verified fact
+    # would sustain it) AND high-risk (a boundary assumption). That is a silently
+    # autonomous reply standing on an LLM guess.
+    def _r(rc): return rc["result"]
+    assumption_summary = {
+        "auto_reply_assumption_driven": [
+            rc["id"] for rc in report_cases
+            if _r(rc).get("action") == "AUTO_REPLY"
+            and _r(rc).get("assumption_verdict") == "assumption_driven"
+        ],
+        "auto_reply_assumption_driven_highrisk": [
+            rc["id"] for rc in report_cases
+            if _r(rc).get("action") == "AUTO_REPLY"
+            and _r(rc).get("assumption_verdict") == "assumption_driven"
+            and _r(rc).get("assumption_risk") == "high"
+        ],
+        "verdict_counts": {
+            v: sum(1 for rc in report_cases if _r(rc).get("assumption_verdict") == v)
+            for v in ("fact_grounded", "assumption_driven")
+        },
+    }
 
     report = {
         "tag":       tag,
@@ -270,6 +337,7 @@ def _emit_report(tag, cases, report_cases, passed, all_metrics, base_metrics, ad
         "metrics":      all_metrics,   # all 100 cases
         "base_metrics": base_metrics,  # baseline only
         "adv_metrics":  adv_metrics,   # adversarial only
+        "assumption_summary": assumption_summary,  # epistemic layer
         "cases":        report_cases,
     }
 
@@ -277,6 +345,7 @@ def _emit_report(tag, cases, report_cases, passed, all_metrics, base_metrics, ad
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
     print(f"\n[Report] written → {out_path}")
+    return report
 
 
 if __name__ == "__main__":

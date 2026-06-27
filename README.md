@@ -10,51 +10,41 @@ pinned: false
 license: mit
 ---
 
-# Support Copilot — SaaS Ticket Triage Agent
+# Support Copilot — SaaS Ticket Routing Decision System
 
 ## One-line pitch
 
-An agentic support system that classifies customer tickets, retrieves KB context, drafts replies, and routes to AUTO_REPLY / ESCALATE_L1 / ESCALATE_L2 — with a deterministic safety gate that keeps unsafe auto-reply rate at 0%.
+Support Copilot is a production-shaped AI support triage project: it classifies SaaS customer tickets, retrieves KB evidence, drafts grounded replies, and decides whether the ticket is safe for `AUTO_REPLY` or must be routed to `ESCALATE_L1` / `ESCALATE_L2`.
+
+It is not a generic support chatbot. The core question is:
+
+> Under what evidence is an AI system allowed to answer a customer automatically?
 
 ## Problem
 
-SaaS support teams waste capacity on tickets that could be auto-resolved from the knowledge base, while high-churn-risk customers get the same queue as routine how-to questions. A single prompt cannot solve this: it can't retrieve KB context before drafting, detect tone separately from content, or retry with a different strategy when confidence is low.
+SaaS support teams waste capacity on routine tickets that could be resolved from the knowledge base, but unsafe automation creates real risk: refund promises, plan-specific feature claims, churn-sensitive customers, SLA/security concerns, and confident replies built on weak KB matches.
 
-## Why an Agent
-
-Five tools run in sequence with information flowing between them:
-
-```
-classify_intent → kb_search → history_lookup → draft_reply → tone_check
-                                                                    ↓
-                                              reasoner: confidence + grounding + tone → action
-```
-
-`tone_check` results gate the action decision — a frustrated customer with churn signals is never auto-replied regardless of KB coverage. A reflection loop retries `kb_search` with a broader query when confidence is low. Neither of these requires changing the core tools.
+This project treats support automation as a routing and safety decision system, not a prompt-writing exercise.
 
 ## Architecture
 
 ```
 ticket_in
-    ↓
-planner.create_plan()        5-step fixed plan
-    ↓
-agent_loop.run_tool_loop()   dispatch + reflect if confidence < 0.65
-    ↓
-reasoner.synthesize()        3-rule policy (see below)
-    ↓
-{intent, priority, tone, kb_grounding, draft_reply, confidence, action, reason}
-    ↓
-action ∈ {AUTO_REPLY, ESCALATE_L1, ESCALATE_L2}
+  -> phase 1: classify_intent | kb_search | history_lookup | tone_check
+  -> deterministic early-L2 gate for SLA / hidden-cancel / security-like signals
+  -> draft_reply
+  -> grounding_compiler
+  -> reasoner.synthesize()
+  -> AUTO_REPLY | ESCALATE_L1 | ESCALATE_L2
 ```
 
-**3-rule routing policy:**
+Phase 1 runs independent signal gathering in parallel. Generation and verification stay sequential because the draft must be checked against the KB before any autonomous reply is allowed.
 
-| Rule | Condition | Action |
-|---|---|---|
-| Churn / SLA | `churn_risk ≥ 0.6` or `(frustrated and churn_risk ≥ 0.4)` or SLA keyword | ESCALATE_L2 |
-| Safe auto-reply | `confidence ≥ 0.75` and `grounding == "strong"` (KB score ≥ 0.60) | AUTO_REPLY |
-| Everything else | low confidence or weak/no KB | ESCALATE_L1 |
+## What makes it different from a chatbot
+
+### 1. Deterministic grounding gate
+
+`AUTO_REPLY` is not controlled by the model's self-reported confidence. The system checks KB grounding explicitly:
 
 **3-level deterministic grounding** (no LLM self-assessment):
 
@@ -64,55 +54,172 @@ action ∈ {AUTO_REPLY, ESCALATE_L1, ESCALATE_L2}
 | `weak`   | top KB score 0.40–0.59 | Related content found — inform L1, don't auto-reply |
 | `none`   | top KB score < 0.40 | No coverage — escalate |
 
-## Eval Results
+### 2. Intent Normalization Layer (INL)
 
-**35 test cases: 20 baseline + 15 adversarial (structured to attack each decision boundary)**
+Raw ticket text is compiled into a stable `intent_set` before retrieval. Known intents map to FAQ entries deterministically; embeddings and BM25 are fallback paths for unknown intents.
 
-| Metric | Baseline | Adversarial |
-|---|---|---|
-| Action accuracy | 45% | 73% |
-| **L2 recall** | **100%** | **100%** |
-| **Unsafe AUTO_REPLY rate** | **0%** | **0%** |
-| False escalation rate | 0% | 0% |
+This keeps common routing decisions stable instead of relying entirely on vector similarity.
 
-Adversarial breakdown by attack type:
+### 3. Context guard
 
-| Type | Cases | Passed | What it tests |
-|---|---|---|---|
-| A — KB misleading | 5 | 3/5 | Strong KB match but answer is plan-tier-specific |
-| B — Emotional noise | 5 | 3/5 | Frustration ≠ churn risk (sarcasm, mild frustration) |
-| C — Multi-intent | 5 | 5/5 | Mixed intent routing stability |
+The system separates:
 
-**Key finding:** adversarial accuracy (73%) exceeds baseline (45%). Failures are concentrated in the baseline set's L2 threshold over-triggering on frustrated-but-low-churn tickets — not edge cases. Multi-intent routing is stable (5/5).
+- LLM extraction: infer user context such as plan / region when present.
+- Rule enforcement: block auto-reply when the KB answer may not apply to that user's entitlement.
 
-**Safety gates held across all 35 cases:** L2 recall 100%, unsafe auto-reply 0%.
+This is the current guard against plan-tier and region-specific false-safe answers.
+
+### 4. Grounding compiler
+
+The draft reply is decomposed into factual claims. Each claim is checked against the retrieved KB snippets. If the draft exceeds the KB boundary, `AUTO_REPLY` is downgraded to `ESCALATE_L1`.
+
+### 5. Append-only run ledger
+
+Each eval run can write immutable artifacts under `data/runs/<run_id>/`:
+
+- `meta.json`
+- `steps.jsonl`
+- `outputs.jsonl`
+- `decisions.jsonl`
+- derived `report.json`
+
+The ledger records what happened. Metrics and pass/fail judgments are derived views, not permanent facts.
+
+### 6. Assumption trace and replay
+
+The reasoner separates deterministic facts from LLM-inferred assumptions such as churn risk, tone, and intent confidence.
+
+`assumption_replay` asks: if a model assumption were neutralized, would the action change? This identifies decisions that are fact-grounded versus assumption-driven.
+
+## Current eval snapshot
+
+Latest checked report: `data/reports/report_epistemic-r3.json`.
+
+| Metric | Result |
+|---|---:|
+| Total eval cases | 100 |
+| Passed cases | 95 / 100 |
+| Action accuracy | 96% |
+| L2 recall | 100% |
+| Unsafe AUTO_REPLY rate | 0% |
+| AUTO_REPLY decisions held up only by LLM assumptions | 0 |
+
+Dataset shape:
+
+- 85 baseline / adapted cases
+- 15 adversarial cases
+- Expected actions: 24 `AUTO_REPLY`, 45 `ESCALATE_L1`, 31 `ESCALATE_L2`
+
+The key safety result is not raw accuracy. The main invariants are:
+
+- **L2 recall must stay 100%**: high-risk tickets cannot be missed.
+- **Unsafe AUTO_REPLY must stay 0%**: no auto-reply without strong grounding.
 
 ## Stability
 
-- KB search: sentence-transformers cosine similarity (primary) → BM25 keyword fallback
+- KB search: INL intent-to-FAQ lookup first; hybrid dense + BM25 fallback for unknown intents
 - LLM: DeepSeek (primary) → Groq llama-3.3-70b-versatile fallback via unified `LLMRouter`
-- Grounding: deterministic score threshold — does not rely on LLM self-assessment
+- Grounding: deterministic score threshold plus claim-level grounding compiler
+- Run evidence: append-only run ledger and structured JSON reports
+
+## Key files
+
+| File | Purpose |
+|---|---|
+| `agent/agent_loop.py` | Orchestrates parallel signal gathering, early-L2 gate, generation, grounding, and replay attachment |
+| `agent/reasoner.py` | Final routing policy, safety gates, assumption trace/replay |
+| `agent/intent_normalizer.py` | INL: text -> stable intent set |
+| `agent/kb.py` | Intent-to-FAQ lookup plus hybrid retrieval fallback |
+| `agent/context_guard.py` | Plan/region entitlement guard |
+| `agent/grounding_compiler.py` | Claim-level KB support check for draft replies |
+| `agent/eval.py` | 100-case eval runner and report writer |
+| `agent/run_ledger.py` | Append-only run ledger |
+| `data/query_assumptions.py` | Query assumption-driven decisions from a report |
+| `SHOWCASE.md` | Three readable case walkthroughs for interview/demo use |
 
 ## Known Limitations (documented, not papered over)
 
-1. **Plan-tier blindness**: grounding checks semantic similarity, not whether the KB answer applies to the user's subscription tier. T-021 (Team plan asking about SSO) and T-024 (version history extension) both fail because strong KB match doesn't guarantee correct answer for the user's context.
+This project is not production-ready. It is a production-shaped portfolio system that demonstrates the decision architecture and evaluation loop.
 
-2. **Tone classifier on sarcasm**: T-028 ("Oh great, fantastic product") is classified as frustrated + mild churn risk → false L2. Sarcasm detection is not implemented.
+1. **No real customer system integration**  
+   There is no Zendesk / Intercom / Freshdesk adapter. Tickets are provided through CLI, Gradio, or eval fixtures.
 
-3. **context_coverage is unmodeled**: the next production step is adding `(grounding == "strong" AND plan_compatible AND feature_available)` as the AUTO_REPLY gate. This requires user context input to the system.
+2. **User context is incomplete**  
+   The strongest remaining risk is context-specific correctness: plan, region, role, and contract terms should be structured inputs, not inferred from ticket text.
 
-Evaluation across 35 cases revealed three independent failure manifolds in LLM-based support decisioning: grounding failure (retrieval quality), context failure (entitlement-unaware routing), and tone miscalibration (churn signal false positives). See `notes/failure_taxonomy.md`.
+3. **KB annotations are partly hard-coded**  
+   Plan-dependent rules live in guard code. A more realistic implementation would annotate each FAQ with `min_plan`, `regions`, `requires_csm`, and risk level.
+
+4. **Tone and churn inference still use LLM signals**  
+   Deterministic L2 signals cover SLA and hidden-cancel patterns, but some churn decisions remain assumption-driven and are tracked by assumption replay.
+
+5. **No online feedback loop**  
+   Human agent corrections do not yet feed back into the eval dataset or policy worklist.
+
+6. **Demo UI is explanatory, not an agent console**  
+   The Gradio app is for interview/demo inspection. It is not a full support dashboard.
 
 ## Quick Start
 
-```bash
-cd support-copilot
+Use `py` on Windows.
 
-# single ticket
-python -m agent.main --ticket "How do I download my invoice?" --id T-001 --user U-101
-
-# full eval (35 cases, baseline + adversarial)
-python -m agent.eval
+```powershell
+cd D:\ehe\support-copilot
+py -m pip install -r requirements.txt
 ```
 
-Requires `GROQ_API_KEY` and/or `DEEPSEEK_API_KEY` in `.env`.
+Configure at least one provider key in `.env`:
+
+```text
+DEEPSEEK_API_KEY=...
+GROQ_API_KEY=...
+```
+
+Single ticket:
+
+```powershell
+py -m agent.main --ticket "How do I download my invoice?" --id T-demo --user U-demo
+```
+
+Gradio demo:
+
+```powershell
+py app.py
+```
+
+Full eval:
+
+```powershell
+py -m agent.eval latest
+```
+
+This writes a new report and run ledger. Do not run full eval unless you want new artifacts under `data/reports/` and `data/runs/`.
+
+Query assumption-driven decisions from an existing report:
+
+```powershell
+py data/query_assumptions.py epistemic-r3 --action AUTO_REPLY --highrisk
+```
+
+## Demo / Eval Review
+
+For a portfolio or interview walkthrough:
+
+- Run the demo with `py app.py`, then open the local Gradio URL printed in the terminal.
+- Run a new eval with `py -m agent.eval <tag>`. This creates a new report and run ledger.
+- Inspect the latest checked report at `data/reports/report_epistemic-r3.json`.
+- Read `SHOWCASE.md` for three representative decisions: safe auto-reply, L1 review, and L2 escalation.
+
+## Interview framing
+
+The project demonstrates AI agent landing skills beyond prompt tuning:
+
+- defining when automation is allowed,
+- separating model assumptions from verified facts,
+- designing evals around safety invariants,
+- making failures visible through reports and ledgers,
+- documenting known blind spots instead of hiding them.
+
+The shortest summary:
+
+> I built a support automation risk gate. It shows when AI can safely auto-reply, when it must route to human review, and what evidence supports that decision.

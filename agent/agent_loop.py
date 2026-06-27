@@ -59,6 +59,7 @@ def run_tool_loop(
     user_id: str,
     plan: list[dict],
     memory: AgentMemory,
+    ledger=None,
 ) -> dict:
     """Execute tool steps + grounding compiler; return observations dict."""
     obs = {
@@ -87,6 +88,8 @@ def run_tool_loop(
             if cached is not None:
                 log("Memory", f"KB cache hit for: {query[:50]}")
                 obs["kb_results"] = cached
+                if ledger is not None:
+                    ledger.log_step(ticket_id, tool_name, cached)
                 continue
             inp = {"query": query, "top_k": 3}
         elif tool_name == "history_lookup":
@@ -107,6 +110,8 @@ def run_tool_loop(
 
         obs[obs_keys[i]] = data
         log("Obs", f"{tool_name} → {str(data)[:120]}")
+        if ledger is not None:
+            ledger.log_step(ticket_id, tool_name, data)
 
         # After draft_reply: run grounding compiler to enforce KB closure (Milestone D)
         if tool_name == "draft_reply" and result["success"]:
@@ -122,14 +127,14 @@ def run_tool_loop(
     return obs
 
 
-def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", memory: AgentMemory = None) -> dict:
+def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", memory: AgentMemory = None, ledger=None) -> dict:
     log("Agent", f"ticket={ticket_id} user={user_id} text='{ticket_text[:60]}'")
 
     if memory is None:
         memory = AgentMemory()
 
     plan = create_plan(ticket_text, user_id)
-    obs = run_tool_loop(ticket_text, ticket_id, user_id, plan, memory)
+    obs = run_tool_loop(ticket_text, ticket_id, user_id, plan, memory, ledger=ledger)
 
     result = synthesize(
         ticket_text=ticket_text,
@@ -185,6 +190,21 @@ def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", me
         )
         result["ticket_id"] = ticket_id
         log("Reflect", f"after iter {iteration}: confidence={result['confidence']}, action={result['action']}")
+
+    if ledger is not None:
+        ledger.log_decision(
+            ticket_id,
+            action=result.get("action"),
+            proximate_grounds=result.get("routing_signals", []),
+            inputs={
+                "grounding":  result.get("grounding"),
+                "churn_risk": result.get("churn_risk"),
+                "tone":       result.get("tone"),
+                "intent_set": result.get("intent_set", []),
+                "confidence": result.get("confidence"),
+            },
+            rule=f"reflection_iters={iteration}",
+        )
 
     # Record this ticket in memory for future dedup
     memory.add_ticket(user_id, {

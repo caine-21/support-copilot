@@ -37,7 +37,8 @@
     "expected": {
       "action": "AUTO_REPLY",
       "min_confidence": 0.75
-    }
+    },
+    "failure_class": "routing_calibration"
   },
   {
     "id": "T-005",
@@ -173,7 +174,8 @@
     "expected": {
       "action": "ESCALATE_L1",
       "note": "TRAP: monthly plan = no refunds per FAQ. Agent must state policy clearly, not invent exceptions. ESCALATE_L1 to explain policy."
-    }
+    },
+    "failure_class": "over_detection"
   },
   {
     "id": "T-019",
@@ -640,7 +642,9 @@
     "expected": {
       "action": "ESCALATE_L2",
       "routing_reason": "churn_signal"
-    }
+    },
+    "failure_class": "ontology_mismatch",
+    "ontology": "communication_preference"
   },
   {
     "id": "T-053",

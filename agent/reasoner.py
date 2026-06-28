@@ -12,6 +12,7 @@ Grounding is deterministic: KB score threshold, NOT LLM self-assessment.
 """
 
 import re
+import copy
 import context_guard as _guard
 from intent_normalizer import normalize_multi, TECHNICAL_INTENTS, BILLING_INTENTS, CANCEL_INTENTS
 
@@ -20,6 +21,59 @@ _GROUNDING_WEAK   = 0.40  # related content found — inform L1 agent, don't aut
 
 # classify_intent LLM outputs treated as technical (supplement INL technical set)
 _LM_TECHNICAL_LABELS: frozenset[str] = frozenset({"bug", "error", "technical", "sync_failure"})
+
+# -- assumption trace (read-only observability) -------------------------------
+# These fields describe which already-computed signals the policy relied on.
+# They do not feed back into routing, grounding, or safety decisions.
+_CHURN_THRESHOLD = 0.80
+_CONF_THRESHOLD = 0.65
+_BOUNDARY_MARGIN = 0.07
+_RISK_ORDER = {"low": 0, "med": 1, "high": 2}
+
+
+def assumption_trace(
+    action: str,
+    *,
+    intent_conf: float,
+    churn_risk: float,
+    tone_label: str,
+    grounding: str,
+    sla_signal: bool,
+    hidden_cancel_signal: bool,
+) -> dict:
+    """Return an audit trace for a completed decision without changing it."""
+    churn_boundary = abs(churn_risk - _CHURN_THRESHOLD) <= _BOUNDARY_MARGIN
+    conf_boundary = abs(intent_conf - _CONF_THRESHOLD) <= _BOUNDARY_MARGIN
+
+    drivers = [
+        {"signal": "sla_signal", "value": sla_signal,
+         "source": "deterministic", "status": "verified", "risk": "low"},
+        {"signal": "hidden_cancel_signal", "value": hidden_cancel_signal,
+         "source": "deterministic", "status": "verified", "risk": "low"},
+        {"signal": "grounding", "value": grounding,
+         "source": "deterministic", "status": "verified", "risk": "low"},
+        {"signal": "churn_risk", "value": round(churn_risk, 2),
+         "source": "llm_inferred", "status": "assumed",
+         "risk": "high" if churn_boundary else "med",
+         "note": "within boundary of escalation threshold" if churn_boundary else ""},
+        {"signal": "intent_confidence", "value": round(intent_conf, 2),
+         "source": "llm_inferred", "status": "assumed",
+         "risk": "high" if conf_boundary else "med",
+         "note": "within boundary of deduction threshold" if conf_boundary else ""},
+        {"signal": "tone", "value": tone_label,
+         "source": "llm_inferred", "status": "assumed", "risk": "med", "note": ""},
+    ]
+    load_bearing = [
+        d["signal"] for d in drivers
+        if d["status"] == "assumed" and d["risk"] == "high"
+    ]
+    max_risk = max((d["risk"] for d in drivers), key=lambda r: _RISK_ORDER[r], default="low")
+    return {
+        "decision": action,
+        "drivers": drivers,
+        "load_bearing_assumptions": load_bearing,
+        "max_assumption_risk": max_risk,
+    }
 
 
 def grounding_level(kb_results: list) -> str:
@@ -231,4 +285,70 @@ def synthesize(
             "auto_reply_safe":   (grounding_check or {}).get("auto_reply_safe", True),
             "ungrounded_claims": (grounding_check or {}).get("ungrounded_claims", []),
         },
+        "assumption_trace": assumption_trace(
+            action,
+            intent_conf=intent_conf,
+            churn_risk=churn_risk,
+            tone_label=tone_label,
+            grounding=grounding,
+            sla_signal=sla_signal,
+            hidden_cancel_signal=hidden_cancel_signal,
+        ),
+    }
+
+
+# -- offline assumption replay ------------------------------------------------
+# This utility intentionally is NOT called from run_agent. It re-runs synthesize()
+# with selected LLM-derived assumptions neutralized, so it is useful for offline
+# analysis but should not add cost or policy coupling to the main request path.
+def _neutralize(classification: dict, tone: dict, driver: str) -> tuple[dict, dict]:
+    c, t = copy.deepcopy(classification), copy.deepcopy(tone)
+    if driver == "churn_risk":
+        t["churn_risk"] = 0.0
+        t["churn_signals"] = []
+    elif driver == "intent_confidence":
+        c["confidence"] = 1.0
+    elif driver == "tone":
+        t["tone"] = "neutral"
+    return c, t
+
+
+def replay_assumptions(
+    ticket_text: str,
+    classification: dict,
+    kb_results: list,
+    history: dict,
+    draft: dict,
+    tone: dict,
+    grounding_check: dict | None = None,
+) -> dict:
+    """Offline policy-sensitivity probe; no LLM calls, no side effects."""
+    assumed = ("churn_risk", "intent_confidence", "tone")
+
+    def _action(c: dict, t: dict) -> str:
+        return synthesize(ticket_text, c, kb_results, history, draft, t, grounding_check)["action"]
+
+    baseline = _action(classification, tone)
+    per_driver = {}
+    load_bearing = []
+    for driver in assumed:
+        c, t = _neutralize(classification, tone, driver)
+        after = _action(c, t)
+        flips = after != baseline
+        per_driver[driver] = {"action_if_removed": after, "load_bearing": flips}
+        if flips:
+            load_bearing.append(driver)
+
+    c_all, t_all = classification, tone
+    for driver in assumed:
+        c_all, t_all = _neutralize(c_all, t_all, driver)
+    all_neutral_action = _action(c_all, t_all)
+
+    return {
+        "baseline_action": baseline,
+        "per_assumption": per_driver,
+        "load_bearing_assumptions": load_bearing,
+        "all_assumptions_neutralized_action": all_neutral_action,
+        "verdict": "fact_grounded" if all_neutral_action == baseline else "assumption_driven",
+        "mode": "offline_only",
     }

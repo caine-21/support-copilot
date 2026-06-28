@@ -191,6 +191,11 @@ def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", me
         result["ticket_id"] = ticket_id
         log("Reflect", f"after iter {iteration}: confidence={result['confidence']}, action={result['action']}")
 
+    result.setdefault("assumption_replay", {
+        "verdict": "unavailable",
+        "reason": "offline_only",
+    })
+
     if ledger is not None:
         ledger.log_decision(
             ticket_id,

@@ -640,8 +640,9 @@
     "adapted_domain": "saas",
     "generation_method": "llm_rewrite",
     "expected": {
-      "action": "ESCALATE_L2",
-      "routing_reason": "churn_signal"
+      "action": "ESCALATE_L1",
+      "routing_reason": "communication_preference — newsletter unsubscribe, not product churn",
+      "note": "ontology_mismatch: newsletter unsubscribe is communication_preference, not product_churn. Original expected ESCALATE_L2/churn_signal conflated communication preference with product subscription cancellation."
     },
     "failure_class": "ontology_mismatch",
     "ontology": "communication_preference"

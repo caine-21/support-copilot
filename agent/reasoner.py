@@ -15,6 +15,7 @@ import re
 import copy
 import context_guard as _guard
 from intent_normalizer import normalize_multi, TECHNICAL_INTENTS, BILLING_INTENTS, CANCEL_INTENTS
+from churn_policy import resolve_churn
 
 _GROUNDING_STRONG = 0.60  # direct answer in KB — safe to auto-reply
 _GROUNDING_WEAK   = 0.40  # related content found — inform L1 agent, don't auto-reply
@@ -40,6 +41,7 @@ def assumption_trace(
     grounding: str,
     sla_signal: bool,
     hidden_cancel_signal: bool,
+    contested: bool,
 ) -> dict:
     """Return an audit trace for a completed decision without changing it."""
     churn_boundary = abs(churn_risk - _CHURN_THRESHOLD) <= _BOUNDARY_MARGIN
@@ -67,6 +69,8 @@ def assumption_trace(
         d["signal"] for d in drivers
         if d["status"] == "assumed" and d["risk"] == "high"
     ]
+    if contested:
+        load_bearing.append("churn_reading_contested")
     max_risk = max((d["risk"] for d in drivers), key=lambda r: _RISK_ORDER[r], default="low")
     return {
         "decision": action,
@@ -217,10 +221,22 @@ def synthesize(
         # Catches unambiguous "I'm leaving" intent when no keyword fires.
         churn_escalate = churn_risk >= 0.8
 
+    _churn = resolve_churn(tone.get("churn_signals", []), ticket_text)
+    churn_demoted_to_l1 = False
+    if churn_escalate and _churn["non_product_churn"]:
+        churn_escalate = False
+        churn_demoted_to_l1 = True
+
     if churn_escalate or sla_signal or hidden_cancel_signal:
         action = "ESCALATE_L2"
         reason = (f"churn_risk={churn_risk:.2f}, tone={tone_label}, "
                   f"sla={sla_signal}, hidden_cancel={hidden_cancel_signal}")
+
+    elif churn_demoted_to_l1:
+        action = "ESCALATE_L1"
+        reason = (f"churn_risk={churn_risk:.2f} but signals are non-product-churn "
+                  f"(transaction or communication preference) - L1 for human review, not auto-reply")
+        missing_info.append("churn reading: non-product-churn (refund/newsletter != product churn)")
 
     # Rule 2: AUTO_REPLY safety gate — strong grounding + context guard + KB closure required
     # context_guard v1: blocks AUTO_REPLY when plan-tier context conflicts with KB entry
@@ -250,11 +266,21 @@ def synthesize(
         action = "ESCALATE_L1"
         reason = f"confidence={confidence}, grounding={grounding} — L1 with KB reference attached"
 
+    if action == "AUTO_REPLY" and _churn["contested"]:
+        action = "ESCALATE_L1"
+        reason = "churn reading contested (exit vs transaction) - blocked autonomous reply"
+        missing_info.append("contested churn reading")
+
     # routing_signals: observable facts that drove the decision (Milestone C log format)
     routing_signals = (
         (["sla_signal"] if sla_signal else [])
         + (["competitor_exit"] if hidden_cancel_signal else [])
         + (["churn_risk_high"] if churn_escalate else [])
+        + (["churn_demoted_communication_preference"]
+           if churn_demoted_to_l1 and action == "ESCALATE_L1" and _churn["communication_preference"] else [])
+        + (["churn_demoted_transaction"]
+           if churn_demoted_to_l1 and action == "ESCALATE_L1" and _churn["all_transaction"] else [])
+        + (["churn_contested"] if _churn["contested"] else [])
     )
 
     return {
@@ -266,6 +292,8 @@ def synthesize(
         "tone": tone_label,
         "churn_risk": churn_risk,
         "churn_signals": tone.get("churn_signals", []),
+        "churn_readings": _churn["readings"],
+        "churn_contested": _churn["contested"],
         "kb_grounding": [{"doc_id": r["doc_id"], "snippet": r["snippet"][:150]} for r in kb_grounding],
         "draft_reply": draft.get("reply", ""),
         "confidence": confidence,
@@ -293,6 +321,7 @@ def synthesize(
             grounding=grounding,
             sla_signal=sla_signal,
             hidden_cancel_signal=hidden_cancel_signal,
+            contested=_churn["contested"],
         ),
     }
 

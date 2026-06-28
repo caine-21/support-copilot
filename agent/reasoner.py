@@ -23,61 +23,31 @@ _GROUNDING_WEAK   = 0.40  # related content found — inform L1 agent, don't aut
 # classify_intent LLM outputs treated as technical (supplement INL technical set)
 _LM_TECHNICAL_LABELS: frozenset[str] = frozenset({"bug", "error", "technical", "sync_failure"})
 
-# -- assumption trace (read-only observability) -------------------------------
-# These fields describe which already-computed signals the policy relied on.
-# They do not feed back into routing, grounding, or safety decisions.
-_CHURN_THRESHOLD = 0.80
-_CONF_THRESHOLD = 0.65
-_BOUNDARY_MARGIN = 0.07
-_RISK_ORDER = {"low": 0, "med": 1, "high": 2}
+_SLA_KEYWORDS: tuple[str, ...] = ("breach", "downtime", "data loss")
+
+_HIDDEN_CANCEL_KEYWORDS: tuple[str, ...] = (
+    "justify the renewal", "renewal cost", "decide to move on",
+    "considering moving on", "evaluating whether", "transfer account ownership",
+    "switching to a competitor", "moving to a competitor",
+    "evaluating switching to", "switch to a competitor",
+    "formally file a complaint", "file a formal complaint",
+    "formal complaint against", "data exposure",
+    "on social media", "senior manager",
+    "speak to a manager", "speak with a manager", "escalate to management",
+)
 
 
-def assumption_trace(
-    action: str,
-    *,
-    intent_conf: float,
-    churn_risk: float,
-    tone_label: str,
-    grounding: str,
-    sla_signal: bool,
-    hidden_cancel_signal: bool,
-    contested: bool,
-) -> dict:
-    """Return an audit trace for a completed decision without changing it."""
-    churn_boundary = abs(churn_risk - _CHURN_THRESHOLD) <= _BOUNDARY_MARGIN
-    conf_boundary = abs(intent_conf - _CONF_THRESHOLD) <= _BOUNDARY_MARGIN
+def compute_l2_signals(ticket_text: str) -> dict:
+    """Deterministic L2 routing signals — pure regex/keyword, zero LLM cost.
 
-    drivers = [
-        {"signal": "sla_signal", "value": sla_signal,
-         "source": "deterministic", "status": "verified", "risk": "low"},
-        {"signal": "hidden_cancel_signal", "value": hidden_cancel_signal,
-         "source": "deterministic", "status": "verified", "risk": "low"},
-        {"signal": "grounding", "value": grounding,
-         "source": "deterministic", "status": "verified", "risk": "low"},
-        {"signal": "churn_risk", "value": round(churn_risk, 2),
-         "source": "llm_inferred", "status": "assumed",
-         "risk": "high" if churn_boundary else "med",
-         "note": "within boundary of escalation threshold" if churn_boundary else ""},
-        {"signal": "intent_confidence", "value": round(intent_conf, 2),
-         "source": "llm_inferred", "status": "assumed",
-         "risk": "high" if conf_boundary else "med",
-         "note": "within boundary of deduction threshold" if conf_boundary else ""},
-        {"signal": "tone", "value": tone_label,
-         "source": "llm_inferred", "status": "assumed", "risk": "med", "note": ""},
-    ]
-    load_bearing = [
-        d["signal"] for d in drivers
-        if d["status"] == "assumed" and d["risk"] == "high"
-    ]
-    if contested:
-        load_bearing.append("churn_reading_contested")
-    max_risk = max((d["risk"] for d in drivers), key=lambda r: _RISK_ORDER[r], default="low")
-    return {
-        "decision": action,
-        "drivers": drivers,
-        "load_bearing_assumptions": load_bearing,
-        "max_assumption_risk": max_risk,
-    }
+    Extracted so agent_loop can short-circuit before draft_reply.
+    """
+    sla = (
+        bool(re.search(r'\bsla\b', ticket_text, re.IGNORECASE))
+        or any(kw in ticket_text.lower() for kw in _SLA_KEYWORDS)
+    )
+    cancel = any(kw in ticket_text.lower() for kw in _HIDDEN_CANCEL_KEYWORDS)
+    return {"sla_signal": sla, "hidden_cancel_signal": cancel}
 
 
 def grounding_level(kb_results: list) -> str:
@@ -97,6 +67,73 @@ def grounding_level(kb_results: list) -> str:
     return "none"
 
 
+# ── assumption trace (Fact-Grounded Reasoning Protocol v0) ────────────────────
+# Read-only shadow layer over an already-computed decision. Does NOT touch any
+# routing branch. Separates VERIFIED facts (deterministic regex/keyword hits on
+# real ticket text) from ASSUMED drivers (LLM inferences: churn_risk, tone,
+# intent confidence). An assumed value sitting within _BOUNDARY_MARGIN of the
+# threshold that gates the action is flagged high-risk — this is exactly the
+# probabilistic intent-ambiguity class (T-018/T-052: churn signal at boundary).
+_CHURN_THRESHOLD = 0.80   # churn_risk LLM-fallback escalation bar (Rule 1)
+_CONF_THRESHOLD  = 0.65   # intent confidence deduction bar
+_BOUNDARY_MARGIN = 0.07   # |value - threshold| <= margin → boundary assumption
+
+_RISK_ORDER = {"low": 0, "med": 1, "high": 2}
+
+
+def assumption_trace(
+    action: str,
+    *,
+    intent_conf: float,
+    churn_risk: float,
+    tone_label: str,
+    grounding: str,
+    sla_signal: bool,
+    hidden_cancel_signal: bool,
+    contested: bool,
+) -> dict:
+    """Auditable separation of verified facts vs latent assumptions behind `action`."""
+    drivers = [
+        {"signal": "sla_signal", "value": sla_signal,
+         "source": "deterministic", "status": "verified", "risk": "low"},
+        {"signal": "hidden_cancel_signal", "value": hidden_cancel_signal,
+         "source": "deterministic", "status": "verified", "risk": "low"},
+        {"signal": "grounding", "value": grounding,
+         "source": "deterministic", "status": "verified", "risk": "low"},
+    ]
+
+    churn_boundary = abs(churn_risk - _CHURN_THRESHOLD) <= _BOUNDARY_MARGIN
+    conf_boundary  = abs(intent_conf - _CONF_THRESHOLD) <= _BOUNDARY_MARGIN
+    drivers += [
+        {"signal": "churn_risk", "value": round(churn_risk, 2),
+         "source": "llm_inferred", "status": "assumed",
+         "risk": "high" if churn_boundary else "med",
+         "note": "within boundary of escalation threshold" if churn_boundary else ""},
+        {"signal": "intent_confidence", "value": round(intent_conf, 2),
+         "source": "llm_inferred", "status": "assumed",
+         "risk": "high" if conf_boundary else "med",
+         "note": "within boundary of deduction threshold" if conf_boundary else ""},
+        {"signal": "tone", "value": tone_label,
+         "source": "llm_inferred", "status": "assumed", "risk": "med", "note": ""},
+    ]
+
+    # load-bearing = assumed drivers whose flip could change the action
+    load_bearing = [d["signal"] for d in drivers
+                    if d["status"] == "assumed" and d["risk"] == "high"]
+    if contested:
+        load_bearing.append("churn_reading_contested")
+
+    max_risk = max((d["risk"] for d in drivers),
+                   key=lambda r: _RISK_ORDER[r], default="low")
+
+    return {
+        "decision": action,
+        "drivers": drivers,
+        "load_bearing_assumptions": load_bearing,
+        "max_assumption_risk": max_risk,
+    }
+
+
 def synthesize(
     ticket_text: str,
     classification: dict,
@@ -105,6 +142,7 @@ def synthesize(
     draft: dict,
     tone: dict,
     grounding_check: dict | None = None,
+    precomputed_signals: dict | None = None,
 ) -> dict:
     intent = classification.get("intent", "other")
     intent_conf = classification.get("confidence", 0.5)
@@ -115,6 +153,11 @@ def synthesize(
     churn_risk = tone.get("churn_risk", 0.0)
     urgency = tone.get("urgency", "medium")
     past_count = history.get("ticket_count", 0)
+
+    # L2 signals — computed once, reused for priority and action blocks.
+    _sigs = precomputed_signals or compute_l2_signals(ticket_text)
+    sla_signal           = _sigs["sla_signal"]
+    hidden_cancel_signal = _sigs["hidden_cancel_signal"]
 
     missing_info: list[str] = []
     deductions: list[str] = []
@@ -147,8 +190,10 @@ def synthesize(
     confidence = round(max(0.0, min(1.0, confidence)), 2)
 
     # ── priority ─────────────────────────────────────────────────────────────
-
-    if tone_label == "frustrated" or churn_risk >= 0.6 or urgency == "high":
+    # SLA/cancel always P1 even when tone_check was skipped (early-exit path).
+    if sla_signal or hidden_cancel_signal:
+        priority = "P1"
+    elif tone_label == "frustrated" or churn_risk >= 0.6 or urgency == "high":
         priority = "P1"
     elif intent in ("bug",) or urgency == "medium":
         priority = "P2"
@@ -179,37 +224,6 @@ def synthesize(
     # intent-class flags (has_technical, has_billing, has_cancel) are logged below
     # and reserved for Milestone C deterministic signal expansion.
 
-    # \bsla\b: word-boundary match to avoid "Slack" → "sla" false positive.
-    sla_signal = (
-        bool(re.search(r'\bsla\b', ticket_text, re.IGNORECASE))
-        or any(kw in ticket_text.lower() for kw in ["breach", "downtime", "data loss"])
-    )
-    # Explicit exit/competitor/escalation signals — deterministic, auditable.
-    hidden_cancel_signal = any(kw in ticket_text.lower() for kw in [
-        "justify the renewal",
-        "renewal cost",
-        "decide to move on",
-        "considering moving on",
-        "evaluating whether",
-        "transfer account ownership",
-        "switching to a competitor",
-        "moving to a competitor",
-        "evaluating switching to",
-        "switch to a competitor",
-        # Formal escalation: always L2 (complaint filing = contractual/legal risk)
-        "formally file a complaint",
-        "file a formal complaint",
-        "formal complaint against",
-        "data exposure",
-        # Reputation threat + senior escalation demand (T-082 gap)
-        # Social media threats and management-bypass demands → always L2 (PR/legal risk)
-        # "on social media" (not bare "social media") avoids "social media campaigns" false match
-        "on social media",
-        "senior manager",
-        "speak to a manager",
-        "speak with a manager",
-        "escalate to management",
-    ])
     # Billing dispute + cancel language: investigate billing first → L1.
     # Competitor-exit and SLA signals still override via hidden_cancel/sla_signal.
     # LLM score suppressed: "invoice wrong + cancel" can legitimately score 0.8+
@@ -221,6 +235,10 @@ def synthesize(
         # Catches unambiguous "I'm leaving" intent when no keyword fires.
         churn_escalate = churn_risk >= 0.8
 
+    # ── churn policy: explicit reading over the implicit churn_risk>=0.8 monopoly ──
+    # Each churn_signal is read EXIT_THREAT vs TRANSACTION. A high churn_risk whose
+    # signals are ALL transaction/eligibility (e.g. a refund request) is NOT churn —
+    # demote to L1: a human handles the transaction, but never auto-reply a refund.
     _churn = resolve_churn(tone.get("churn_signals", []), ticket_text)
     churn_demoted_to_l1 = False
     if churn_escalate and _churn["non_product_churn"]:
@@ -232,10 +250,11 @@ def synthesize(
         reason = (f"churn_risk={churn_risk:.2f}, tone={tone_label}, "
                   f"sla={sla_signal}, hidden_cancel={hidden_cancel_signal}")
 
+    # Rule 1b: churn reading demoted (high churn_risk but transaction-only) → L1, never auto-reply
     elif churn_demoted_to_l1:
         action = "ESCALATE_L1"
         reason = (f"churn_risk={churn_risk:.2f} but signals are non-product-churn "
-                  f"(transaction or communication preference) - L1 for human review, not auto-reply")
+                  f"(transaction or communication preference) — L1 for human review, not auto-reply")
         missing_info.append("churn reading: non-product-churn (refund/newsletter != product churn)")
 
     # Rule 2: AUTO_REPLY safety gate — strong grounding + context guard + KB closure required
@@ -266,9 +285,11 @@ def synthesize(
         action = "ESCALATE_L1"
         reason = f"confidence={confidence}, grounding={grounding} — L1 with KB reference attached"
 
+    # Contested churn (exit AND transaction readings present): collapse stands, but it
+    # must not be autonomous — block AUTO_REPLY under unresolved disagreement (teeth).
     if action == "AUTO_REPLY" and _churn["contested"]:
         action = "ESCALATE_L1"
-        reason = "churn reading contested (exit vs transaction) - blocked autonomous reply"
+        reason = "churn reading contested (exit vs transaction) — blocked autonomous reply"
         missing_info.append("contested churn reading")
 
     # routing_signals: observable facts that drove the decision (Milestone C log format)
@@ -277,9 +298,9 @@ def synthesize(
         + (["competitor_exit"] if hidden_cancel_signal else [])
         + (["churn_risk_high"] if churn_escalate else [])
         + (["churn_demoted_communication_preference"]
-           if churn_demoted_to_l1 and action == "ESCALATE_L1" and _churn["communication_preference"] else [])
+           if churn_demoted_to_l1 and _churn["communication_preference"] else [])
         + (["churn_demoted_transaction"]
-           if churn_demoted_to_l1 and action == "ESCALATE_L1" and _churn["all_transaction"] else [])
+           if churn_demoted_to_l1 and _churn["all_transaction"] else [])
         + (["churn_contested"] if _churn["contested"] else [])
     )
 
@@ -313,7 +334,7 @@ def synthesize(
             "auto_reply_safe":   (grounding_check or {}).get("auto_reply_safe", True),
             "ungrounded_claims": (grounding_check or {}).get("ungrounded_claims", []),
         },
-        "assumption_trace": assumption_trace(
+        "assumption_trace": assumption_trace(   # Fact-Grounded Reasoning Protocol v0
             action,
             intent_conf=intent_conf,
             churn_risk=churn_risk,
@@ -326,10 +347,28 @@ def synthesize(
     }
 
 
-# -- offline assumption replay ------------------------------------------------
-# This utility intentionally is NOT called from run_agent. It re-runs synthesize()
-# with selected LLM-derived assumptions neutralized, so it is useful for offline
-# analysis but should not add cost or policy coupling to the main request path.
+# ── assumption replay (policy-sensitivity probe over a decision) ──────────────
+# Re-invokes synthesize() as a black box with one (or all) LLM assumption(s)
+# neutralized to a non-triggering baseline, and diffs the resulting `action`.
+# Zero LLM cost (synthesize does no LLM calls), zero side effects, routing logic
+# untouched. NOTE: "neutralize" = set the assumption to the value at which it no
+# longer pushes the decision (a modeling choice, not ground truth).
+#
+# WHAT THIS MEASURES — read carefully: this probes POLICY SENSITIVITY, not WORLD
+# CAUSALITY. We perturb the model's *belief inputs* and re-run the *same policy*;
+# it answers "if the model didn't believe this assumption, would the decision
+# change" — NOT "if the underlying fact were different, what would happen". One
+# level apart, easy to conflate.
+#
+#   single-driver flip  → decision is load-bearing on that assumption (policy-sensitive)
+#   all-neutral == base → decision is FACT-STABILIZED (verified facts decide it)
+#   all-neutral != base → decision is ASSUMPTION-DEPENDENT (only holds via inference)
+#
+# Limitation: single-driver probes miss interaction effects (two assumptions each
+# inert alone but load-bearing jointly). The all-neutral probe catches the joint
+# case; full subset attribution (Shapley) is intentionally out of scope for v0.
+
+# neutralizing value per assumed driver — the non-escalating / no-deduction baseline
 def _neutralize(classification: dict, tone: dict, driver: str) -> tuple[dict, dict]:
     c, t = copy.deepcopy(classification), copy.deepcopy(tone)
     if driver == "churn_risk":
@@ -350,27 +389,32 @@ def replay_assumptions(
     draft: dict,
     tone: dict,
     grounding_check: dict | None = None,
+    precomputed_signals: dict | None = None,
 ) -> dict:
-    """Offline policy-sensitivity probe; no LLM calls, no side effects."""
-    assumed = ("churn_risk", "intent_confidence", "tone")
+    """Counterfactual: which LLM assumptions actually drive this decision?"""
+    _ASSUMED = ("churn_risk", "intent_confidence", "tone")
 
     def _action(c: dict, t: dict) -> str:
-        return synthesize(ticket_text, c, kb_results, history, draft, t, grounding_check)["action"]
+        return synthesize(ticket_text, c, kb_results, history, draft, t,
+                          grounding_check, precomputed_signals)["action"]
 
     baseline = _action(classification, tone)
+
     per_driver = {}
     load_bearing = []
-    for driver in assumed:
-        c, t = _neutralize(classification, tone, driver)
+    for d in _ASSUMED:
+        c, t = _neutralize(classification, tone, d)
         after = _action(c, t)
         flips = after != baseline
-        per_driver[driver] = {"action_if_removed": after, "load_bearing": flips}
+        per_driver[d] = {"action_if_removed": after, "load_bearing": flips}
         if flips:
-            load_bearing.append(driver)
+            load_bearing.append(d)
 
+    # all assumptions neutralized at once → fact-grounded vs assumption-driven
+    # (_neutralize deep-copies internally, so chaining is safe and non-mutating)
     c_all, t_all = classification, tone
-    for driver in assumed:
-        c_all, t_all = _neutralize(c_all, t_all, driver)
+    for d in _ASSUMED:
+        c_all, t_all = _neutralize(c_all, t_all, d)
     all_neutral_action = _action(c_all, t_all)
 
     return {
@@ -378,6 +422,6 @@ def replay_assumptions(
         "per_assumption": per_driver,
         "load_bearing_assumptions": load_bearing,
         "all_assumptions_neutralized_action": all_neutral_action,
-        "verdict": "fact_grounded" if all_neutral_action == baseline else "assumption_driven",
-        "mode": "offline_only",
+        "verdict": ("fact_grounded" if all_neutral_action == baseline
+                    else "assumption_driven"),
     }

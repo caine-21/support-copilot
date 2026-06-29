@@ -20,12 +20,31 @@ import agent_loop
 from agent_loop import run_agent
 from memory import AgentMemory
 from run_ledger import RunLedger
+from reasoner import synthesize
 
 
 def load_test_cases() -> list[dict]:
     path = os.path.join(os.path.dirname(__file__), '..', 'data', 'test_tickets.json')
     with open(path, encoding='utf-8') as f:
         return json.load(f)
+
+
+def selfcheck_unknown_fallback_gate() -> dict:
+    """Prove unknown fallback cannot AUTO_REPLY even with strong KB grounding."""
+    result = synthesize(
+        ticket_text="Can your product help with something unusual and unspecified?",
+        classification={"intent": "how-to", "confidence": 0.95},
+        kb_results=[{"doc_id": "FAQ-test", "snippet": "Test KB answer.", "score": 0.95}],
+        history={"ticket_count": 0},
+        draft={"reply": "Test KB answer."},
+        tone={"tone": "neutral", "churn_risk": 0.0, "urgency": "low", "churn_signals": []},
+        grounding_check={"grounding_ratio": 1.0, "auto_reply_safe": True, "ungrounded_claims": []},
+    )
+    if result.get("action") == "AUTO_REPLY":
+        raise AssertionError("unknown fallback gate failed: AUTO_REPLY was allowed")
+    if "unknown_fallback_cap" not in result.get("routing_signals", []):
+        raise AssertionError("unknown fallback gate failed: routing signal missing")
+    return result
 
 
 def score_case(result: dict, expected: dict) -> tuple[bool, list[str]]:
@@ -78,6 +97,8 @@ def score_case(result: dict, expected: dict) -> tuple[bool, list[str]]:
             failures.append(f"AUTO_REPLY with grounding={result.get('grounding')} — unsafe (strong required)")
         if not result.get("kb_grounding"):
             failures.append("AUTO_REPLY without any kb_grounding")
+        if result.get("intent_set") == ["unknown"]:
+            failures.append("STRUCTURAL: unknown fallback must never AUTO_REPLY")
 
     return len(failures) == 0, failures
 
@@ -116,6 +137,10 @@ def compute_metrics(results: list[dict], cases: list[dict], tag: str = "") -> di
     all_auto = [r for r in results if r.get("action") == "AUTO_REPLY"]
     unsafe_auto = sum(1 for r in all_auto if r.get("grounding") != "strong")
     unsafe_auto_rate = unsafe_auto / max(len(all_auto), 1)
+    unknown_fallback_auto = sum(
+        1 for r in results
+        if r.get("intent_set") == ["unknown"] and r.get("action") == "AUTO_REPLY"
+    )
 
     intent_accuracy = (
         round(intent_correct / intent_total, 2)
@@ -136,11 +161,16 @@ def compute_metrics(results: list[dict], cases: list[dict], tag: str = "") -> di
         "l2_recall":              round(l2_recall, 2),
         "false_escalation_rate":  round(false_escalation_rate, 2),
         "unsafe_auto_reply_rate": round(unsafe_auto_rate, 2),
+        "unknown_fallback_auto_reply_count": unknown_fallback_auto,
         "total_cases":            n,
     }
 
 
 def run_eval(tag: str = "latest"):
+    gate_selfcheck = selfcheck_unknown_fallback_gate()
+    print("[Invariant] unknown fallback gate selfcheck: PASS "
+          f"(action={gate_selfcheck['action']}, grounding={gate_selfcheck['grounding']})")
+
     cases = load_test_cases()
     baseline = [c for c in cases if not c.get("attack_type")]
     adversarial = [c for c in cases if c.get("attack_type")]
@@ -269,6 +299,11 @@ def run_eval(tag: str = "latest"):
     print("=" * 70)
 
     # ── epistemic layer: assumption-driven decisions ─────────────────────────
+    all_metrics = compute_metrics(results_list, cases)
+    print("\n-- STRUCTURAL INVARIANTS --")
+    print("  unknown-fallback AUTO_REPLY count : "
+          f"{all_metrics['unknown_fallback_auto_reply_count']}   <- must be 0")
+
     auto_assum = [rc for rc in report_cases
                   if rc["result"].get("action") == "AUTO_REPLY"
                   and rc["result"].get("assumption_verdict") == "assumption_driven"]
@@ -281,7 +316,6 @@ def run_eval(tag: str = "latest"):
 
     # ── structured JSON report (P0) ───────────────────────────────────────────
     # Overall metrics across all 100 cases (baseline + adversarial)
-    all_metrics = compute_metrics(results_list, cases)
     report = _emit_report(
         tag=tag,
         cases=cases,

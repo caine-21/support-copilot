@@ -148,7 +148,13 @@ def synthesize(
     intent_conf = classification.get("confidence", 0.5)
     secondary = classification.get("secondary_intent")
     kb_grounding = kb_results if kb_results else []
+    # normalize_multi() is pure CPU, reused by grounding caps and intent-class gates.
+    _multi = normalize_multi(ticket_text)
+    _intent_set = set(_multi.get("intent_set", ["unknown"]))
     grounding = grounding_level(kb_grounding)   # "strong" | "weak" | "none"
+    unknown_fallback = (_intent_set == {"unknown"})
+    if unknown_fallback and grounding == "strong":
+        grounding = "weak"   # ambiguous fallback cannot claim deterministic strong grounding
     tone_label = tone.get("tone", "neutral")
     churn_risk = tone.get("churn_risk", 0.0)
     urgency = tone.get("urgency", "medium")
@@ -202,9 +208,6 @@ def synthesize(
 
     # ── intent-class gate (Milestone B) ──────────────────────────────────────
     # normalize_multi() is pure CPU — no LLM call, negligible cost.
-    _multi = normalize_multi(ticket_text)
-    _intent_set = set(_multi.get("intent_set", ["unknown"]))
-
     # LLM classify_intent label also contributes to technical detection
     _lm_technical = intent in _LM_TECHNICAL_LABELS
     has_technical = _lm_technical or bool(_intent_set & TECHNICAL_INTENTS)
@@ -292,6 +295,11 @@ def synthesize(
         reason = "churn reading contested (exit vs transaction) — blocked autonomous reply"
         missing_info.append("contested churn reading")
 
+    if action == "AUTO_REPLY" and unknown_fallback:
+        action = "ESCALATE_L1"
+        reason = "unknown-intent fallback never auto-replies - L1 with KB reference attached"
+        missing_info.append("unknown-intent fallback: human review required")
+
     # routing_signals: observable facts that drove the decision (Milestone C log format)
     routing_signals = (
         (["sla_signal"] if sla_signal else [])
@@ -302,6 +310,7 @@ def synthesize(
         + (["churn_demoted_transaction"]
            if churn_demoted_to_l1 and _churn["all_transaction"] else [])
         + (["churn_contested"] if _churn["contested"] else [])
+        + (["unknown_fallback_cap"] if unknown_fallback else [])
     )
 
     return {

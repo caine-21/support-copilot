@@ -45,10 +45,12 @@ INTENT_IDS = {
     "refund_status",      # status inquiry → L1 (needs lookup)
     "invoice_customize",  # customization → L1 (not self-serve)
     "plan_change",
+    "seat_management",
     "cancel_subscription",
     "password_reset",
     "data_export",
     "permission_levels",  # FAQ-feature-02
+    "invitation_issue",
     "feature_feedback",   # no FAQ → L1
     "version_history",    # FAQ-feature-07
     "sso_issue",          # SSO broken/not working → L1 (no FAQ — needs investigation)
@@ -105,6 +107,11 @@ _RULES: list[tuple[list[str], str, str, bool]] = [
       "switch workspace", "switching workspace"],
      "plan_change", "change / upgrade / downgrade subscription plan", True),
 
+    # Seat management / mid-cycle seat pricing
+    (["add seat", "add seats", "add a seat", "more seats", "extra seats",
+      "remove seat", "remove seats", "manage seats", "seat pricing", "mid-cycle"],
+     "seat_management", "seat management / mid-cycle pricing", False),
+
     # Cancel subscription
     (["cancel subscription", "cancel my subscription", "cancel my plan",
       "cancel the subscription", "end my subscription", "terminate subscription",
@@ -131,8 +138,18 @@ _RULES: list[tuple[list[str], str, str, bool]] = [
     # Permission levels
     (["permission level", "permission levels", "read-only access", "read only access",
       "view only access", "viewer role", "editor role", "commenter role",
-      "what roles are", "user roles", "access level", "access levels"],
+      "what roles are", "user roles", "access level", "access levels",
+      "as a guest", "guest access", "guest role",
+      "without giving them editor", "invite as a guest", "add as a guest"],
      "permission_levels", "permission levels and roles", False),
+
+    # Invitation delivery issue. Avoid bare "invite" to keep guest permission flows distinct.
+    (["invitation email", "invite email", "invite mail",
+      "didn't get the email", "did not get the email", "not receiving invitation",
+      "not receiving the invitation", "never received the invite", "didn't receive the invite",
+      "never got the email", "didn't get invitation", "did not get invitation",
+      "invited someone but"],
+     "invitation_issue", "invitation email delivery issue", False),
 
     # Feature feedback / review
     (["leave feedback", "submit feedback", "provide feedback", "give feedback",
@@ -240,6 +257,7 @@ TECHNICAL_INTENTS: frozenset[str] = frozenset({
     "upload_error",    # file/media upload failures
     "sso_issue",       # SSO broken / not working
     "signup_issue",    # account creation / sign-up failure
+    "invitation_issue",# invite email delivery failure
     "ui_preferences",  # feature stopped working (notifications, display)
 })
 
@@ -250,6 +268,7 @@ BILLING_INTENTS: frozenset[str] = frozenset({
     "refund_status",
     "invoice_customize",
     "invoice_download",
+    "seat_management",
     # sla_uptime is contract class, not billing — handled by sla_signal in reasoner
 })
 
@@ -267,10 +286,12 @@ _INTENT_TYPE_MAP = {
     "invoice_customize":  "billing",
     "invoice_download":   "billing",
     "plan_change":        "account",
+    "seat_management":    "billing",
     "cancel_subscription":"cancellation",
     "password_reset":     "account",
     "data_export":        "account",
     "permission_levels":  "account",
+    "invitation_issue":   "account",
     "feature_feedback":   "other",
     "version_history":    "account",
     "sso_issue":          "technical",

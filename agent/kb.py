@@ -195,10 +195,12 @@ INTENT_FAQ_MAP: dict[str, list[str]] = {
     "refund_status":      [],               # needs agent lookup → L1
     "invoice_customize":  [],               # not self-serve → L1
     "plan_change":        ["FAQ-account-02"],
+    "seat_management":    ["FAQ-billing-05"],
     "cancel_subscription":[],               # no self-serve answer → L2 (churn)
     "password_reset":     ["FAQ-account-01"],
     "data_export":        ["FAQ-feature-04"],
     "permission_levels":  ["FAQ-feature-02"],
+    "invitation_issue":   ["FAQ-troubleshoot-06"],
     "feature_feedback":   [],               # no self-serve path → L1
     "version_history":    ["FAQ-feature-07"],
     "sso_issue":          [],               # SSO broken needs investigation → L1

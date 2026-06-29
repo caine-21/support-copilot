@@ -4,3 +4,7 @@ __pycache__/
 *.pyo
 *.log
 .DS_Store
+
+# eval run artifacts (local validation evidence; not source of truth)
+data/reports/report_*.json
+data/runs/

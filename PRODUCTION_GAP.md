@@ -2,8 +2,8 @@
 
 ## 1. Current Position
 
-Support Copilot is a production-shaped portfolio / POC system. It is not a full
-production support platform.
+Support Copilot is an offline-evaluated POC. It is not connected to a real
+customer-service platform and is not running in production.
 
 The current project already covers several parts of a real AI support automation
 workflow:
@@ -25,7 +25,7 @@ support evidence for `AUTO_REPLY`, or whether it should move to `ESCALATE_L1` /
 | Production system needs | Current gap | Portfolio / POC proof | Do now? |
 |---|---|---|---|
 | Real support platform integration: Zendesk / Intercom / Freshdesk adapter | Tickets are loaded from CLI, Gradio, and eval fixtures instead of a real queue. | Add a mock ticket adapter that accepts Zendesk-like ticket JSON and produces the same routing packet. | Yes, as a mock adapter. Do not use real credentials yet. |
-| Structured customer context: plan / region / role / contract / SLA tier / account status | Context is mostly inferred from ticket text or hard-coded guard logic. | Add customer context fixtures and require routing to inspect structured context before `AUTO_REPLY`. | Yes, high priority. |
+| Structured customer context: plan / region / role / permissions / contract / account status | A local synthetic Customer Context Beta now gates `AUTO_REPLY` and records reasons, but there is no CRM adapter, real customer data, or independent support-agent review. | Preserve the fixed local eval; next complete developer review and external support-agent walkthrough before considering no-send replay. | Beta complete locally; do not expand integration in this batch. |
 | Knowledge governance: KB health / gap recommendation / version / approval / expiry | KB entries are usable for retrieval, but do not yet carry governance metadata. | Annotate KB docs with constraints such as `min_plan`, `regions`, `risk_level`, `requires_human`, `source`, and `last_verified`. | Yes, high priority. |
 | Online feedback loop: live traces -> human feedback -> dataset -> regression -> rollout | Eval data is offline and manually maintained. Human reviewer corrections do not yet become regression cases. | Simulate reviewer overrides and convert them into candidate eval fixtures. | Later in P1. Start with reviewer handoff packet first. |
 | Standard observability: OpenTelemetry / LangSmith-style traces / latency / cost | The project has run ledger and assumption trace, but not standard tracing, latency, token cost, or provider-level spans. | Keep the run ledger as a portfolio-friendly trace; later add latency/cost fields without standing up a full tracing stack. | Not now. Add lightweight fields only when needed. |
@@ -44,7 +44,8 @@ support evidence for `AUTO_REPLY`, or whether it should move to `ESCALATE_L1` /
 
 ### P1
 
-- Add `customer_context` schema + fixtures.
+- Complete the generated Customer Context developer review form.
+- Arrange an independent support-agent walkthrough when available.
 - Add KB annotation.
 - Add Automation Readiness Report.
 - Add mock ticket adapter.
@@ -77,15 +78,12 @@ this project stronger as a portfolio / POC system.
 
 The next implementation slice should be:
 
-- structured customer context fixture
-- KB annotation
-- Automation Readiness Report
-- mock ticket adapter
+- complete the generated developer review form
+- arrange an independent support-agent walkthrough
+- consider no-send replay only after compliant, de-identified data is available
 
 Why this slice:
 
-- These four items best prove SaaS/FDE implementation ability.
-- They move the project from an offline agent demo toward a customer POC workflow.
-- They do not require real customer data.
-- They do not require real support platform credentials.
-- They create clearer interview evidence than adding more prompt rules.
+- It tests the current labels and field dependencies before adding capability.
+- It keeps synthetic local evaluation separate from external validation.
+- It does not describe CRM integration, Shadow Mode, or production sending as current capability.

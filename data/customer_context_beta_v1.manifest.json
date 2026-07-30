@@ -1,0 +1,20 @@
+{
+  "dataset_version": "customer-context-beta-v1",
+  "dataset_file": "data/customer_context_beta_v1.json",
+  "sha256": "577bd3afaee52a6ec36c1dd3f99f533adff0117fcedcb10d7ad9bd8904de95bc",
+  "frozen_at": "2026-07-30T17:56:08Z",
+  "case_count": 30,
+  "unique_case_ids": 30,
+  "unique_ticket_texts": 30,
+  "distribution": {
+    "complete_low_risk": 6,
+    "missing_required_field": 5,
+    "conflicting_sources": 5,
+    "stale_required_field": 4,
+    "unknown_or_not_applicable": 4,
+    "ticket_override_attempt": 3,
+    "existing_high_risk": 3
+  },
+  "oracle_origin": "Codex-assisted labels derived from the user-approved Customer Context Beta contract; not customer-support expert annotation.",
+  "change_policy": "Do not overwrite v1 after evaluation. If an oracle is corrected, preserve v1, document the correction, and create a new dataset version."
+}

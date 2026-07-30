@@ -14,6 +14,7 @@ Grounding is deterministic: KB score threshold, NOT LLM self-assessment.
 import re
 import copy
 import context_guard as _guard
+from customer_context import evaluate_customer_context
 from intent_normalizer import normalize_multi, TECHNICAL_INTENTS, BILLING_INTENTS, CANCEL_INTENTS
 from churn_policy import resolve_churn
 
@@ -143,15 +144,35 @@ def synthesize(
     tone: dict,
     grounding_check: dict | None = None,
     precomputed_signals: dict | None = None,
+    customer_context: dict | None = None,
+    no_service: bool = False,
 ) -> dict:
     intent = classification.get("intent", "other")
     intent_conf = classification.get("confidence", 0.5)
     secondary = classification.get("secondary_intent")
     kb_grounding = kb_results if kb_results else []
     # normalize_multi() is pure CPU, reused by grounding caps and intent-class gates.
-    _multi = normalize_multi(ticket_text)
+    _multi = normalize_multi(ticket_text, allow_llm=not no_service)
     _intent_set = set(_multi.get("intent_set", ["unknown"]))
     grounding = grounding_level(kb_grounding)   # "strong" | "weak" | "none"
+    # L2 signals are independent of customer attributes. When either fires, the
+    # route is already human-only, so no customer field participates in it.
+    _sigs = precomputed_signals or compute_l2_signals(ticket_text)
+    if customer_context is None:
+        context_decision = None
+    elif _sigs["sla_signal"] or _sigs["hidden_cancel_signal"]:
+        context_decision = {
+            "safe_for_auto_reply": True,
+            "relevant_fields": [],
+            "used_fields": [],
+            "blocking_fields": [],
+            "reason_codes": ["customer_context_not_required"],
+            "field_states": {},
+        }
+    else:
+        context_decision = evaluate_customer_context(
+            ticket_text, kb_grounding, customer_context
+        )
     unknown_fallback = (_intent_set == {"unknown"})
     if unknown_fallback and grounding == "strong":
         grounding = "weak"   # ambiguous fallback cannot claim deterministic strong grounding
@@ -161,7 +182,6 @@ def synthesize(
     past_count = history.get("ticket_count", 0)
 
     # L2 signals — computed once, reused for priority and action blocks.
-    _sigs = precomputed_signals or compute_l2_signals(ticket_text)
     sla_signal           = _sigs["sla_signal"]
     hidden_cancel_signal = _sigs["hidden_cancel_signal"]
 
@@ -264,7 +284,14 @@ def synthesize(
     # context_guard v1: blocks AUTO_REPLY when plan-tier context conflicts with KB entry
     # grounding_compiler (Milestone D): blocks AUTO_REPLY when draft exceeds KB boundary
     elif confidence >= 0.75 and grounding == "strong":
-        guard = _guard.check(ticket_text, kb_grounding)
+        guard = (
+            {
+                "safe": context_decision["safe_for_auto_reply"],
+                "reason": ", ".join(context_decision["reason_codes"]),
+            }
+            if context_decision is not None
+            else _guard.check(ticket_text, kb_grounding)
+        )
         gc = grounding_check or {}
         gc_safe   = gc.get("auto_reply_safe", True)   # default True when compiler skipped
         gc_ratio  = gc.get("grounding_ratio", 1.0)
@@ -313,7 +340,7 @@ def synthesize(
         + (["unknown_fallback_cap"] if unknown_fallback else [])
     )
 
-    return {
+    result = {
         "ticket_id": None,
         "grounding": grounding,
         "intent": intent,
@@ -354,6 +381,18 @@ def synthesize(
             contested=_churn["contested"],
         ),
     }
+    if context_decision is not None:
+        context_reason_codes = list(context_decision["reason_codes"])
+        if action != "AUTO_REPLY" and context_reason_codes in (
+            ["customer_context_ok"],
+            ["customer_context_not_required"],
+        ):
+            context_reason_codes = ["existing_policy_requires_human"]
+        elif action == "ESCALATE_L2" and "existing_policy_requires_human" not in context_reason_codes:
+            context_reason_codes.append("existing_policy_requires_human")
+        result["reason_codes"] = context_reason_codes
+        result["customer_context_decision"] = context_decision
+    return result
 
 
 # ── assumption replay (policy-sensitivity probe over a decision) ──────────────
@@ -399,13 +438,16 @@ def replay_assumptions(
     tone: dict,
     grounding_check: dict | None = None,
     precomputed_signals: dict | None = None,
+    customer_context: dict | None = None,
+    no_service: bool = False,
 ) -> dict:
     """Counterfactual: which LLM assumptions actually drive this decision?"""
     _ASSUMED = ("churn_risk", "intent_confidence", "tone")
 
     def _action(c: dict, t: dict) -> str:
         return synthesize(ticket_text, c, kb_results, history, draft, t,
-                          grounding_check, precomputed_signals)["action"]
+                          grounding_check, precomputed_signals,
+                          customer_context, no_service)["action"]
 
     baseline = _action(classification, tone)
 

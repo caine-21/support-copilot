@@ -30,7 +30,14 @@ def log(tag: str, msg: str):
         print(f"[{tag}] {msg}")
 
 
-def _attach_replay(result: dict, ticket_text: str, obs: dict, signals: dict) -> dict:
+def _attach_replay(
+    result: dict,
+    ticket_text: str,
+    obs: dict,
+    signals: dict,
+    customer_context: dict | None = None,
+    no_service: bool = False,
+) -> dict:
     """Attach policy-sensitivity replay: which LLM assumptions drive this decision.
 
     Pure CPU (synthesize does no LLM calls), routing untouched. Probes POLICY
@@ -46,6 +53,8 @@ def _attach_replay(result: dict, ticket_text: str, obs: dict, signals: dict) -> 
         obs.get("tone", {}),
         grounding_check=obs.get("grounding_check"),
         precomputed_signals=signals,
+        customer_context=customer_context,
+        no_service=no_service,
     )
     return result
 
@@ -64,6 +73,13 @@ def _log_decision(ledger, ticket_id, result, signals, rule):
             "tone":        result.get("tone"),
             "intent_set":  result.get("intent_set", []),
             "confidence":  result.get("confidence"),
+            "customer_context_reason_codes": result.get("reason_codes", []),
+            "customer_context_used_fields": (
+                result.get("customer_context_decision", {}).get("used_fields", [])
+            ),
+            "customer_context_blocking_fields": (
+                result.get("customer_context_decision", {}).get("blocking_fields", [])
+            ),
         },
         rule=rule,
     )
@@ -94,17 +110,23 @@ def decide_reflection_strategy(result: dict, iteration: int) -> dict | None:
     return None
 
 
-def _phase1_parallel(ticket_text: str, user_id: str, memory: AgentMemory) -> dict:
+def _phase1_parallel(
+    ticket_text: str,
+    user_id: str,
+    memory: AgentMemory,
+    registry: dict | None = None,
+) -> dict:
     """Phase 1: classify_intent + kb_search + history_lookup + tone_check in parallel.
 
     tone_check is included here (not in Phase 2) so churn_risk is always available,
     even when early L2 exit skips draft_reply.
     """
     obs = {"classification": {}, "kb_results": [], "history": {}, "tone": {}}
+    active_registry = registry or tool_registry
     kb_was_cached = [False]  # mutable container for closure
 
     def _classify():
-        r = tool_registry["classify_intent"].execute({"ticket_text": ticket_text})
+        r = active_registry["classify_intent"].execute({"ticket_text": ticket_text})
         return "classification", r.get("data", {}) if r["success"] else {}
 
     def _kb():
@@ -113,15 +135,15 @@ def _phase1_parallel(ticket_text: str, user_id: str, memory: AgentMemory) -> dic
             log("Memory", f"KB cache hit: {ticket_text[:50]}")
             kb_was_cached[0] = True
             return "kb_results", cached
-        r = tool_registry["kb_search"].execute({"query": ticket_text, "top_k": 3})
+        r = active_registry["kb_search"].execute({"query": ticket_text, "top_k": 3})
         return "kb_results", r.get("data", []) if r["success"] else []
 
     def _history():
-        r = tool_registry["history_lookup"].execute({"user_id": user_id, "memory": memory})
+        r = active_registry["history_lookup"].execute({"user_id": user_id, "memory": memory})
         return "history", r.get("data", {}) if r["success"] else {}
 
     def _tone():
-        r = tool_registry["tone_check"].execute({"ticket_text": ticket_text})
+        r = active_registry["tone_check"].execute({"ticket_text": ticket_text})
         return "tone", r.get("data", {}) if r["success"] else {}
 
     with ThreadPoolExecutor(max_workers=4) as executor:
@@ -138,16 +160,31 @@ def _phase1_parallel(ticket_text: str, user_id: str, memory: AgentMemory) -> dic
     return obs
 
 
-def _phase2_sequential(ticket_text: str, obs: dict) -> dict:
+def _phase2_sequential(
+    ticket_text: str,
+    obs: dict,
+    registry: dict | None = None,
+    no_service: bool = False,
+) -> dict:
     """Phase 2: draft (expensive LLM) → grounding_compiler (inline)."""
-    dr = tool_registry["draft_reply"].execute({
+    active_registry = registry or tool_registry
+    dr = active_registry["draft_reply"].execute({
         "ticket_text": ticket_text,
         "kb_snippets": obs["kb_results"],
     })
     if dr["success"]:
         obs["draft"] = dr.get("data", {})
         draft_text = obs["draft"].get("reply", "")
-        gc = compile_grounding(draft_text, obs["kb_results"])
+        if no_service:
+            gc = obs["draft"].get("grounding_check") or {
+                "claims": [],
+                "grounding_ratio": 0.0,
+                "ungrounded_claims": ["no-service grounding fixture missing"],
+                "ungrounded_summary": "No deterministic grounding result was supplied.",
+                "auto_reply_safe": False,
+            }
+        else:
+            gc = compile_grounding(draft_text, obs["kb_results"])
         obs["grounding_check"] = gc
         log("Grounding", (
             f"ratio={gc['grounding_ratio']:.2f} "
@@ -158,14 +195,24 @@ def _phase2_sequential(ticket_text: str, obs: dict) -> dict:
     return obs
 
 
-def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", memory: AgentMemory = None, ledger=None) -> dict:
+def run_agent(
+    ticket_text: str,
+    ticket_id: str = "T-?",
+    user_id: str = "U-?",
+    memory: AgentMemory = None,
+    ledger=None,
+    customer_context: dict | None = None,
+    registry: dict | None = None,
+    no_service: bool = False,
+) -> dict:
     log("Agent", f"ticket={ticket_id} user={user_id} text='{ticket_text[:60]}'")
 
     if memory is None:
         memory = AgentMemory()
 
     # ── Phase 1: parallel data gathering ─────────────────────────────────────
-    obs = _phase1_parallel(ticket_text, user_id, memory)
+    active_registry = registry or tool_registry
+    obs = _phase1_parallel(ticket_text, user_id, memory, active_registry)
     obs.update({"draft": {}, "grounding_check": {}})
     if ledger is not None:
         ledger.log_step(ticket_id, "classify_intent", obs["classification"])
@@ -188,16 +235,26 @@ def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", me
             tone=obs["tone"],
             grounding_check=None,
             precomputed_signals=signals,
+            customer_context=customer_context,
+            no_service=no_service,
         )
         result["ticket_id"] = ticket_id
-        result = _attach_replay(result, ticket_text, obs, signals)
+        result = _attach_replay(
+            result, ticket_text, obs, signals, customer_context, no_service
+        )
         if ledger is not None:
+            if customer_context is not None:
+                ledger.log_step(
+                    ticket_id,
+                    "customer_context_gate",
+                    result.get("customer_context_decision", {}),
+                )
             _log_decision(ledger, ticket_id, result, signals, rule="early_l2_gate")
         memory.add_ticket(user_id, {"ticket_id": ticket_id, "intent": result["intent"], "action": result["action"]})
         return result
 
     # ── Phase 2: sequential generation + verification ─────────────────────────
-    obs = _phase2_sequential(ticket_text, obs)
+    obs = _phase2_sequential(ticket_text, obs, active_registry, no_service)
     if ledger is not None:
         ledger.log_step(ticket_id, "draft_reply",     obs.get("draft"))
         ledger.log_step(ticket_id, "grounding_check", obs.get("grounding_check"))
@@ -211,6 +268,8 @@ def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", me
         tone=obs["tone"],
         grounding_check=obs.get("grounding_check"),
         precomputed_signals=signals,
+        customer_context=customer_context,
+        no_service=no_service,
     )
     result["ticket_id"] = ticket_id
 
@@ -225,21 +284,30 @@ def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", me
 
         if strategy["tool"] == "kb_search":
             new_query = f"{strategy['query_modifier']} {ticket_text}"
-            r = tool_registry["kb_search"].execute({"query": new_query.strip(), "top_k": 5})
+            r = active_registry["kb_search"].execute({"query": new_query.strip(), "top_k": 5})
             if r["success"] and r["data"]:
                 obs["kb_results"] = r["data"]
                 log("Reflect", f"KB retry found {len(r['data'])} results")
-                draft_r = tool_registry["draft_reply"].execute(
+                draft_r = active_registry["draft_reply"].execute(
                     {"ticket_text": ticket_text, "kb_snippets": obs["kb_results"]}
                 )
                 if draft_r["success"]:
                     obs["draft"] = draft_r["data"]
-                    obs["grounding_check"] = compile_grounding(
-                        obs["draft"].get("reply", ""), obs["kb_results"]
-                    )
+                    if no_service:
+                        obs["grounding_check"] = obs["draft"].get("grounding_check") or {
+                            "claims": [],
+                            "grounding_ratio": 0.0,
+                            "ungrounded_claims": ["no-service grounding fixture missing"],
+                            "ungrounded_summary": "No deterministic grounding result was supplied.",
+                            "auto_reply_safe": False,
+                        }
+                    else:
+                        obs["grounding_check"] = compile_grounding(
+                            obs["draft"].get("reply", ""), obs["kb_results"]
+                        )
 
         elif strategy["tool"] == "classify_intent":
-            r = tool_registry["classify_intent"].execute({"ticket_text": ticket_text})
+            r = active_registry["classify_intent"].execute({"ticket_text": ticket_text})
             if r["success"]:
                 obs["classification"] = r["data"]
 
@@ -252,12 +320,22 @@ def run_agent(ticket_text: str, ticket_id: str = "T-?", user_id: str = "U-?", me
             tone=obs["tone"],
             grounding_check=obs.get("grounding_check"),
             precomputed_signals=signals,
+            customer_context=customer_context,
+            no_service=no_service,
         )
         result["ticket_id"] = ticket_id
         log("Reflect", f"after iter {iteration}: confidence={result['confidence']}, action={result['action']}")
 
-    result = _attach_replay(result, ticket_text, obs, signals)
+    result = _attach_replay(
+        result, ticket_text, obs, signals, customer_context, no_service
+    )
     if ledger is not None:
+        if customer_context is not None:
+            ledger.log_step(
+                ticket_id,
+                "customer_context_gate",
+                result.get("customer_context_decision", {}),
+            )
         _log_decision(ledger, ticket_id, result, signals, rule=f"reflection_iters={iteration}")
     memory.add_ticket(user_id, {
         "ticket_id": ticket_id,

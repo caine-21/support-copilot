@@ -334,7 +334,7 @@ _INTENT_TO_GROUP: dict[str, int] = {
 }
 
 
-def normalize_multi(query: str) -> dict:
+def normalize_multi(query: str, *, allow_llm: bool = True) -> dict:
     """
     Scan ALL rules; return every matching intent (multi-intent aware).
 
@@ -380,6 +380,14 @@ def normalize_multi(query: str) -> dict:
             fired_groups.add(group_idx)
 
     if not matched:
+        if not allow_llm:
+            return {
+                "intent_set": ["unknown"],
+                "requires_clarification": False,
+                "unknown_entity": "",
+                "intent_type": "unknown",
+                "confidence": 0.4,
+            }
         inl = _llm_normalize(query)
         return {
             "intent_set": [inl["intent_id"]],

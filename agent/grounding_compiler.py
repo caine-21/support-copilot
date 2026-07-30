@@ -21,9 +21,6 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))
 
-from llm import call_llm, safe_json_parse
-
-
 # Fraction of claims that must be KB-supported for AUTO_REPLY to proceed.
 # Below this → action downgraded to ESCALATE_L1.
 GROUNDING_REQUIRED: float = 0.75
@@ -97,6 +94,10 @@ def compile_grounding(draft: str, kb_snippets: list[dict]) -> dict:
             "ungrounded_summary": "",
             "auto_reply_safe":    True,
         }
+
+    # Lazy import keeps deterministic/no-service runs from loading provider
+    # configuration. This function remains the provider-backed path.
+    from llm import call_llm, safe_json_parse
 
     kb_block = "\n\n".join(
         f"[{item['doc_id']}]: {item.get('snippet', '')}" for item in kb_snippets

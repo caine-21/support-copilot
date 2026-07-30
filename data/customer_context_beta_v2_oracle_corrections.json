@@ -1,0 +1,40 @@
+{
+  "dataset_version": "customer-context-beta-v2",
+  "parent_dataset_version": "customer-context-beta-v1",
+  "parent_dataset_sha256": "577bd3afaee52a6ec36c1dd3f99f533adff0117fcedcb10d7ad9bd8904de95bc",
+  "created_at": "2026-07-31T02:41:00+08:00",
+  "oracle_corrections": [
+    {
+      "case_id": "CCB-001",
+      "changes": {
+        "expected": {
+          "route": "ESCALATE_L1",
+          "auto_reply_allowed": false,
+          "reason_codes": ["existing_policy_requires_human"]
+        },
+        "label_reason": "Customer context is complete, but API-limit wording is outside the deterministic intent map; the existing unknown-intent safety lock requires L1 review."
+      },
+      "reason": "The v1 oracle ignored the pre-existing unknown-intent AUTO_REPLY prohibition. The policy is retained; the oracle is corrected."
+    },
+    {
+      "case_id": "CCB-002",
+      "changes": {
+        "expected": {
+          "route": "ESCALATE_L1",
+          "auto_reply_allowed": false,
+          "reason_codes": ["existing_policy_requires_human"]
+        },
+        "label_reason": "Customer context is complete, but this residency wording is outside the deterministic intent map; the existing unknown-intent safety lock requires L1 review."
+      },
+      "reason": "The v1 oracle ignored the pre-existing unknown-intent AUTO_REPLY prohibition. The policy is retained; the oracle is corrected."
+    },
+    {
+      "case_id": "CCB-030",
+      "changes": {
+        "relevant_fields": []
+      },
+      "reason": "The deterministic SLA L2 gate decides human handling before customer attributes are consulted, so no customer field is a routing dependency."
+    }
+  ],
+  "change_policy": "The v1 dataset and initial report remain unchanged. These corrections change oracle interpretation only; no failed case is deleted or replaced."
+}

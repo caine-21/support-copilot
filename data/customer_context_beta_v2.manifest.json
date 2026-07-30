@@ -1,0 +1,13 @@
+{
+  "dataset_version": "customer-context-beta-v2",
+  "base_dataset_file": "data/customer_context_beta_v1.json",
+  "base_dataset_sha256": "577bd3afaee52a6ec36c1dd3f99f533adff0117fcedcb10d7ad9bd8904de95bc",
+  "oracle_corrections_file": "data/customer_context_beta_v2_oracle_corrections.json",
+  "oracle_corrections_sha256": "49d6e61801f6060413098ef59f83e874582db64e0ed31604de8143e4bc7aeac9",
+  "combined_sha256": "a3d30ed655290a92acb4a78eb0995048fdde431b9d18e65a0f099c918e3b0408",
+  "frozen_at": "2026-07-30T18:41:00Z",
+  "case_count": 30,
+  "oracle_correction_count": 3,
+  "oracle_origin": "Codex-assisted labels derived from the user-approved contract and corrected against the preserved v1 run; not customer-support expert annotation.",
+  "change_policy": "The base v1 dataset and initial v1 evidence remain immutable."
+}

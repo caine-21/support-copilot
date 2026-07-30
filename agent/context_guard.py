@@ -17,8 +17,6 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))
 
-from llm import call_llm, safe_json_parse
-
 # ── Entitlement annotations (deterministic, human-maintained) ─────────────────
 # These do not change with model updates — only change when FAQ policy changes.
 
@@ -63,6 +61,10 @@ def extract_user_context(ticket_text: str) -> dict:
     Fallback to {plan: "unknown", region: "unknown"} on any error.
     """
     try:
+        # Lazy import keeps deterministic/no-service paths from loading provider
+        # configuration. The legacy inferred-context path is otherwise unchanged.
+        from llm import call_llm, safe_json_parse
+
         raw = call_llm(_EXTRACT_SYSTEM, f"Ticket: {ticket_text}")
         parsed = safe_json_parse(raw)
         return {

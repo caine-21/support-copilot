@@ -9,7 +9,6 @@ import os
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(__file__))
 
-from llm import call_llm, safe_json_parse
 import kb as kb_module
 
 
@@ -61,6 +60,8 @@ Output JSON only:
 
 
 def _classify_intent(ticket_text: str) -> dict:
+    from llm import call_llm, safe_json_parse
+
     raw = call_llm(_INTENT_SYSTEM, f"Ticket: {ticket_text}")
     result = safe_json_parse(raw)
     return {
@@ -125,6 +126,8 @@ Output JSON only:
 
 
 def _draft_reply(ticket_text: str, kb_snippets: list) -> dict:
+    from llm import call_llm, safe_json_parse
+
     kb_block = "\n\n".join(
         f"[{item['doc_id']}]: {item['snippet']}" for item in kb_snippets
     ) if kb_snippets else "No KB results found."
@@ -155,6 +158,8 @@ churn_risk: 0.0 = no risk, 1.0 = explicit cancellation intent"""
 
 
 def _tone_check(ticket_text: str) -> dict:
+    from llm import call_llm, safe_json_parse
+
     raw = call_llm(_TONE_SYSTEM, f"Ticket: {ticket_text}")
     result = safe_json_parse(raw)
     return {

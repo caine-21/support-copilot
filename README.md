@@ -14,7 +14,7 @@ license: mit
 
 ## One-line pitch
 
-Support Copilot is a production-shaped AI support triage project: it classifies SaaS customer tickets, retrieves KB evidence, drafts grounded replies, and decides whether the ticket is safe for `AUTO_REPLY` or must be routed to `ESCALATE_L1` / `ESCALATE_L2`.
+Support Copilot is an offline-evaluated AI support triage POC: it classifies SaaS customer tickets, retrieves KB evidence, drafts grounded replies, and decides whether the ticket is eligible for `AUTO_REPLY` or must be routed to `ESCALATE_L1` / `ESCALATE_L2`.
 
 It is not a generic support chatbot. The core question is:
 
@@ -30,6 +30,7 @@ This project treats support automation as a routing and safety decision system, 
 
 ```
 ticket_in
+  -> synthetic customer_context fixture (Beta; no CRM)
   -> phase 1: classify_intent | kb_search | history_lookup | tone_check
   -> deterministic early-L2 gate for SLA / hidden-cancel / security-like signals
   -> draft_reply
@@ -131,6 +132,8 @@ The key safety result is not raw accuracy. The main invariants are:
 | `agent/intent_normalizer.py` | INL: text -> stable intent set |
 | `agent/kb.py` | Intent-to-FAQ lookup plus hybrid retrieval fallback |
 | `agent/context_guard.py` | Plan/region entitlement guard |
+| `agent/customer_context.py` | Structured customer-field validation and AUTO_REPLY gate |
+| `agent/customer_context_eval.py` | Frozen 30-case deterministic no-service evaluation entry |
 | `agent/grounding_compiler.py` | Claim-level KB support check for draft replies |
 | `agent/eval.py` | 100-case eval runner and report writer |
 | `agent/run_ledger.py` | Append-only run ledger |
@@ -139,13 +142,13 @@ The key safety result is not raw accuracy. The main invariants are:
 
 ## Known Limitations (documented, not papered over)
 
-This project is not production-ready. It is a production-shaped portfolio system that demonstrates the decision architecture and evaluation loop.
+This project is an offline-evaluated POC, not a production system. It demonstrates the decision flow and evaluation loop without a real customer-service integration.
 
 1. **No real customer system integration**  
    There is no Zendesk / Intercom / Freshdesk adapter. Tickets are provided through CLI, Gradio, or eval fixtures.
 
-2. **User context is incomplete**  
-   The strongest remaining risk is context-specific correctness: plan, region, role, and contract terms should be structured inputs, not inferred from ticket text.
+2. **Customer context is local and synthetic**
+   The Beta now accepts structured plan, region, role, permissions, contract, and account fields, but only through synthetic fixtures. There is no CRM adapter, real customer data, or independent support-agent review.
 
 3. **KB annotations are partly hard-coded**  
    Plan-dependent rules live in guard code. A more realistic implementation would annotate each FAQ with `min_plan`, `regions`, `requires_csm`, and risk level.
@@ -191,6 +194,12 @@ Full eval:
 
 ```powershell
 py -m agent.eval latest
+```
+
+Customer Context Beta deterministic evaluation (no provider):
+
+```powershell
+py -m agent.customer_context_eval --dataset-version v2 --tag <new-tag>
 ```
 
 This writes a new report and run ledger. Do not run full eval unless you want new artifacts under `data/reports/` and `data/runs/`.

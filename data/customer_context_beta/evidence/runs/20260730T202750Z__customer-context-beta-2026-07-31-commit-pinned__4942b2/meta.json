@@ -1,0 +1,13 @@
+{
+  "run_id": "20260730T202750Z__customer-context-beta-2026-07-31-commit-pinned__4942b2",
+  "tag": "customer-context-beta-2026-07-31-commit-pinned",
+  "started_utc": "20260730T202750Z",
+  "schema_version": 1,
+  "dataset_version": "customer-context-beta-v2",
+  "dataset_hash": "a3d30ed655290a92acb4a78eb0995048fdde431b9d18e65a0f099c918e3b0408",
+  "git_commit": "efea70b29ebc87c0e870f492cadb57a479b15032",
+  "source_snapshot_sha256": "a3c1b0b827d1fee2124a739253f7dff8412a917b027cce8d8b3c53e7864de20d",
+  "mode": "deterministic_no_service",
+  "provider": "none",
+  "finished_utc": "2026-07-30T20:27:51.558486Z"
+}

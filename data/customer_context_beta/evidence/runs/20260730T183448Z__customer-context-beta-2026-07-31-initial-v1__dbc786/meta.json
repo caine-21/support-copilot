@@ -1,0 +1,13 @@
+{
+  "run_id": "20260730T183448Z__customer-context-beta-2026-07-31-initial-v1__dbc786",
+  "tag": "customer-context-beta-2026-07-31-initial-v1",
+  "started_utc": "20260730T183448Z",
+  "schema_version": 1,
+  "dataset_version": "customer-context-beta-v1",
+  "dataset_hash": "577bd3afaee52a6ec36c1dd3f99f533adff0117fcedcb10d7ad9bd8904de95bc",
+  "git_commit": "51154a8b419abb58b4b8d96e49121304f63a224c",
+  "source_snapshot_sha256": "636e5f4d9634c62171298dc6ecf157ae6af6ac399c6f10f5ecb9df7b2194ef84",
+  "mode": "deterministic_no_service",
+  "provider": "none",
+  "finished_utc": "2026-07-30T18:34:48.732036Z"
+}

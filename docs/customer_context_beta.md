@@ -80,7 +80,8 @@ a3d30ed655290a92acb4a78eb0995048fdde431b9d18e65a0f099c918e3b0408
 
 Oracle 来自用户批准的业务合同和 Codex 辅助整理，不是客服专家标注。
 
-最终 v2 报告：
+在固定代码 commit `efea70b29ebc87c0e870f492cadb57a479b15032` 上于
+`2026-07-31T04:27:50+08:00` 重跑 v2，结果为：
 
 - 30/30 场景产生结构完整的逐条记录；
 - 30/30 与版本化 oracle 一致；
@@ -89,10 +90,12 @@ Oracle 来自用户批准的业务合同和 Codex 辅助整理，不是客服专
 - 两次运行的确定性决策一致；
 - 缺失、冲突、过期和工单覆盖系统事实的场景均没有自动回复。
 
-权威逐条数据位于：
+权威的 commit-pinned 逐条数据位于：
 
-- `data/customer_context_beta/evidence/customer_context_beta_2026-07-31-final-v2.json`
-- `data/customer_context_beta/evidence/customer_context_beta_2026-07-31-final-v2.md`
+- `data/customer_context_beta/evidence/customer_context_beta_2026-07-31-commit-pinned.json`
+- `data/customer_context_beta/evidence/customer_context_beta_2026-07-31-commit-pinned.md`
+
+初次 v1 失败报告和提交前的 v2 报告仍保留，用于追溯 oracle 修正过程。
 
 ## 可复现命令
 
@@ -107,7 +110,7 @@ py -m agent.customer_context_eval --dataset-version v2 --tag <new-tag>
 
 1. 自动化测试：验证结构、状态、权限、套餐、文本覆盖、现有 L2 规则、工作流集成和报告字段。
 2. Codex 辅助本地结构化评测：固定 30 场景通过真实 `run_agent` 入口运行，工具边界使用合成 fixture，保存逐条记录。
-3. 开发者人工复核：`developer_review_2026-07-31-final-v2.md` 已生成但尚未填写，因此当前不能声明完成开发者走查。
+3. 开发者人工复核：`developer_review_2026-07-31-commit-pinned.md` 已生成但尚未填写，因此当前不能声明完成开发者走查。
 
 ## 当前限制
 
@@ -115,4 +118,4 @@ py -m agent.customer_context_eval --dataset-version v2 --tag <new-tag>
 - 没有独立客服人员复核。
 - 没有 Shadow Mode、人工审批队列、真实自动发送或生产部署。
 - 没有线上流量、业务效果或 ROI 数据。
-- 报告记录基础 commit `51154a8` 和本轮源码快照哈希；由于本轮按要求不自动提交，最终 commit-pinned 复跑仍需在 Reviewer 审核并提交代码后执行。
+- 固定报告记录代码 commit `efea70b29ebc87c0e870f492cadb57a479b15032`；12 个源码文件哈希与该 commit 的 Git blob 一致，运行时 tracked working tree 为 clean。

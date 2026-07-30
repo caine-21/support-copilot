@@ -335,6 +335,9 @@ def test_fixed_evaluation_emits_complete_per_case_no_service_records():
 
     assert report["run"]["mode"] == "deterministic_no_service"
     assert report["run"]["provider"] == "none"
+    assert isinstance(report["run"]["tracked_working_tree_dirty"], bool)
+    assert len(report["run"]["source_file_sha256"]) == 12
+    assert len(report["run"]["working_tree_source_file_sha256"]) == 12
     assert report["dataset"]["case_count"] == 30
     assert len(report["cases"]) == 30
     assert report["determinism"]["repeat_count"] == 2

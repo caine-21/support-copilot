@@ -150,13 +150,6 @@ class _FixedTool:
 
 
 def _source_snapshot() -> dict:
-    file_hashes = {}
-    for relative_path in SOURCE_FILES:
-        content = (PROJECT_ROOT / relative_path).read_bytes()
-        file_hashes[relative_path] = hashlib.sha256(content).hexdigest()
-    joined = "\n".join(f"{path}:{file_hashes[path]}" for path in sorted(file_hashes))
-    snapshot_hash = hashlib.sha256(joined.encode("utf-8")).hexdigest()
-
     commit = subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=PROJECT_ROOT,
@@ -164,8 +157,40 @@ def _source_snapshot() -> dict:
         capture_output=True,
         text=True,
     ).stdout.strip()
+    file_hashes = {}
+    working_tree_file_hashes = {}
+    for relative_path in SOURCE_FILES:
+        committed_content = subprocess.run(
+            ["git", "show", f"{commit}:{relative_path}"],
+            cwd=PROJECT_ROOT,
+            check=True,
+            capture_output=True,
+        ).stdout
+        working_tree_content = (PROJECT_ROOT / relative_path).read_bytes()
+        file_hashes[relative_path] = hashlib.sha256(committed_content).hexdigest()
+        working_tree_file_hashes[relative_path] = hashlib.sha256(
+            working_tree_content
+        ).hexdigest()
+    joined = "\n".join(f"{path}:{file_hashes[path]}" for path in sorted(file_hashes))
+    snapshot_hash = hashlib.sha256(joined.encode("utf-8")).hexdigest()
+    working_tree_joined = "\n".join(
+        f"{path}:{working_tree_file_hashes[path]}"
+        for path in sorted(working_tree_file_hashes)
+    )
+    working_tree_snapshot_hash = hashlib.sha256(
+        working_tree_joined.encode("utf-8")
+    ).hexdigest()
+
     status = subprocess.run(
         ["git", "status", "--short", "--untracked-files=all"],
+        cwd=PROJECT_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    ).stdout.splitlines()
+    tracked_status = subprocess.run(
+        ["git", "status", "--short", "--untracked-files=no"],
         cwd=PROJECT_ROOT,
         check=True,
         capture_output=True,
@@ -175,8 +200,11 @@ def _source_snapshot() -> dict:
     return {
         "git_commit": commit,
         "working_tree_dirty": bool(status),
+        "tracked_working_tree_dirty": bool(tracked_status),
         "source_snapshot_sha256": snapshot_hash,
         "file_sha256": file_hashes,
+        "working_tree_source_snapshot_sha256": working_tree_snapshot_hash,
+        "working_tree_file_sha256": working_tree_file_hashes,
     }
 
 
@@ -474,8 +502,13 @@ def run_fixed_evaluation(
             "provider": "none",
             "git_commit": source["git_commit"],
             "working_tree_dirty": source["working_tree_dirty"],
+            "tracked_working_tree_dirty": source["tracked_working_tree_dirty"],
             "source_snapshot_sha256": source["source_snapshot_sha256"],
             "source_file_sha256": source["file_sha256"],
+            "working_tree_source_snapshot_sha256": (
+                source["working_tree_source_snapshot_sha256"]
+            ),
+            "working_tree_source_file_sha256": source["working_tree_file_sha256"],
         },
         "dataset": {
             "version": contract["dataset"]["dataset_version"],
@@ -535,6 +568,7 @@ def render_markdown_report(report: dict) -> str:
         "",
         f"- 运行时间：`{report['run']['run_at']}`",
         f"- 基础 commit：`{report['run']['git_commit']}`（working tree dirty：`{str(report['run']['working_tree_dirty']).lower()}`）",
+        f"- tracked working tree dirty：`{str(report['run']['tracked_working_tree_dirty']).lower()}`",
         f"- 源码快照 SHA-256：`{report['run']['source_snapshot_sha256']}`",
         f"- 数据版本：`{report['dataset']['version']}`",
         f"- 数据 SHA-256：`{report['dataset']['sha256']}`",

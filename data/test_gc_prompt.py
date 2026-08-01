@@ -39,6 +39,8 @@ TESTS = [
     },
 ]
 
+RESULTS = []
+
 for t in TESTS:
     result = compile_grounding(t["draft"], t["kb"])
     print(f"=== {t['id']} ===")
@@ -55,3 +57,9 @@ for t in TESTS:
     )
     print(f"  caught expected ungrounded: {'YES' if caught else 'NO -- MISSED'}")
     print()
+    RESULTS.append(caught)
+
+
+def test_expected_ungrounded_claims_are_detected():
+    assert len(RESULTS) == len(TESTS)
+    assert all(RESULTS)

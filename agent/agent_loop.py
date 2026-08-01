@@ -204,6 +204,8 @@ def run_agent(
     customer_context: dict | None = None,
     registry: dict | None = None,
     no_service: bool = False,
+    multi_agent_mode: str = "off",
+    multi_agent_runner=None,
 ) -> dict:
     log("Agent", f"ticket={ticket_id} user={user_id} text='{ticket_text[:60]}'")
 
@@ -239,6 +241,12 @@ def run_agent(
             no_service=no_service,
         )
         result["ticket_id"] = ticket_id
+        if multi_agent_mode == "shadow":
+            from multi_agent.shadow import MultiAgentShadowRunner
+            shadow = multi_agent_runner or MultiAgentShadowRunner()
+            result["multi_agent_shadow"] = shadow.finalize(shadow.skipped(), result["action"])
+            if ledger is not None:
+                ledger.log_step(ticket_id, "multi_agent_shadow_summary", {"status": "skipped", "reason": "early_l2"})
         result = _attach_replay(
             result, ticket_text, obs, signals, customer_context, no_service
         )
@@ -252,6 +260,23 @@ def run_agent(
             _log_decision(ledger, ticket_id, result, signals, rule="early_l2_gate")
         memory.add_ticket(user_id, {"ticket_id": ticket_id, "intent": result["intent"], "action": result["action"]})
         return result
+
+    shadow_packet = None
+    if multi_agent_mode == "shadow":
+        from multi_agent.shadow import MultiAgentShadowRunner
+        shadow = multi_agent_runner or MultiAgentShadowRunner()
+        try:
+            shadow_packet = shadow.run(ticket_text, obs, customer_context)
+            if ledger is not None:
+                decision = shadow_packet.manager_decision
+                ledger.log_step(ticket_id, "multi_agent_manager", {"status": "ok", "selected_specialists": decision.selected_specialists if decision else []})
+                for specialist in shadow_packet.specialist_results:
+                    ledger.log_step(ticket_id, f"multi_agent_{specialist.specialist}", {"status": "failed" if specialist.error else "ok", "input_fields": ["ticket_text", "classification", "kb"]})
+                ledger.log_step(ticket_id, "multi_agent_merge", {"status": shadow_packet.status, "conflicts": shadow_packet.conflicts})
+        except Exception as exc:
+            from multi_agent.contracts import MultiAgentShadowPacket
+            from multi_agent.safety import safe_error
+            shadow_packet = MultiAgentShadowPacket(status="failed", baseline_action="", baseline_action_unchanged=True, errors=[safe_error("merger", exc)])
 
     # ── Phase 2: sequential generation + verification ─────────────────────────
     obs = _phase2_sequential(ticket_text, obs, active_registry, no_service)
@@ -326,6 +351,10 @@ def run_agent(
         result["ticket_id"] = ticket_id
         log("Reflect", f"after iter {iteration}: confidence={result['confidence']}, action={result['action']}")
 
+    if shadow_packet is not None:
+        result["multi_agent_shadow"] = shadow.finalize(shadow_packet, result["action"])
+        if ledger is not None:
+            ledger.log_step(ticket_id, "multi_agent_shadow_summary", {"status": shadow_packet.status, "baseline_action_unchanged": True})
     result = _attach_replay(
         result, ticket_text, obs, signals, customer_context, no_service
     )

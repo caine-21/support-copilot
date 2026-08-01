@@ -28,6 +28,18 @@ This project treats support automation as a routing and safety decision system, 
 
 ## Architecture
 
+### Multi-Agent Shadow (offline-evaluated)
+
+Multi-Agent Shadow is an offline-evaluated advisory layer with an independent Support Manager, Billing Specialist, Technical Specialist, domain-isolated ticket slices, explicit KB domains, deterministic merging, safe component errors, and a data-driven three-layer Oracle. Shadow does not change the formal routing or auto-reply authorization decision.
+
+Run its scripted/fake harness locally:
+
+```powershell
+py -B -m agent.multi_agent_eval
+```
+
+Current offline result: Scenario `20/20`, Manager Accuracy `0.90`, Multi-intent Coverage `0.80`, and Off/Shadow Unsafe AUTO_REPLY `0/0` (delta `0`). These are not real-model effectiveness or production-validation claims. See [Multi-Agent Shadow documentation](docs/MULTI_AGENT_SHADOW.md) for architecture, Eval semantics, and the evidence boundary.
+
 ```
 ticket_in
   -> synthetic customer_context fixture (Beta; no CRM)

@@ -8,3 +8,6 @@ __pycache__/
 # eval run artifacts (local validation evidence; not source of truth)
 data/reports/report_*.json
 data/runs/
+
+# ticket workflow slice: local SQLite runtime db (not source)
+data/service/

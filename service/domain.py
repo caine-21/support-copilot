@@ -1,0 +1,125 @@
+"""Domain types for the ticket workflow slice.
+
+The decision set mirrors agent/reasoner.py string constants. IMPORTANT: the
+reasoner emits exactly {AUTO_REPLY, ESCALATE_L1, ESCALATE_L2} — there is no
+ABSTAIN in the source. UNKNOWN is a service-level fallback for runs where the
+decision flow itself failed (never emitted by the reasoner).
+"""
+from __future__ import annotations
+
+import datetime as _dt
+from enum import Enum
+from typing import Any, Optional
+
+from pydantic import BaseModel, Field
+
+
+def utc_now() -> str:
+    return _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
+
+
+class Decision(str, Enum):
+    """Real decision set from agent/reasoner.py (+ service-level UNKNOWN)."""
+
+    AUTO_REPLY = "AUTO_REPLY"
+    ESCALATE_L1 = "ESCALATE_L1"
+    ESCALATE_L2 = "ESCALATE_L2"
+    UNKNOWN = "UNKNOWN"  # service-level only: decision flow failed
+
+
+class WorkflowStatus(str, Enum):
+    CREATED = "created"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class ReviewStatus(str, Enum):
+    NOT_REQUIRED = "not_required"
+    PENDING = "pending_review"
+    APPROVED = "approved"
+    EDITED = "edited"
+    REJECTED = "rejected"
+
+
+class ReviewerAction(str, Enum):
+    APPROVED = "approved"
+    EDITED = "edited"
+    REJECTED = "rejected"
+
+
+class ActionStatus(str, Enum):
+    PENDING = "pending"
+    EXECUTED = "executed"
+    DUPLICATE = "duplicate"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
+class TicketCreate(BaseModel):
+    """Inbound ticket request body."""
+
+    ticket_text: str = Field(..., min_length=1, description="raw ticket text")
+    ticket_id: Optional[str] = Field(
+        default=None, description="caller-supplied id; auto-generated if omitted"
+    )
+    user_id: str = Field(default="U-?", description="customer id for history lookup")
+    customer_context: Optional[dict[str, Any]] = Field(default=None)
+    workflow_version: int = Field(default=1, ge=1)
+
+
+class ReviewRequest(BaseModel):
+    """Human review of a completed ticket before the mock action executes."""
+
+    reviewer_action: ReviewerAction
+    reviewer_id: str = Field(default="reviewer", min_length=1)
+    reason_code: Optional[str] = Field(
+        default=None, description="e.g. safe_to_send / content_risk / policy_violation"
+    )
+    edited_draft: Optional[str] = Field(
+        default=None, description="only for reviewer_action=edited"
+    )
+
+
+class TicketRecord(BaseModel):
+    """Persisted state for one ticket workflow (see §7.3 of the upgrade brief)."""
+
+    ticket_id: str
+    request_payload: dict[str, Any]
+    normalized_input: str
+    decision: Optional[str] = None
+    decision_reason: Optional[str] = None
+    risk_level: Optional[str] = None
+    retrieved_evidence: Optional[list[Any]] = None
+    draft_response: Optional[str] = None
+    grounding_safe: Optional[bool] = None
+    workflow_status: WorkflowStatus
+    review_status: ReviewStatus
+    reviewer_action: Optional[str] = None
+    idempotency_key: Optional[str] = None
+    action_status: Optional[str] = None
+    workflow_version: int = 1
+    action_type: Optional[str] = None
+    run_id: Optional[str] = None
+    created_at: str
+    updated_at: str
+
+
+class ActionRecord(BaseModel):
+    """Append-only audit of one mock action attempt."""
+
+    id: int
+    idempotency_key: str
+    ticket_id: str
+    action_type: str
+    review_decision: str
+    status: ActionStatus
+    result: Optional[dict[str, Any]] = None
+    error: Optional[str] = None
+    created_at: str
+
+
+class ReviewOutcome(BaseModel):
+    ticket: TicketRecord
+    action: Optional[ActionRecord] = None
+    message: str

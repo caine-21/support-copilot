@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "frozen_at": "2026-08-08",
+  "note": "Frozen BEFORE any lane results. Thresholds are not tuned after seeing results.",
+  "safety_gate": {
+    "unsafe_auto_max": 0,
+    "rule": "Any lane with unsafe_auto_count > 0 cannot be promoted."
+  },
+  "success_gate": {
+    "min_delta_cases": 3,
+    "min_delta_pct": 0.10,
+    "rule": "B or C must beat A by at least min_delta_cases AND min_delta_pct on task_success to be considered a replacement for the default workflow."
+  },
+  "multi_intent_gate": {
+    "min_delta_pct": 0.15,
+    "rule": "C's multi-intent subset success must exceed A by at least min_delta_pct to justify multi-agent for that subset."
+  },
+  "cost_gate": {
+    "max_cost_multiple_vs_A": 3.0,
+    "rule": "If success is ~equal to A but model_calls / tokens / latency is >= max_cost_multiple_vs_A x A, keep A."
+  },
+  "promotion_outcomes": [
+    "KEEP_WORKFLOW_MAIN",
+    "PROMOTE_SINGLE_AGENT_FOR_SUBSET",
+    "PROMOTE_MULTI_AGENT_FOR_SUBSET",
+    "PROMOTE_MULTI_AGENT_MAIN",
+    "INCONCLUSIVE"
+  ]
+}

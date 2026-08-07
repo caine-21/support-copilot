@@ -20,6 +20,8 @@ It is not a generic support chatbot. The core question is:
 
 > Under what evidence is an AI system allowed to answer a customer automatically?
 
+**Canonical facts / reproducibility:** [`./CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) — 唯一事实口径（reproducible test baselines、CURRENT/HISTORICAL eval 标签、复现命令、allowed/forbidden claims）。
+
 ## Problem
 
 SaaS support teams waste capacity on routine tickets that could be resolved from the knowledge base, but unsafe automation creates real risk: refund promises, plan-specific feature claims, churn-sensitive customers, SLA/security concerns, and confident replies built on weak KB matches.
@@ -104,7 +106,13 @@ The reasoner separates deterministic facts from LLM-inferred assumptions such as
 
 `assumption_replay` asks: if a model assumption were neutralized, would the action change? This identifies decisions that are fact-grounded versus assumption-driven.
 
-## Current eval snapshot
+## Reproducible test baseline (current clean)
+
+Bounded agent tooling is committed at `c9e1ade`; clean-room verification (`git archive <commit>` → temp → offline pytest) gives **70 passed** (60 legacy/service + 10 tooling). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §2 for the baseline table.
+
+## Historical model-evaluation snapshot (HISTORICAL)
+
+> ⚠️ The table below is a **historical model-evaluation artifact** (`data/reports/report_epistemic-r3.json`): it requires a real provider API key, is non-deterministic, and was **not re-run** as part of the `c9e1ade` clean committed baseline. Cite it as a historical snapshot, not as the current committed result.
 
 Latest checked report: `data/reports/report_epistemic-r3.json`.
 
@@ -127,6 +135,8 @@ The key safety result is not raw accuracy. The main invariants are:
 
 - **L2 recall must stay 100%**: high-risk tickets cannot be missed.
 - **Unsafe AUTO_REPLY must stay 0%**: no auto-reply without strong grounding.
+
+Deterministic / scripted evaluations that **are** reproducible (no provider): Customer Context Beta `30/30` (provider none, commit `efea70b`) and Multi-Agent Shadow `20/20` (offline scripted). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6.
 
 ## Stability
 
@@ -175,6 +185,16 @@ This project is an offline-evaluated POC, not a production system. It demonstrat
    The Gradio app is for interview/demo inspection. It is not a full support dashboard.
 
 ## Quick Start
+
+### Bounded agent tooling (local / no-service test harness)
+
+The default remains the Legacy safety workflow. The optional tool loop uses native provider function calls in production and a scripted adapter in tests; Risk, grounding and authorization remain deterministic gates. See [Agent Tooling](docs/AGENT_TOOLING.md).
+
+```powershell
+$env:SUPPORT_AGENT_MODE="tool_loop"
+$env:SUPPORT_TOOL_BACKEND="local" # or mcp
+py -B -m pytest tests\test_agent_tooling.py -q -p no:cacheprovider
+```
 
 Use `py` on Windows.
 

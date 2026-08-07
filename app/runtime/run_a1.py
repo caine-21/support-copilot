@@ -226,6 +226,12 @@ def run_a1(request: IncomingRequest, *, clock=None, tool_gateway=None) -> A1RunR
         trace.emit("lane_started", "knowledge", payload={"intent": intent})
         _tool_t0 = time.monotonic()
         kres = run_knowledge_specialist(kinput, gateway=knowledge_gateway)
+        if kres.skill_name:
+            trace.emit("skill_selected", "skills",
+                       reason_codes=kres.skill_reason_codes,
+                       payload={"skill_name": kres.skill_name, "intent": intent})
+            trace.emit("skill_started", "skills",
+                       payload={"skill_name": kres.skill_name, "intent": intent})
         trace.emit("tool_called", "knowledge",
                    payload={"tool": "search_knowledge_base",
                             "backend": getattr(knowledge_gateway, "backend", "local"),
@@ -234,6 +240,11 @@ def run_a1(request: IncomingRequest, *, clock=None, tool_gateway=None) -> A1RunR
                             "status": kres.status.value,
                             "evidence_count": len(kres.evidence),
                             "duration_ms": round((time.monotonic() - _tool_t0) * 1000, 2)})
+        if kres.skill_name:
+            trace.emit("skill_completed", "skills",
+                       payload={"skill_name": kres.skill_name,
+                                "status": kres.skill_status,
+                                "evidence_count": len(kres.evidence)})
         trace.emit("lane_completed", "knowledge",
                    payload={"intent": intent, "coverage": kres.coverage,
                             "status": kres.status.value})

@@ -33,6 +33,9 @@ class KnowledgeSpecialistResult(BaseModel):
     source_refs: list[str] = Field(default_factory=list)
     status: SpecialistStatus = SpecialistStatus.SUCCESS
     reason_codes: list[str] = Field(default_factory=list)
+    skill_name: str | None = None
+    skill_status: str | None = None
+    skill_reason_codes: list[str] = Field(default_factory=list)
 
 
 class SupportSpecialistInput(BaseModel):

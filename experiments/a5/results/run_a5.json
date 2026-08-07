@@ -1,0 +1,2622 @@
+{
+  "run_id": "run_a5",
+  "provider": "deepseek",
+  "model": "deepseek-chat",
+  "benchmark_hash": "e57b9b288245",
+  "decision_policy_hash": "d54697987725",
+  "elapsed_s": 327.0,
+  "lanes": {
+    "A": {
+      "task_success": 0.633,
+      "model_calls_per_case": 0.0,
+      "input_tokens_per_case": 0.0,
+      "output_tokens_per_case": 0.0,
+      "tool_calls_per_case": 0.93,
+      "trace_events_per_case": 15.27,
+      "latency_p50_ms": 656.5,
+      "latency_p95_ms": 6214.5,
+      "unsafe_auto": 0
+    },
+    "B": {
+      "task_success": 0.3,
+      "model_calls_per_case": 1.63,
+      "input_tokens_per_case": 0.0,
+      "output_tokens_per_case": 0.0,
+      "tool_calls_per_case": 1.57,
+      "trace_events_per_case": 4.73,
+      "latency_p50_ms": 5430.3,
+      "latency_p95_ms": 10341.1,
+      "unsafe_auto": 0
+    },
+    "C": {
+      "task_success": 0.633,
+      "model_calls_per_case": 0.73,
+      "input_tokens_per_case": 0.0,
+      "output_tokens_per_case": 0.0,
+      "tool_calls_per_case": 0.5,
+      "trace_events_per_case": 1.37,
+      "latency_p50_ms": 1278.7,
+      "latency_p95_ms": 6901.6,
+      "unsafe_auto": 0
+    }
+  },
+  "subsets": {
+    "A": {
+      "single": {
+        "total": 6,
+        "passed": 5,
+        "rate": 0.833
+      },
+      "multi": {
+        "total": 8,
+        "passed": 5,
+        "rate": 0.625
+      },
+      "high_risk": {
+        "total": 5,
+        "passed": 4,
+        "rate": 0.8
+      },
+      "weak_evidence": {
+        "total": 4,
+        "passed": 2,
+        "rate": 0.5
+      },
+      "ambiguous": {
+        "total": 4,
+        "passed": 0,
+        "rate": 0.0
+      },
+      "unknown": {
+        "total": 3,
+        "passed": 3,
+        "rate": 1.0
+      }
+    },
+    "B": {
+      "single": {
+        "total": 6,
+        "passed": 0,
+        "rate": 0.0
+      },
+      "multi": {
+        "total": 8,
+        "passed": 0,
+        "rate": 0.0
+      },
+      "high_risk": {
+        "total": 5,
+        "passed": 4,
+        "rate": 0.8
+      },
+      "weak_evidence": {
+        "total": 4,
+        "passed": 2,
+        "rate": 0.5
+      },
+      "ambiguous": {
+        "total": 4,
+        "passed": 0,
+        "rate": 0.0
+      },
+      "unknown": {
+        "total": 3,
+        "passed": 3,
+        "rate": 1.0
+      }
+    },
+    "C": {
+      "single": {
+        "total": 6,
+        "passed": 5,
+        "rate": 0.833
+      },
+      "multi": {
+        "total": 8,
+        "passed": 5,
+        "rate": 0.625
+      },
+      "high_risk": {
+        "total": 5,
+        "passed": 4,
+        "rate": 0.8
+      },
+      "weak_evidence": {
+        "total": 4,
+        "passed": 2,
+        "rate": 0.5
+      },
+      "ambiguous": {
+        "total": 4,
+        "passed": 0,
+        "rate": 0.0
+      },
+      "unknown": {
+        "total": 3,
+        "passed": 3,
+        "rate": 1.0
+      }
+    }
+  },
+  "per_case": [
+    {
+      "case_id": "A5-01",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "invoice_download"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 17974.03,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-01",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "invoice_download"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "get_customer_context"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "get_customer_context"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01",
+        "customer_context"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 10341.14,
+      "model_calls": 2,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 5,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-01",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "invoice_download"
+      ],
+      "selected_specialists": [
+        "billing"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1768.05,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-02",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "password_reset"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-account-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 508.53,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-02",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "password_reset"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 7844.44,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 4,
+      "error_codes": [
+        "tool_timeout"
+      ]
+    },
+    {
+      "case_id": "A5-02",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "password_reset"
+      ],
+      "selected_specialists": [
+        "technical"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-account-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1464.44,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-03",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "signup_issue"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-troubleshoot-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 716.52,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-03",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "signup_issue"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-troubleshoot-01",
+        "FAQ-troubleshoot-01",
+        "FAQ-troubleshoot-01"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 8504.99,
+      "model_calls": 2,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 8,
+      "error_codes": [
+        "tool_timeout"
+      ]
+    },
+    {
+      "case_id": "A5-03",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "signup_issue"
+      ],
+      "selected_specialists": [
+        "technical"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-troubleshoot-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1882.4,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-04",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "sso_setup"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-security-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 656.45,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-04",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "sso_setup"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "get_customer_context",
+        "get_ticket_history"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "get_customer_context",
+        "get_ticket_history"
+      ],
+      "evidence_refs": [
+        "FAQ-security-01",
+        "customer_context",
+        "current-user"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 5390.99,
+      "model_calls": 3,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 7,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-04",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "sso_setup"
+      ],
+      "selected_specialists": [
+        "technical"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-security-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1458.37,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-05",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6051.34,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "tool_timeout:tool_timeout",
+        "empty_draft_or_kb"
+      ]
+    },
+    {
+      "case_id": "A5-05",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 7977.91,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 4,
+      "error_codes": [
+        "tool_timeout"
+      ]
+    },
+    {
+      "case_id": "A5-05",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [
+        "technical"
+      ],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6901.6,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": [
+        "unknown_fallback_cap"
+      ]
+    },
+    {
+      "case_id": "A5-06",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "audit_logs"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-security-03"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 668.56,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-06",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "audit_logs"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "get_customer_context",
+        "get_ticket",
+        "get_ticket_history"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "get_customer_context",
+        "get_ticket_history"
+      ],
+      "evidence_refs": [
+        "FAQ-security-03",
+        "customer_context",
+        "user-4821"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 5071.51,
+      "model_calls": 3,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 8,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-06",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "audit_logs"
+      ],
+      "selected_specialists": [
+        "technical"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-security-03"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1958.55,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-07",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "password_reset",
+        "invoice_download"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-account-01",
+        "FAQ-billing-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 586.19,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 27,
+      "error_codes": [
+        "multi_intent",
+        "intent_faq_selected",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-07",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "invoice_download",
+        "password_reset"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "get_customer_context",
+        "get_ticket_history"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "get_customer_context",
+        "get_ticket_history"
+      ],
+      "evidence_refs": [
+        "FAQ-account-01",
+        "FAQ-billing-01",
+        "customer_context",
+        "current_user"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6931.5,
+      "model_calls": 3,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 8,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-07",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "invoice_download",
+        "password_reset"
+      ],
+      "selected_specialists": [
+        "billing",
+        "technical"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01",
+        "FAQ-account-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1526.43,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-08",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "plan_change",
+        "password_reset"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-account-01",
+        "FAQ-account-02"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 710.71,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 27,
+      "error_codes": [
+        "multi_intent",
+        "intent_faq_selected",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-08",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "password_reset",
+        "plan_change"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-account-02",
+        "FAQ-account-01"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 4360.41,
+      "model_calls": 2,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 5,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-08",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "password_reset",
+        "plan_change"
+      ],
+      "selected_specialists": [
+        "billing",
+        "technical"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-account-02",
+        "FAQ-account-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1676.4,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-09",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "invoice_download",
+        "sso_setup"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01",
+        "FAQ-security-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 881.38,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 27,
+      "error_codes": [
+        "multi_intent",
+        "intent_faq_selected",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-09",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "invoice_download",
+        "sso_setup"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "get_customer_context",
+        "get_ticket_history"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "get_customer_context",
+        "get_ticket_history"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01",
+        "FAQ-security-01",
+        "customer_context",
+        "current"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6539.62,
+      "model_calls": 3,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 8,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-09",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "invoice_download",
+        "sso_setup"
+      ],
+      "selected_specialists": [
+        "billing",
+        "technical"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01",
+        "FAQ-security-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1838.89,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-10",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [
+        "password_reset"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-account-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 764.55,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-10",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "password_reset"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-account-01"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 7838.0,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 5,
+      "error_codes": [
+        "tool_timeout"
+      ]
+    },
+    {
+      "case_id": "A5-10",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [
+        "password_reset"
+      ],
+      "selected_specialists": [
+        "technical",
+        "billing"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-account-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1830.38,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-11",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [
+        "invoice_download"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 685.53,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-11",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "invoice_download"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "get_customer_context",
+        "get_ticket_history"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "get_customer_context",
+        "get_ticket_history"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01",
+        "FAQ-feature-04",
+        "FAQ-billing-01",
+        "customer_context",
+        "current-user"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6545.22,
+      "model_calls": 3,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 8,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-11",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [
+        "invoice_download"
+      ],
+      "selected_specialists": [
+        "billing",
+        "technical"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1455.3,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-12",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "permission_levels",
+        "signup_issue"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-feature-02",
+        "FAQ-troubleshoot-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 618.83,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 27,
+      "error_codes": [
+        "multi_intent",
+        "intent_faq_selected",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-12",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "permission_levels",
+        "signup_issue"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-feature-02",
+        "FAQ-troubleshoot-01",
+        "FAQ-troubleshoot-01",
+        "FAQ-troubleshoot-01",
+        "FAQ-feature-02"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6886.36,
+      "model_calls": 3,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 8,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-12",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "permission_levels",
+        "signup_issue"
+      ],
+      "selected_specialists": [
+        "technical"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-feature-02",
+        "FAQ-troubleshoot-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1257.1,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-13",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "version_history",
+        "sso_setup"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-feature-07",
+        "FAQ-security-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 671.32,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 27,
+      "error_codes": [
+        "multi_intent",
+        "intent_faq_selected",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-13",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "sso_setup",
+        "version_history"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-security-01",
+        "FAQ-feature-07",
+        "FAQ-security-01",
+        "FAQ-feature-07"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 5430.33,
+      "model_calls": 3,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 8,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-13",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "sso_setup",
+        "version_history"
+      ],
+      "selected_specialists": [
+        "technical"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-feature-07",
+        "FAQ-security-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1846.95,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-14",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [
+        "cancellation_fee",
+        "refund_status"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-07"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 39.9,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 27,
+      "error_codes": [
+        "multi_intent",
+        "intent_faq_selected",
+        "kb_fallback",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-14",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "cancellation_fee",
+        "refund_status"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-07",
+        "FAQ-billing-03",
+        "FAQ-billing-08",
+        "FAQ-billing-07"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 4355.06,
+      "model_calls": 2,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 5,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-14",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [
+        "cancellation_fee",
+        "refund_status"
+      ],
+      "selected_specialists": [
+        "billing"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-07"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 559.48,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-15",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "sla_uptime"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.73,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 6,
+      "error_codes": [
+        "early_risk_pre_guard",
+        "early_risk_pre_guard"
+      ]
+    },
+    {
+      "case_id": "A5-15",
+      "lane": "B",
+      "task_success": true,
+      "predicted_intents": [
+        "sla_uptime"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.23,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": [
+        "pre_guard_escalation"
+      ]
+    },
+    {
+      "case_id": "A5-15",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "sla_uptime"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.19,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": [
+        "sla_signal"
+      ]
+    },
+    {
+      "case_id": "A5-16",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "plan_change"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.65,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 6,
+      "error_codes": [
+        "early_risk_pre_guard",
+        "early_risk_pre_guard"
+      ]
+    },
+    {
+      "case_id": "A5-16",
+      "lane": "B",
+      "task_success": true,
+      "predicted_intents": [
+        "plan_change"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.22,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": [
+        "pre_guard_escalation"
+      ]
+    },
+    {
+      "case_id": "A5-16",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "plan_change"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.14,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": [
+        "competitor_exit"
+      ]
+    },
+    {
+      "case_id": "A5-17",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [
+        "cancel_subscription"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 16.09,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "no_kb_evidence",
+        "empty_draft_or_kb"
+      ]
+    },
+    {
+      "case_id": "A5-17",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "cancel_subscription"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 1557.36,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-17",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [
+        "cancel_subscription"
+      ],
+      "selected_specialists": [
+        "billing",
+        "technical"
+      ],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 561.12,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-18",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.72,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 6,
+      "error_codes": [
+        "early_risk_pre_guard",
+        "early_risk_pre_guard"
+      ]
+    },
+    {
+      "case_id": "A5-18",
+      "lane": "B",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.23,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": [
+        "pre_guard_escalation"
+      ]
+    },
+    {
+      "case_id": "A5-18",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.13,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": [
+        "competitor_exit",
+        "unknown_fallback_cap"
+      ]
+    },
+    {
+      "case_id": "A5-19",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.74,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 6,
+      "error_codes": [
+        "early_risk_pre_guard",
+        "early_risk_pre_guard"
+      ]
+    },
+    {
+      "case_id": "A5-19",
+      "lane": "B",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.21,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": [
+        "pre_guard_escalation"
+      ]
+    },
+    {
+      "case_id": "A5-19",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L2",
+      "unsafe_action": false,
+      "latency_ms": 0.12,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": [
+        "competitor_exit",
+        "unknown_fallback_cap"
+      ]
+    },
+    {
+      "case_id": "A5-20",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "invoice_customize"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 10.28,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "no_kb_evidence",
+        "empty_draft_or_kb"
+      ]
+    },
+    {
+      "case_id": "A5-20",
+      "lane": "B",
+      "task_success": true,
+      "predicted_intents": [
+        "invoice_customize"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01",
+        "FAQ-billing-01",
+        "FAQ-billing-01"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 7048.43,
+      "model_calls": 4,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 10,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-20",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "invoice_customize"
+      ],
+      "selected_specialists": [
+        "billing"
+      ],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 658.7,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-21",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "refund_status"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 10.48,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "no_kb_evidence",
+        "empty_draft_or_kb"
+      ]
+    },
+    {
+      "case_id": "A5-21",
+      "lane": "B",
+      "task_success": true,
+      "predicted_intents": [
+        "refund_status"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 1985.39,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-21",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "refund_status"
+      ],
+      "selected_specialists": [
+        "billing"
+      ],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 662.29,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-22",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6076.48,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "tool_timeout:tool_timeout",
+        "empty_draft_or_kb"
+      ]
+    },
+    {
+      "case_id": "A5-22",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 8310.21,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 4,
+      "error_codes": [
+        "tool_timeout"
+      ]
+    },
+    {
+      "case_id": "A5-22",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [
+        "technical"
+      ],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6946.84,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": [
+        "unknown_fallback_cap"
+      ]
+    },
+    {
+      "case_id": "A5-23",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [
+        "invoice_download"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 825.46,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "intent_faq_selected",
+        "ok"
+      ]
+    },
+    {
+      "case_id": "A5-23",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [
+        "invoice_download"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "get_customer_context",
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "get_ticket_history"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "get_customer_context",
+        "search_knowledge_base",
+        "get_ticket_history"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01",
+        "customer_context",
+        "FAQ-billing-01",
+        "user_unknown"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6376.06,
+      "model_calls": 4,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 10,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-23",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [
+        "invoice_download"
+      ],
+      "selected_specialists": [
+        "billing"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-01"
+      ],
+      "final_authorization": "AUTO_REPLY",
+      "unsafe_action": false,
+      "latency_ms": 1278.7,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": []
+    },
+    {
+      "case_id": "A5-24",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-24",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-24",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-25",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-25",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-25",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-26",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-26",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-26",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-27",
+      "lane": "A",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-27",
+      "lane": "B",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-27",
+      "lane": "C",
+      "task_success": false,
+      "predicted_intents": [],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "",
+      "unsafe_action": false,
+      "latency_ms": 0.0,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 0,
+      "error_codes": [
+        "lane_exception:ValueError:customer_context.fields must be an object"
+      ]
+    },
+    {
+      "case_id": "A5-28",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6214.48,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "tool_timeout:tool_timeout",
+        "empty_draft_or_kb"
+      ]
+    },
+    {
+      "case_id": "A5-28",
+      "lane": "B",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 1574.9,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-28",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 954.01,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": [
+        "unknown_fallback_cap"
+      ]
+    },
+    {
+      "case_id": "A5-29",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 915.56,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "no_kb_evidence",
+        "empty_draft_or_kb"
+      ]
+    },
+    {
+      "case_id": "A5-29",
+      "lane": "B",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 7397.58,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 4,
+      "error_codes": [
+        "tool_timeout"
+      ]
+    },
+    {
+      "case_id": "A5-29",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [],
+      "tools_completed": [],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 923.86,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 1,
+      "error_codes": [
+        "unknown_fallback_cap"
+      ]
+    },
+    {
+      "case_id": "A5-30",
+      "lane": "A",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 6110.55,
+      "model_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 17,
+      "error_codes": [
+        "single_intent",
+        "tool_timeout:tool_timeout",
+        "empty_draft_or_kb"
+      ]
+    },
+    {
+      "case_id": "A5-30",
+      "lane": "B",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [],
+      "tools_requested": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "get_customer_context"
+      ],
+      "tools_completed": [
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "search_knowledge_base",
+        "get_customer_context"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-07",
+        "FAQ-account-02",
+        "FAQ-billing-05",
+        "FAQ-billing-01",
+        "FAQ-billing-05",
+        "FAQ-billing-07",
+        "FAQ-billing-08",
+        "customer_context"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 13155.35,
+      "model_calls": 4,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 9,
+      "error_codes": [
+        "final_output"
+      ]
+    },
+    {
+      "case_id": "A5-30",
+      "lane": "C",
+      "task_success": true,
+      "predicted_intents": [
+        "unknown"
+      ],
+      "selected_specialists": [
+        "billing"
+      ],
+      "tools_requested": [
+        "search_knowledge_base"
+      ],
+      "tools_completed": [
+        "search_knowledge_base"
+      ],
+      "evidence_refs": [
+        "FAQ-billing-07",
+        "FAQ-billing-05"
+      ],
+      "final_authorization": "ESCALATE_L1",
+      "unsafe_action": false,
+      "latency_ms": 3470.22,
+      "model_calls": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "trace_event_count": 2,
+      "error_codes": [
+        "unknown_fallback_cap"
+      ]
+    }
+  ]
+}

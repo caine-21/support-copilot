@@ -81,32 +81,40 @@ def test_decision_flow_failure_is_recorded_not_success(repo, svc_factory):
     assert "provider down" in (rec.decision_reason or "")
 
 
-def test_approve_executes_action_once(repo, svc_factory):
+def test_approve_creates_checkpoint_not_executes(repo, svc_factory):
     svc = svc_factory(decision_fn=make_fake_decision_fn())
     _auto_ticket(svc, ticket_id="T-a")
     out = svc.review_ticket(
         "T-a",
         ReviewRequest(reviewer_action=ReviewerAction.APPROVED, reason_code="safe_to_send"),
     )
-    assert out.action is not None
-    assert out.action.status == ActionStatus.EXECUTED
-    assert out.action.action_type == "create_reply"
+    # A4: approval is separated from execution — no adapter call, no action row.
+    assert out.action is None
     assert out.ticket.review_status == ReviewStatus.APPROVED
-    assert out.ticket.action_status == ActionStatus.EXECUTED.value
+    assert out.ticket.action_status == ActionStatus.READY_FOR_EXECUTION.value
+    assert out.ticket.approved_payload_hash is not None
+    assert len(svc.list_actions("T-a")) == 0
+    # explicit resume/executor performs the mock action
+    resume = svc.execute_approved_reply("T-a")
+    assert resume.action is not None
+    assert resume.action.status == ActionStatus.EXECUTED
+    assert resume.action.action_type == "create_reply"
     assert len(svc.list_actions("T-a")) == 1
 
 
-def test_repeat_approve_does_not_re_execute(repo, svc_factory):
+def test_repeat_approve_then_execute_once(repo, svc_factory):
     svc = svc_factory(decision_fn=make_fake_decision_fn())
     _auto_ticket(svc, ticket_id="T-idem")
     first = svc.review_ticket("T-idem", ReviewRequest(reviewer_action=ReviewerAction.APPROVED))
-    assert first.action.status == ActionStatus.EXECUTED
+    assert first.action is None  # not executed at approval
     second = svc.review_ticket("T-idem", ReviewRequest(reviewer_action=ReviewerAction.APPROVED))
-    assert second.action is not None
-    assert second.action.id == first.action.id  # same row, not re-executed
-    assert second.action.status == ActionStatus.EXECUTED
-    assert "no re-execution" in second.message
-    assert len(svc.list_actions("T-idem")) == 1  # only one action row ever
+    assert "already reviewed" in second.message
+    r1 = svc.execute_approved_reply("T-idem")
+    assert r1.action.status == ActionStatus.EXECUTED
+    r2 = svc.execute_approved_reply("T-idem")
+    assert r2.action.id == r1.action.id  # same row, adapter not re-invoked
+    assert "already executed" in r2.message
+    assert len(svc.list_actions("T-idem")) == 1
 
 
 def test_review_rejected_takes_no_action(repo, svc_factory):
@@ -121,28 +129,33 @@ def test_review_rejected_takes_no_action(repo, svc_factory):
     assert len(svc.list_actions("T-rej")) == 0
 
 
-def test_unsafe_auto_reply_blocked_by_evidence_gate(repo, svc_factory):
+def test_unsafe_auto_reply_blocked_by_evidence_gate_at_execute(repo, svc_factory):
     svc = svc_factory(
         decision_fn=make_fake_decision_fn(action="AUTO_REPLY", grounding_safe=False)
     )
     _auto_ticket(svc, ticket_id="T-unsafe")
+    # approval creates the checkpoint even with unsafe grounding (human may approve)
+    out = svc.review_ticket("T-unsafe", ReviewRequest(reviewer_action=ReviewerAction.APPROVED))
+    assert out.ticket.review_status == ReviewStatus.APPROVED
+    assert out.ticket.action_status == ActionStatus.READY_FOR_EXECUTION.value
+    # execution revalidates the evidence gate — approval alone cannot override it
     with pytest.raises(NoEvidenceGate):
-        svc.review_ticket("T-unsafe", ReviewRequest(reviewer_action=ReviewerAction.APPROVED))
-    # nothing executed, ticket still pending
+        svc.execute_approved_reply("T-unsafe")
     assert len(svc.list_actions("T-unsafe")) == 0
     rec = svc.get_ticket("T-unsafe")
-    assert rec.review_status == ReviewStatus.PENDING
+    assert rec.review_status == ReviewStatus.APPROVED
 
 
-def test_adapter_failure_recorded_not_success(repo, svc_factory):
+def test_adapter_failure_recorded_not_success_at_execute(repo, svc_factory):
     class BoomAdapter(MockTicketActionAdapter):
         def create_reply(self, *, ticket_id, draft, evidence):
             raise RuntimeError("mock send failed")
 
     svc = svc_factory(decision_fn=make_fake_decision_fn(), adapter=BoomAdapter())
     _auto_ticket(svc, ticket_id="T-err")
+    svc.review_ticket("T-err", ReviewRequest(reviewer_action=ReviewerAction.APPROVED))
     with pytest.raises(RuntimeError):
-        svc.review_ticket("T-err", ReviewRequest(reviewer_action=ReviewerAction.APPROVED))
+        svc.execute_approved_reply("T-err")
     actions = svc.list_actions("T-err")
     assert len(actions) == 1
     assert actions[0].status == ActionStatus.FAILED
@@ -157,7 +170,8 @@ def test_escalation_path_uses_create_escalation(repo, svc_factory):
         decision_fn=make_fake_decision_fn(action="ESCALATE_L2", grounding_safe=None)
     )
     _auto_ticket(svc, ticket_id="T-l2")
-    out = svc.review_ticket("T-l2", ReviewRequest(reviewer_action=ReviewerAction.APPROVED))
+    svc.review_ticket("T-l2", ReviewRequest(reviewer_action=ReviewerAction.APPROVED))
+    out = svc.execute_approved_reply("T-l2")
     assert out.action.action_type == "create_escalation"
     assert out.action.status == ActionStatus.EXECUTED
     assert "escalated_mock" in (out.action.result or {}).get("status", "")

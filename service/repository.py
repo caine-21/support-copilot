@@ -39,6 +39,10 @@ CREATE TABLE IF NOT EXISTS tickets (
   workflow_version  INTEGER NOT NULL DEFAULT 1,
   action_type       TEXT,
   run_id            TEXT,
+  approved_payload  TEXT,
+  approved_payload_hash TEXT,
+  reviewed_at       TEXT,
+  review_version    INTEGER,
   created_at        TEXT NOT NULL,
   updated_at        TEXT NOT NULL
 );
@@ -85,6 +89,18 @@ class TicketRepository:
         self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._conn.executescript(_SCHEMA)
+        # Prototype-safe additive migration: existing DBs get the A4 review
+        # checkpoint columns without a manual drop. Idempotent — each ALTER is
+        # skipped if the column already exists.
+        for col, ddl in (
+            ("approved_payload", "ALTER TABLE tickets ADD COLUMN approved_payload TEXT"),
+            ("approved_payload_hash", "ALTER TABLE tickets ADD COLUMN approved_payload_hash TEXT"),
+            ("reviewed_at", "ALTER TABLE tickets ADD COLUMN reviewed_at TEXT"),
+            ("review_version", "ALTER TABLE tickets ADD COLUMN review_version INTEGER"),
+        ):
+            cols = {r[1] for r in self._conn.execute("PRAGMA table_info(tickets)").fetchall()}
+            if col not in cols:
+                self._conn.execute(ddl)
         self._conn.commit()
 
     def close(self) -> None:
@@ -98,8 +114,9 @@ class TicketRepository:
                  decision_reason, risk_level, retrieved_evidence, draft_response,
                  grounding_safe, workflow_status, review_status, reviewer_action,
                  idempotency_key, action_status, workflow_version, action_type,
-                 run_id, created_at, updated_at
-               ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                 run_id, approved_payload, approved_payload_hash, reviewed_at,
+                 review_version, created_at, updated_at
+               ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 record.ticket_id,
                 json.dumps(record.request_payload, ensure_ascii=False),
@@ -118,6 +135,10 @@ class TicketRepository:
                 record.workflow_version,
                 record.action_type,
                 record.run_id,
+                record.approved_payload,
+                record.approved_payload_hash,
+                record.reviewed_at,
+                record.review_version,
                 record.created_at,
                 record.updated_at,
             ),
@@ -212,6 +233,10 @@ class TicketRepository:
             workflow_version=row["workflow_version"],
             action_type=row["action_type"],
             run_id=row["run_id"],
+            approved_payload=row["approved_payload"],
+            approved_payload_hash=row["approved_payload_hash"],
+            reviewed_at=row["reviewed_at"],
+            review_version=row["review_version"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
         )

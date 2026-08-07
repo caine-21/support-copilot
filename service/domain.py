@@ -50,6 +50,7 @@ class ReviewerAction(str, Enum):
 
 class ActionStatus(str, Enum):
     PENDING = "pending"
+    READY_FOR_EXECUTION = "ready_for_execution"
     EXECUTED = "executed"
     DUPLICATE = "duplicate"
     FAILED = "failed"
@@ -101,6 +102,12 @@ class TicketRecord(BaseModel):
     workflow_version: int = 1
     action_type: Optional[str] = None
     run_id: Optional[str] = None
+    # A4 review checkpoint: the reviewed content that was approved, its SHA-256
+    # binding, and review metadata. NULL until a human approves/edits.
+    approved_payload: Optional[str] = None
+    approved_payload_hash: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    review_version: Optional[int] = None
     created_at: str
     updated_at: str
 

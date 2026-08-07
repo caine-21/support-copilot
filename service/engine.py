@@ -205,43 +205,26 @@ class TicketWorkflowService:
             self.repo.update_ticket(ticket)
             return ReviewOutcome(ticket=ticket, message="rejected — no action taken")
 
-        # approved / edited → execute the mock action once (idempotency key)
-        action_type = ticket.action_type or _action_type_for(ticket.decision or "")
-        idem_key = self._idempotency_key(ticket.ticket_id, ticket.workflow_version, action_type)
-
-        existing = self.repo.get_action_by_key(idem_key)
-        if existing is not None and existing.status == ActionStatus.EXECUTED:
-            ticket.review_status = (
-                ReviewStatus.EDITED if req.reviewer_action == ReviewerAction.EDITED
-                else ReviewStatus.APPROVED
-            )
-            ticket.reviewer_action = req.reviewer_action.value
-            ticket.action_status = ActionStatus.DUPLICATE.value
-            self.repo.update_ticket(ticket)
-            return ReviewOutcome(
-                ticket=ticket, action=existing,
-                message="idempotent hit — action already executed once",
-            )
-        if existing is not None and existing.status == ActionStatus.FAILED:
-            # Strategy B: a FAILED attempt must not be silently retried into an
-            # IntegrityError (UNIQUE idempotency key). Explicit manual resolution.
-            raise InvalidTransition("previous_execution_failed — manual retry required")
-
-        # Evidence gate + adapter execution + record (shared with execute_approved_reply).
-        draft = req.edited_draft if req.reviewer_action == ReviewerAction.EDITED and req.edited_draft else (ticket.draft_response or "")
-        record = self._perform_approved_action(
-            ticket, idem_key=idem_key, action_type=action_type,
-            draft=draft, review_decision=req.reviewer_action.value,
-        )
+        # approved / edited → persist the reviewed payload + SHA-256 binding and
+        # set READY_FOR_EXECUTION. The mock action is NOT executed here — this is
+        # the A4 separation of approval from execution. Execution is an explicit
+        # resume/executor step (execute_approved_reply) that revalidates state,
+        # content integrity, evidence and idempotency.
+        payload = req.edited_draft if req.reviewer_action == ReviewerAction.EDITED and req.edited_draft else (ticket.draft_response or "")
+        ticket.approved_payload = payload
+        ticket.approved_payload_hash = self._payload_hash(payload)
+        ticket.reviewed_at = utc_now()
+        ticket.review_version = (ticket.review_version or 0) + 1
         ticket.review_status = (
             ReviewStatus.EDITED if req.reviewer_action == ReviewerAction.EDITED
             else ReviewStatus.APPROVED
         )
         ticket.reviewer_action = req.reviewer_action.value
+        ticket.action_status = ActionStatus.READY_FOR_EXECUTION.value
         self.repo.update_ticket(ticket)
         return ReviewOutcome(
-            ticket=ticket, action=record,
-            message=f"{action_type} executed once (mock) — action {record.status.value}",
+            ticket=ticket, action=None,
+            message="approved — READY_FOR_EXECUTION, mock action pending explicit resume",
         )
 
     def execute_approved_reply(self, ticket_id: str) -> ReviewOutcome:
@@ -254,7 +237,7 @@ class TicketWorkflowService:
         ticket = self.repo.get_ticket(ticket_id)
         if ticket.review_status == ReviewStatus.REJECTED:
             raise InvalidTransition("review rejected — action not executed")
-        if ticket.review_status != ReviewStatus.APPROVED:
+        if ticket.review_status not in (ReviewStatus.APPROVED, ReviewStatus.EDITED):
             raise InvalidTransition("approval_required — no persisted human approval")
 
         action_type = ticket.action_type or _action_type_for(ticket.decision or "")
@@ -272,16 +255,34 @@ class TicketWorkflowService:
             # manual resolution required.
             raise InvalidTransition("previous_execution_failed — manual retry required")
 
-        # Approved content = the persisted reviewed draft; caller cannot supply text.
-        draft = ticket.draft_response or ""
+        # Approved content binding: what was approved is what may be executed.
+        # The caller cannot supply content; the persisted reviewed payload is
+        # the source of truth, and its SHA-256 must still match the approved hash.
+        if not ticket.approved_payload_hash or not ticket.approved_payload:
+            raise InvalidTransition("stale_approved_draft — no approved payload bound")
+        if self._payload_hash(ticket.approved_payload) != ticket.approved_payload_hash:
+            raise InvalidTransition("stale_approved_draft — reviewed content was modified after approval")
+
         record = self._perform_approved_action(
             ticket, idem_key=idem_key, action_type=action_type,
-            draft=draft, review_decision=ticket.reviewer_action or ReviewerAction.APPROVED.value,
+            draft=ticket.approved_payload,
+            review_decision=ticket.reviewer_action or ReviewerAction.APPROVED.value,
         )
         return ReviewOutcome(
             ticket=ticket, action=record,
             message=f"execute_approved_reply: {action_type} executed once (mock)",
         )
+
+    @staticmethod
+    def _canonical_payload(text: str) -> str:
+        """Stable canonicalization for the integrity binding: trimmed UTF-8 text."""
+        return (text or "").strip()
+
+    @classmethod
+    def _payload_hash(cls, text: str) -> str:
+        import hashlib
+
+        return hashlib.sha256(cls._canonical_payload(text).encode("utf-8")).hexdigest()
 
     def _perform_approved_action(
         self, ticket: TicketRecord, *, idem_key: str, action_type: str,

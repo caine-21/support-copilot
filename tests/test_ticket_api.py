@@ -47,23 +47,25 @@ def test_duplicate_create_conflict(client):
     assert "already exists" in r.json()["detail"]
 
 
-def test_review_approve_then_idempotent(client):
+def test_review_approve_creates_checkpoint_not_executes(client):
     client.post("/tickets", json={"ticket_text": "hi", "ticket_id": "T-rv"})
     r = client.post("/tickets/T-rv/review", json={"reviewer_action": "approved", "reviewer_id": "me"})
     assert r.status_code == 200
     body = r.json()
-    assert body["action"]["status"] == "executed"
+    assert body["action"] is None  # approval does not execute
+    assert body["ticket"]["review_status"] == "approved"
+    assert body["ticket"]["action_status"] == "ready_for_execution"
+    assert body["ticket"]["approved_payload_hash"] is not None
 
-    # second review → same action row, no re-execution
+    # second review → idempotent "already reviewed", no execution
     r2 = client.post("/tickets/T-rv/review", json={"reviewer_action": "approved", "reviewer_id": "me"})
     assert r2.status_code == 200
-    assert r2.json()["action"]["id"] == body["action"]["id"]
-    assert "no re-execution" in r2.json()["message"]
+    assert "already reviewed" in r2.json()["message"]
 
-    # action history has exactly one row
+    # no action rows — execution is a separate executor step
     acts = client.get("/tickets/T-rv/actions")
     assert acts.status_code == 200
-    assert len(acts.json()) == 1
+    assert len(acts.json()) == 0
 
 
 def test_review_rejected_no_action(client):
@@ -78,8 +80,10 @@ def test_review_rejected_no_action(client):
     assert len(client.get("/tickets/T-rej-api/actions").json()) == 0
 
 
-def test_unsafe_auto_reply_blocked_409(client):
-    # fake decision returns AUTO_REPLY with grounding_safe=False → evidence gate
+def test_unsafe_auto_reply_approval_ok_execution_gated(client):
+    # A4: approval creates a checkpoint even when grounding is unsafe; the
+    # NoEvidenceGate is enforced at EXECUTION time (executor-only), so the
+    # review endpoint returns 200 with READY_FOR_EXECUTION.
     repo = TicketRepository(":memory:")
     svc = TicketWorkflowService(
         repo=repo,
@@ -89,8 +93,9 @@ def test_unsafe_auto_reply_blocked_409(client):
     c = TestClient(create_app(service=svc))
     c.post("/tickets", json={"ticket_text": "unsafe", "ticket_id": "T-unsafe-api"})
     r = c.post("/tickets/T-unsafe-api/review", json={"reviewer_action": "approved"})
-    assert r.status_code == 409
-    assert "evidence gate" in r.json()["detail"]
+    assert r.status_code == 200
+    assert r.json()["ticket"]["action_status"] == "ready_for_execution"
+    assert r.json()["ticket"]["approved_payload_hash"] is not None
 
 
 def test_review_missing_ticket_404(client):
@@ -105,4 +110,7 @@ def test_review_edited_uses_edited_draft(client):
         json={"reviewer_action": "edited", "reviewer_id": "me", "edited_draft": "Edited reply text"},
     )
     assert r.status_code == 200
-    assert r.json()["ticket"]["review_status"] == "edited"
+    body = r.json()
+    assert body["ticket"]["review_status"] == "edited"
+    assert body["ticket"]["approved_payload"] == "Edited reply text"
+    assert body["ticket"]["approved_payload_hash"] is not None

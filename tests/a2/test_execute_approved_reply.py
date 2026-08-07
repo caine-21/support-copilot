@@ -22,7 +22,7 @@ from agent.tooling import (
     tools_for_scope,
 )
 from service.action_adapter import MockTicketActionAdapter
-from service.domain import ReviewStatus, ReviewerAction, TicketCreate
+from service.domain import ActionStatus, ReviewStatus, ReviewerAction, TicketCreate
 from service.engine import TicketWorkflowService
 from service.repository import TicketRepository
 from tests._service_helpers import make_fake_decision_fn
@@ -41,10 +41,18 @@ def _create_ticket(db_path, *, grounding_safe=True, draft="Approved draft conten
 
 def _persist_approval(db_path, review_status=ReviewStatus.APPROVED,
                       reviewer_action=ReviewerAction.APPROVED.value):
+    from service.engine import TicketWorkflowService
+
     repo = TicketRepository(str(db_path))
     ticket = repo.get_ticket("T-A2B-001")
     ticket.review_status = review_status
     ticket.reviewer_action = reviewer_action
+    if review_status == ReviewStatus.APPROVED:
+        # A4: a bound approved payload is required before execution is possible.
+        payload = ticket.draft_response or ""
+        ticket.approved_payload = payload
+        ticket.approved_payload_hash = TicketWorkflowService._payload_hash(payload)
+        ticket.action_status = ActionStatus.READY_FOR_EXECUTION.value
     repo.update_ticket(ticket)
     repo.close()
     return ticket

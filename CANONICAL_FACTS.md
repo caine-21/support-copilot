@@ -263,6 +263,32 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 
 **Crash window boundary（KNOWN LIMITATION）**：DB check → mock call → DB record 仍存在 crash window；real external exactly-once 不保证（未引入 outbox/distributed transaction）。
 
+### ⑧ A5 Architecture A/B/C Evaluation（CURRENT VERIFIED — 评估本身）
+
+| 字段 | 值 |
+|---|---|
+| Commits | `a03d75b`（freeze benchmark/policy）· `14ee54b`（harness）· `a953a23`（results） |
+| Provider / model | DeepSeek `deepseek-chat`（A 确定性；B/C 同模型同 config） |
+| Benchmark | 30 synthetic/de-identified cases（6 single / 8 multi / 5 high-risk / 4 weak-evidence / 4 ambiguous / 3 unknown）；oracle 与 agent view 分离（no-leak 测试） |
+| Decision policy | 结果前冻结（unsafe_auto>0→不推广；success 需≥3 case 且≥10% 领先；multi-intent 需≥15%；cost≥3×→保留 A） |
+
+**Overall task_success**（30 例，synthetic/offline）：
+| Lane | success | unsafe_auto | model_calls/case | tool_calls/case | latency p50/p95 |
+|---|---|---|---|---|---|
+| A（deterministic workflow） | 0.633 | 0 | 0.0 | 0.93 | 656ms / 6.2s |
+| B（single agent + tools） | 0.300 | 0 | 1.63 | 1.57 | 5.4s / 10.3s |
+| C（manager + specialists） | 0.633 | 0 | 0.73 | 0.50 | 1.3s / 6.9s |
+
+**关键发现**：
+- **A 与 C 在全部 30 例上 task_success 与 final_authorization 完全一致**——Manager+Specialists 相比确定性工作流零增益，却多花 0.73 model calls/case + ~2× 延迟。确定性工作流已通过 INTENT_FAQ_MAP 逐 intent 检索，specialist 分层未提供额外价值。
+- **B 明显更差**（0.300）：single agent 的 LLM 草稿超出 KB 边界 → fail-closed grounding → L1 降级（10 个分歧 case 全部 A/C=P、B=F）。
+- 所有 lane unsafe_auto=0（共享授权 gate 公平约束）。
+- Multi-intent subset：A 5/8 = C 5/8，B 0/8（C 未超 A 15%）。
+
+**架构决策：KEEP_WORKFLOW_MAIN。** Multi-Agent 保持 experimental/read-only shadow，不 promotion（数据未支持）。这是成功的 A5——证明的是架构判断，不是 buzzword accumulation。**评估数据是 synthetic/offline，不是线上指标。**
+
+**限制**：4 个 ambiguous case 用 malformed partial customer_context fixture → 三 lane 同等报错（0/4，排除于相对比较）；token usage 未 instrumented（adapter 不暴露），成本以 model_calls + latency 度量。
+
 ---
 
 ## 7. Tooling（bounded read-only agent tooling，CURRENT VERIFIED）
@@ -342,7 +368,7 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 - **email / lead 完整 vertical slice**（当前 ticket=SUPPORTED，email/lead=ROUTING_ONLY；3-channel HITL / checkpoint 亦 FUTURE）
 - **connection / session pooling**（当前 per-tool-call 子进程；未引入 pooling）
 - **真实发送 / 真实 CRM / 真实 side effect**
-- **Multi-Agent A/B/C 对照实验**（A5）
+- **Multi-Agent 正式 promotion**（A5 实验已完成：KEEP_WORKFLOW_MAIN——C 未胜 A 且成本更高；Multi-Agent 仍 experimental/read-only shadow）
 - **统一多域企业级 MCP / production deployment / real exactly-once**
 
 ---

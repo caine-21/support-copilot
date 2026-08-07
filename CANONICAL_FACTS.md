@@ -15,7 +15,7 @@
 | Runtime baseline commit | `c9e1ade chore: pin bounded agent tooling baseline`（bounded tooling 已入 git，clean-room 70 passed） |
 | 本文档所在 commit | Commit 0B（docs-only 收敛；runtime tree 与 `c9e1ade` 一致） |
 | Verified date | 2026-08-07 |
-| Current architecture label | **Deterministic routing workflow**（LLM 作子过程）+ **bounded read-only tool loop**（opt-in）+ deterministic authorization gates + **read-only Multi-Agent Shadow**（EXPERIMENTAL，非正式业务车道） |
+| Current architecture label | **Deterministic routing workflow**（LLM 作子过程）+ **bounded read-only tool loop**（opt-in）+ **A1 unified request runtime**（ticket vertical slice）+ deterministic authorization gates + **read-only Multi-Agent Shadow**（EXPERIMENTAL，非正式业务车道） |
 | Current maturity label | **Local Verified Prototype**（离线评测 POC；无真实工单系统、无部署、无发送） |
 
 ---
@@ -27,11 +27,14 @@
 | Baseline | Commit | Scope | Result | Meaning |
 |---|---|---|---|---|
 | Legacy clean | `31e409d` | committed legacy + service 切片 | **60 passed**（21–49s，离线） | pre-tooling 基线 |
-| Tooling clean | `c9e1ade` | committed bounded tooling + legacy + service | **70 passed**（29–48s，离线） | **current clean test baseline** |
+| Tooling clean | `c9e1ade` | committed bounded tooling + legacy + service | **70 passed**（29–48s，离线） | bounded tooling 基线 |
+| Grounding fail-closed | `2c13496` | + grounding fail-closed（11 safety tests） | **81 passed** | fail-closed 基线 |
+| A1 unified runtime | `2429c63` | + app/ + tests/a1（32 tests） | **113 passed** | **current clean test baseline** |
 
-- 70 = 60（legacy/service）+ 10（`tests/test_agent_tooling.py`，含本地 stdio MCP spawn）。
+- 演进链是**架构里程碑**，不是单纯测试数量增长：60（确定性工作流）→ 70（bounded tooling）→ 81（fail-closed grounding）→ 113（unified request runtime）。
+- 113 = 81（前基线）+ 32（tests/a1）。
 - 验证方法：`git archive <commit>` → 全新临时目录 → `py -B -m pytest tests -q`（**离线，无 API key，无 .env，无工作树未提交文件**）。
-- 实测：`c9e1ade` clean-room = **70 collected / 70 passed / 0 failed / 0 skipped / 0 warnings**（2026-08-07）。
+- 实测：`c9e1ade` clean-room = 70；`2c13496` = 81；`2429c63` clean-room = **113 collected / 113 passed × 2 次**（2026-08-07）。docs commit（`a11ad85` / `c84c37b`）不改变 runtime/test surface，不作工程测试里程碑。
 
 ---
 
@@ -130,6 +133,37 @@
 
 Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍授权 AUTO——修复未关闭正常路径。
 
+### ④ A1 Unified Request Runtime（Commit 2，CURRENT VERIFIED）
+
+| 字段 | 值 |
+|---|---|
+| Commit | `2429c63 feat: add unified request routing and specialist runtime`（21 new files；legacy runtime 0 修改） |
+| Clean-room | **113/113 × 2**（连续两次） |
+| Architecture | **Additive Domain Facade**（非 Multi-Agent）：Unified IncomingRequest → deterministic Request Router → Context Projection → Support/Knowledge Specialist lanes → existing grounding/risk/authorization → structured trace |
+| 入口 | `app/runtime/run_a1.run_a1(request)`；`app/` 只做 contract / coordination / projection / routing / trace |
+
+**Channel capability（诚实三通道）**：
+
+| Channel | Capability | A1 证据 |
+|---|---|---|
+| ticket | **SUPPORTED** | 完整 vertical slice（3 demo 真实执行） |
+| email | **ROUTING_ONLY** | contract + route；无 specialist、无副作用、无业务结果 |
+| lead | **ROUTING_ONLY** | 同上 |
+
+**Router 真实动态性（三种可验证行为，execution graph 真变化非 metadata）**：
+
+| Case | intents | 行为 | 证据 |
+|---|---|---|---|
+| CLEAN | invoice_download | Support+Knowledge，normal route | trace 单 slice / 1× tool / 1× lane |
+| MULTI | password_reset + invoice_download | multi_intent → 2 intent slices 独立处理 → 2× knowledge/tool path | trace 4× lane / 2× tool；evidence 分离 FAQ-account-01 ∥ FAQ-billing-01（测试断言 disjoint） |
+| HIGH-RISK | sla_uptime + sla signal | early_risk_pre_guard → ESCALATE_L2 → 0 lane / 0 tool / 0 draft | trace route_early_stop；generation 前截停 |
+
+**Context isolation（CURRENT VERIFIED）**：Support/Knowledge 经 `ContextProjection` 获取最小视图。测试证明 `authorization / lane_results / route_decision / grounding_status / executor / idempotency / MockTicketActionAdapter / side-effect capability` 不被投影给 Specialist；Support `sender_context` 仅暴露 allowlist `{plan, region, role}`（不含 email/phone/account_status）。**表述限于"针对当前 projection contract 的测试证明"，不称"完全防止泄漏"。**
+
+**Proposal / Authorization 分离**：Specialist 只产出 `proposal`；`AUTO_REPLY / ESCALATE_L1 / ESCALATE_L2` 由既有 deterministic evidence/risk gate（`agent.reasoner.synthesize`）决定。Specialist 无权产生业务授权。
+
+**Known flake（不归因 A1）**：`test_mcp_backend_matches_local_contract` / `test_mcp_v2_stdio_three_read_tools_and_clean_exit` 在 Windows 负载下偶发 stdio 子进程 12s 启动超时。证据：Commit 1 已观察；Commit 2 未改 MCP path；`2429c63` clean-room 连续 113/113。**pre-existing infrastructure flake，A2 处理，本轮不改 timeout。**
+
 ---
 
 ## 7. Tooling（bounded read-only agent tooling，CURRENT VERIFIED）
@@ -199,11 +233,13 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 
 ## 12. FUTURE（未实现，不得写成 current）
 
-- **Unified Customer Operations MCP**（多工具企业级 MCP 服务器）——当前只有本地只读 stdio MCP server
-- **Skill Registry / Skill 系统**
-- **三通道（ticket/email/lead）统一 runtime**（当前仅 ticket）
+> A1 已完成项见 §6④（IncomingRequest / Router / Specialists / ContextProjection / trace 均已 CURRENT VERIFIED）。以下仍 FUTURE：
+
+- **Unified Customer Operations MCP**（多工具企业级 MCP 服务器）——当前只有本地只读 stdio MCP server（A2）
+- **Skill Registry / Skill 系统**（A3）
+- **email / lead 完整 vertical slice**（当前 ticket=SUPPORTED，email/lead=ROUTING_ONLY；3-channel HITL 亦 FUTURE）
 - **真实发送 / 真实 CRM / 在线反馈闭环**
-- **Multi-Agent A/B/C 对照实验**
+- **Multi-Agent A/B/C 对照实验**（A5）
 
 ---
 
@@ -233,12 +269,17 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 7. 「bounded tooling 是 committed baseline：只读工具 + 代码层权限门 + 有界循环，clean-room 70 passed。」（c9e1ade）
 8. 「当前是本地验证原型：无真实工单系统、无发送，AUTO_REPLY 只是决策输出，ticket 副作用走 Mock adapter。」
 9. 「我修过一个授权链的 fail-open：grounding 未运行、空 claims 或 compiler 异常原本可能被默认解释成 safe。我把 unknown/error 统一改成 fail-closed，并用 positive control 确认强证据路径仍然可以 AUTO。」（Commit 1 `2c13496`，11 个 fail-closed 测试）
+10. 「我设计统一 IncomingRequest 与确定性 Request Router，根据 channel、intent、risk 和 context 动态选择 Specialist 执行路径；多意图请求按 intent slice 独立检索/处理，高风险请求在生成前 early-stop。」（Commit 2 `2429c63`，§6④）
+11. 「统一 contract 已覆盖 ticket/email/lead；当前 ticket 有完整 vertical slice，email/lead 只验证到 routing contract。」（诚实三通道）
+12. 「我把生成建议与执行授权拆开：Specialist 可以产出 proposal，但 AUTO/L1/L2 仍由既有 deterministic evidence/risk gate 决定。」（§6④）
 
 ### Forbidden claims
 
 - ❌ 任何「98% / L2 100% / 99/100 / stable」作为当前结果。
 - ❌ 把 95/100 说成 `c9e1ade` / `2c13496` 的评测结果（未重跑）。
 - ❌ 「grounding 现在绝对不会出错」/「生产安全问题已解决」/「81 tests 证明线上安全」。
+- ❌ 「已实现完整 ticket/email/lead 三通道 Agent」（当前仅 ticket=SUPPORTED；email/lead=ROUTING_ONLY）。
+- ❌ 把 A1 说成 Multi-Agent 生产架构（A1 是确定性 Router + Specialist lanes + 既有 gate；Multi-Agent A/B/C 仍 FUTURE）。
 - ❌ 「已接真实工单系统 / 已在生产 / 线上准确率」。
 - ❌ 「已自动发送客服回复」。
 - ❌ 「Multi-Agent 改进正式路由」或「Multi-Agent 是正式链路」。

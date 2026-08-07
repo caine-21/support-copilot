@@ -110,7 +110,13 @@ The reasoner separates deterministic facts from LLM-inferred assumptions such as
 
 ## Reproducible test baseline (current clean)
 
-Bounded agent tooling is committed at `c9e1ade`; clean-room verification (`git archive <commit>` → temp → offline pytest) gives **70 passed** (60 legacy/service + 10 tooling). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §2 for the baseline table.
+Bounded agent tooling is committed at `c9e1ade`; clean-room verification (`git archive <commit>` → temp → offline pytest) gives **70 passed** (60 legacy/service + 10 tooling). Current clean baseline is **113 passed** at `2429c63` (A1 unified runtime). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §2 for the baseline table.
+
+## A1 Unified Request Runtime (`app/`)
+
+An additive domain facade over the verified `agent.*` modules: unified `IncomingRequest` → deterministic `Request Router` (channel / intent / risk / context) → `ContextProjection` → Support / Knowledge Specialist lanes → existing grounding + risk + authorization gate → structured trace. `app/` owns contract, coordination, projection, routing and trace — never policy.
+
+Honest channel boundary: **ticket = SUPPORTED** (full vertical slice); **email / lead = ROUTING_ONLY** (contract + route only, no specialist, no side effect). It is not a three-channel agent. Demo cases and traces: `data/a1_demo_cases.json`; evidence pack: `notes/interview-prep/flagship-projects/a1/`. See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6④.
 
 ## Historical model-evaluation snapshot (HISTORICAL)
 

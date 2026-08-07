@@ -34,9 +34,10 @@
 | A2 MCP parity | `1e1f238` | + MCP backend parity + A1-on-MCP | **148 passed** | MCP read plane |
 | A2 action gate | `ffc5eb8` | + execute_approved_reply（11 A2B tests） | **159 passed** | approval-gated action |
 | **A2 final** | `23b1415` | + FAILED-retry fix（2 tests） | **161 passed** | A2 基线 |
-| **A3 skill registry** | `45adff8` | + app/skills + knowledge_lookup skill + tests/a3（20） | **181 passed** | **current clean test baseline** |
+| **A3 skill registry** | `45adff8` | + app/skills + knowledge_lookup skill + tests/a3（20） | **181 passed** | A3 基线 |
+| **A4 hitl checkpoint** | `437b805` | + review checkpoint + approval/execution separation + tests/a4（10） | **191 passed** | **current clean test baseline** |
 
-- 演进链是**架构里程碑**，不是单纯测试数量增长：60（确定性工作流）→ 70（bounded tooling）→ 81（fail-closed grounding）→ 113（A1 unified runtime）→ 131（typed read plane）→ 148（MCP parity）→ 161（approval-gated action + FAILED semantics）→ 181（typed skill registry）。
+- 演进链是**架构里程碑**，不是单纯测试数量增长：60（确定性工作流）→ 70（bounded tooling）→ 81（fail-closed grounding）→ 113（A1 unified runtime）→ 131（typed read plane）→ 148（MCP parity）→ 161（approval-gated action + FAILED semantics）→ 181（typed skill registry）→ 191（HITL checkpoint + approval/execution separation）。
 - 验证方法：`git archive <commit>` → 全新临时目录 → `py -B -m pytest tests -q`（**离线，无 API key，无 .env，无工作树未提交文件**）。
 - docs commit（`a11ad85` / `c84c37b` / `194d73f` 的 docs-only 与 test-harness 部分）不改变业务 test surface 的工程里程碑口径（194d73f 是 12s→30s 的 harness deadline 调整，不改变业务语义）。
 
@@ -232,6 +233,36 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 
 **A1/A2 invariants 保持**：CLEAN final state 不变（新增仅 skill trace 事件）；MULTI 2 slices → 2 次 skill execution（各自 intent/context）；A2 capability（Knowledge 仅 search / get_ticket & execute_approved_reply forbidden / MCP failure fail-closed / FAILED≠EXECUTED）全部保持。
 
+### ⑦ A4 HITL Checkpoint（Commit A4，CURRENT VERIFIED）
+
+| 字段 | 值 |
+|---|---|
+| Commit | `437b805 feat: persist review checkpoints and separate approval from execution` |
+| Clean-room | **191 passed** |
+| **approval_execution_coupling** | **separated**（A2 的 coupled → A4 的 separated） |
+
+**状态机**：`PENDING(WAITING_FOR_REVIEW)` → human approve/edit/reject → `APPROVED/EDITED + READY_FOR_EXECUTION`（或 `REJECTED`）→ 显式 resume/executor → `EXECUTED / FAILED`。**approval 与 execution 是不同状态转换**——`review_ticket(approved)` 不再立即执行 mock action（adapter 0）。
+
+**Review checkpoint（SQLite 持久化，非内存）**：ticket 上新增 `approved_payload`（reviewed 内容，source of truth）/ `approved_payload_hash`（SHA-256）/ `reviewed_at` / `review_version`。迁移为 additive idempotent ALTER（旧 DB 自动升级，无 Alembic，不手动删库）。
+
+**Approved content binding（CURRENT VERIFIED，从 FUTURE 升级）**：`what was approved == what may be executed`。canonicalize（trimmed UTF-8）→ SHA-256 → persist；execution 时 re-hash persisted approved_payload 与存储 hash 比对，不一致 → `stale_approved_draft`（execute forbidden）。caller 不能传 reply_text/hash/approved（ticket_id only）。
+
+**Resume / restart proof**：跨 service/repository 新实例（同一 SQLite）读取 checkpoint → 校验 → 执行 approved content 恰一次（测试证明）。进程重启语义明确（checkpoint 不是内存 HITL）。
+
+**Human edit**：Agent draft A → Human edit B → approved payload=B、hash=hash(B) → executor 执行 B（绝不 hash A execute B）。
+
+**Evidence revalidation**：approval 不覆盖 evidence gate——`approved + grounding unsafe → execute 时 NoEvidenceGate → grounding_not_authorized`（adapter 0）。
+
+**Idempotency / FAILED**：保持 A2——EXECUTED → already_executed（adapter total 1）；FAILED → previous_execution_failed（manual retry，adapter 不再调）；WAITING/REJECTED → 不可执行。
+
+**能力边界保持**：Knowledge/Support/Skill 均不可见 executor（execute_approved_reply 仍 Executor only）；HIGH-RISK 仍 0 checkpoint / 0 review state / 0 action / L2；email/lead 仍 ROUTING_ONLY（不建 checkpoint）。
+
+**预期行为变更（EXPECTED）**：`review_ticket(approved)` 从"立即执行"改为"创建 checkpoint，READY_FOR_EXECUTION，adapter 0"——这是 A4 的真实 architecture evolution，已同步更新 service/API 测试。A1 routing/authorization result 与 A2 permission semantics 未变。
+
+**AUTO_REPLY 语义澄清**：在 demo/service slice 中，external-equivalent action 仍经过 review gate——`AUTO_REPLY` 是**授权结果（decision label）**，不是"自动执行"；执行仍需显式 resume/executor。
+
+**Crash window boundary（KNOWN LIMITATION）**：DB check → mock call → DB record 仍存在 crash window；real external exactly-once 不保证（未引入 outbox/distributed transaction）。
+
 ---
 
 ## 7. Tooling（bounded read-only agent tooling，CURRENT VERIFIED）
@@ -304,11 +335,11 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 > A1 已完成项见 §6④（IncomingRequest / Router / Specialists / ContextProjection / trace，CURRENT VERIFIED）。
 > A2 已完成项见 §6⑤（typed MCP read plane / Local-MCP parity / specialist scoped read capability / approval-gated mock MCP action，CURRENT VERIFIED）。
 > A3 已完成项见 §6⑥（typed Skill Registry / deterministic selector / minimal context / permission intersection / 1 implemented skill：knowledge_lookup，CURRENT VERIFIED）。
+> A4 已完成项见 §6⑦（ticket HITL checkpoint / approval-execution separation / approved-draft SHA-256 binding / restart resume，CURRENT VERIFIED）。
 > 以下仍 FUTURE：
 
 - **更多 Skill**（当前仅 knowledge_lookup；support_proposal 评估为不值得 Skill 化）
 - **email / lead 完整 vertical slice**（当前 ticket=SUPPORTED，email/lead=ROUTING_ONLY；3-channel HITL / checkpoint 亦 FUTURE）
-- **approved-draft hash/version binding**（当前执行读 persisted draft_response，无 immutable approved-draft hash）
 - **connection / session pooling**（当前 per-tool-call 子进程；未引入 pooling）
 - **真实发送 / 真实 CRM / 真实 side effect**
 - **Multi-Agent A/B/C 对照实验**（A5）

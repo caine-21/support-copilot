@@ -99,6 +99,18 @@ class RunLedger:
             "rule":              rule,               # early_l2_gate / reflection_iters=N
         })
 
+    def log_tool_execution(self, ticket_id: str, *, turn_index, call_id, tool_name,
+                           backend, redacted_arguments, result_status, evidence,
+                           latency_ms, retry_count, authorization_result=None,
+                           stop_reason=None):
+        """Auditable tool event; raw model reasoning and customer values are omitted."""
+        self._append(self._steps, {"ticket_id": ticket_id, "step": "tool_execution",
+            "turn_index": turn_index, "call_id": call_id, "tool_name": tool_name,
+            "backend": backend, "redacted_arguments": redacted_arguments,
+            "result_status": result_status, "evidence_refs": evidence,
+            "latency_ms": latency_ms, "retry_count": retry_count,
+            "authorization_result": authorization_result, "stop_reason": stop_reason})
+
     # ── derived view (disposable, regenerable) ───────────────────────────────
     def finalize(self, report_view: dict) -> str:
         self.meta["finished_utc"] = _utc_now()

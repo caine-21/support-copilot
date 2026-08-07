@@ -206,11 +206,31 @@ def run_agent(
     no_service: bool = False,
     multi_agent_mode: str = "off",
     multi_agent_runner=None,
+    support_agent_mode: str | None = None,
+    tool_backend: str | None = None,
+    tool_model=None,
 ) -> dict:
     log("Agent", f"ticket={ticket_id} user={user_id} text='{ticket_text[:60]}'")
 
     if memory is None:
         memory = AgentMemory()
+
+    # Compatibility-safe default: existing deterministic workflow remains the
+    # default. Tool loop is an explicit mode and still returns through
+    # deterministic synthesize()/authorization inside tool_loop.
+    selected_mode = support_agent_mode or os.getenv("SUPPORT_AGENT_MODE", "legacy")
+    if selected_mode == "tool_loop":
+        from agent.tool_loop import run_tool_loop
+        # Reuse the same Phase-1 classification/tone semantics as Legacy. The
+        # tool loop receives observations; it never substitutes its own policy.
+        tool_obs = _phase1_parallel(ticket_text, user_id, memory, registry or tool_registry)
+        result, _ = run_tool_loop(
+            ticket_text, ticket_id, user_id, memory, customer_context,
+            model=tool_model, backend=tool_backend, ledger=ledger,
+            classification=tool_obs["classification"], tone=tool_obs["tone"],
+        )
+        memory.add_ticket(user_id, {"ticket_id": ticket_id, "intent": result.get("intent", "other"), "action": result["action"]})
+        return result
 
     # ── Phase 1: parallel data gathering ─────────────────────────────────────
     active_registry = registry or tool_registry

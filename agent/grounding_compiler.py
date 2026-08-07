@@ -71,7 +71,7 @@ Output JSON only:
 """
 
 
-def compile_grounding(draft: str, kb_snippets: list[dict]) -> dict:
+def compile_grounding(draft: str, kb_snippets: list[dict], *, no_service: bool = False) -> dict:
     """
     Decompose draft into claims and map each to KB support.
 
@@ -94,6 +94,26 @@ def compile_grounding(draft: str, kb_snippets: list[dict]) -> dict:
             "ungrounded_summary": "",
             "auto_reply_safe":    True,
         }
+
+    if no_service:
+        # Conservative, deterministic equivalent for the no-service harness.
+        # A claim is supported only when its meaningful terms occur in a KB
+        # excerpt; uncertainty is rejected rather than inferred as grounded.
+        import re
+        snippets = " ".join(item.get("snippet", "").lower() for item in kb_snippets)
+        claims = [part.strip() for part in re.split(r"[.!?]+", draft) if part.strip()]
+        graph = []
+        for claim in claims:
+            terms = {word for word in re.findall(r"[a-z0-9]+", claim.lower()) if len(word) > 2}
+            supported = bool(terms) and terms.issubset(set(re.findall(r"[a-z0-9]+", snippets)))
+            graph.append({"text": claim, "supported_by_kb": supported,
+                          "supporting_doc": kb_snippets[0].get("doc_id") if supported else None})
+        ratio = round(sum(item["supported_by_kb"] for item in graph) / len(graph), 3) if graph else 0.0
+        ungrounded = [item["text"] for item in graph if not item["supported_by_kb"]]
+        return {"claims": graph, "grounding_ratio": ratio,
+                "ungrounded_claims": ungrounded,
+                "ungrounded_summary": "Unsupported claims require human review." if ungrounded else "",
+                "auto_reply_safe": ratio >= GROUNDING_REQUIRED}
 
     # Lazy import keeps deterministic/no-service runs from loading provider
     # configuration. This function remains the provider-backed path.

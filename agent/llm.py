@@ -6,7 +6,14 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+
+def _load_provider_config() -> None:
+    """Load provider configuration only at a real-provider boundary.
+
+    Importing contracts, scripted adapters, or no-service test harnesses must
+    never read `.env` as a side effect.
+    """
+    load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 
 class LLMRouter:
@@ -23,6 +30,7 @@ class LLMRouter:
 
     def _deepseek(self):
         if self._ds_client is None:
+            _load_provider_config()
             from openai import OpenAI
             key = os.environ.get("DEEPSEEK_API_KEY")
             if not key:
@@ -35,6 +43,7 @@ class LLMRouter:
 
     def _groq(self):
         if self._groq_client is None:
+            _load_provider_config()
             from openai import OpenAI
             key = os.environ.get("GROQ_API_KEY")
             if not key:
@@ -85,6 +94,22 @@ class LLMRouter:
                 last_err = e
                 continue
         raise RuntimeError(f"All LLM providers failed. Last error: {last_err}")
+
+    def call_with_tools(self, messages: list[dict], tools: list[dict], model: str = "deepseek-chat"):
+        """Native OpenAI-compatible function calling; no JSON-in-text emulation."""
+        providers = [("deepseek", self._deepseek, "deepseek-chat"), ("groq", self._groq, "llama-3.3-70b-versatile")]
+        last_err = None
+        for name, client_fn, fallback_model in providers:
+            try:
+                return client_fn().chat.completions.create(
+                    model=model if name == "deepseek" else fallback_model,
+                    messages=messages, tools=tools, tool_choice="auto", max_tokens=800,
+                    temperature=0.2, timeout=self._TIMEOUTS[name],
+                )
+            except Exception as exc:
+                print(f"[LLM] {name} native tool call failed: {exc}")
+                last_err = exc
+        raise RuntimeError(f"All native tool providers failed. Last error: {last_err}")
 
 
 # module-level singleton — import and use directly

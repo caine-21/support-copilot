@@ -191,6 +191,8 @@ def execute_approved_reply(args: ExecuteApprovedReplyArgs, _: ToolRuntime) -> To
             return ToolResult(status=ToolStatus.FORBIDDEN, data={}, error_code="approval_required")
         if "rejected" in msg:
             return ToolResult(status=ToolStatus.FORBIDDEN, data={}, error_code="review_rejected")
+        if "previous_execution_failed" in msg:
+            return ToolResult(status=ToolStatus.ERROR, data={}, error_code="previous_execution_failed")
         return ToolResult(status=ToolStatus.ERROR, data={}, error_code="action_not_executable")
     except Exception as exc:  # noqa: BLE001 — boundary maps any failure to the envelope
         return ToolResult(status=ToolStatus.ERROR, data={}, error_code=f"action_execution_failed:{type(exc).__name__}")

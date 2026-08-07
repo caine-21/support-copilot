@@ -202,3 +202,46 @@ def test_adapter_failure_recorded_not_success(tmp_path):
     assert len(actions) == 1
     assert actions[0].status.value == "failed"   # FAILED != EXECUTED
     assert "provider down" in (actions[0].error or "")
+
+
+def test_failed_action_retry_is_explicit_not_reinvoked(tmp_path):
+    # Strategy B: a FAILED attempt is a terminal failure state. A second call
+    # must NOT re-invoke the adapter and must NOT crash on the UNIQUE
+    # idempotency key — it returns previous_execution_failed.
+    from service.engine import InvalidTransition
+
+    db = tmp_path / "tickets.db"
+    _create_ticket(db)
+    _persist_approval(db)
+    calls = []
+
+    class _BoomAdapter:
+        def create_reply(self, **_kw):
+            calls.append(1)
+            raise RuntimeError("provider down")
+
+    svc = _svc(db, decision_fn=make_fake_decision_fn(), adapter=_BoomAdapter())
+    with pytest.raises(RuntimeError):
+        svc.execute_approved_reply("T-A2B-001")
+    assert len(calls) == 1
+
+    with pytest.raises(InvalidTransition) as exc:
+        svc.execute_approved_reply("T-A2B-001")
+    assert "previous_execution_failed" in str(exc.value)
+    assert len(calls) == 1  # adapter NOT re-invoked
+    actions = _actions(db)
+    assert len(actions) == 1 and actions[0].status.value == "failed"
+
+
+def test_handler_maps_previous_execution_failed():
+    from unittest import mock
+
+    from agent.tooling import ExecuteApprovedReplyArgs, ToolStatus, execute_approved_reply
+    from service.engine import InvalidTransition
+
+    with mock.patch("service.engine.TicketWorkflowService") as MockSvc:
+        MockSvc.return_value.execute_approved_reply.side_effect = \
+            InvalidTransition("previous_execution_failed — manual retry required")
+        res = execute_approved_reply(ExecuteApprovedReplyArgs(ticket_id="T-1"), None)
+    assert res.status is ToolStatus.ERROR
+    assert res.error_code == "previous_execution_failed"

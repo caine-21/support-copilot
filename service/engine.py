@@ -222,6 +222,10 @@ class TicketWorkflowService:
                 ticket=ticket, action=existing,
                 message="idempotent hit — action already executed once",
             )
+        if existing is not None and existing.status == ActionStatus.FAILED:
+            # Strategy B: a FAILED attempt must not be silently retried into an
+            # IntegrityError (UNIQUE idempotency key). Explicit manual resolution.
+            raise InvalidTransition("previous_execution_failed — manual retry required")
 
         # Evidence gate + adapter execution + record (shared with execute_approved_reply).
         draft = req.edited_draft if req.reviewer_action == ReviewerAction.EDITED and req.edited_draft else (ticket.draft_response or "")
@@ -261,6 +265,12 @@ class TicketWorkflowService:
                 ticket=ticket, action=existing,
                 message="already executed — idempotent, adapter not re-invoked",
             )
+        if existing is not None and existing.status == ActionStatus.FAILED:
+            # Strategy B: a FAILED attempt is a terminal failure state. It is
+            # never "already_executed", and an auto retry is NOT re-invoked
+            # (the UNIQUE idempotency key cannot hold two attempts). Explicit
+            # manual resolution required.
+            raise InvalidTransition("previous_execution_failed — manual retry required")
 
         # Approved content = the persisted reviewed draft; caller cannot supply text.
         draft = ticket.draft_response or ""

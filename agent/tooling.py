@@ -64,6 +64,17 @@ class GetTicketArgs(BaseModel):
     ticket_id: str = Field(min_length=1, max_length=128)
 
 
+class ExecuteApprovedReplyArgs(BaseModel):
+    """Executor-only action input.
+
+    Minimal on purpose: no `approved`, `force`, `review_status` or `reply_text`
+    fields. Approval, evidence, integrity and idempotency all come from
+    server-side persisted state — the caller cannot pass an approval flag.
+    """
+    model_config = ConfigDict(extra="forbid")
+    ticket_id: str = Field(min_length=1, max_length=128)
+
+
 class ToolPermission(str, Enum):
     READ = "read"
     REVERSIBLE_WRITE = "reversible_write"
@@ -158,6 +169,41 @@ def get_ticket(args: GetTicketArgs, _: ToolRuntime) -> ToolResult:
             pass
 
 
+def execute_approved_reply(args: ExecuteApprovedReplyArgs, _: ToolRuntime) -> ToolResult:
+    """Executor-only: perform the human-approved mock reply for a ticket.
+
+    Reads persisted approval / evidence / idempotency from the server; never
+    accepts caller-supplied content or an approval flag.
+    """
+    from service.engine import InvalidTransition, NoEvidenceGate, TicketWorkflowService
+    from service.repository import TicketNotFound
+
+    try:
+        svc = TicketWorkflowService(enable_ledger=False)
+        outcome = svc.execute_approved_reply(args.ticket_id)
+    except TicketNotFound:
+        return ToolResult(status=ToolStatus.NOT_FOUND, data={}, error_code="ticket_not_found")
+    except NoEvidenceGate:
+        return ToolResult(status=ToolStatus.FORBIDDEN, data={}, error_code="grounding_not_authorized")
+    except InvalidTransition as exc:
+        msg = str(exc)
+        if "approval_required" in msg:
+            return ToolResult(status=ToolStatus.FORBIDDEN, data={}, error_code="approval_required")
+        if "rejected" in msg:
+            return ToolResult(status=ToolStatus.FORBIDDEN, data={}, error_code="review_rejected")
+        return ToolResult(status=ToolStatus.ERROR, data={}, error_code="action_not_executable")
+    except Exception as exc:  # noqa: BLE001 — boundary maps any failure to the envelope
+        return ToolResult(status=ToolStatus.ERROR, data={}, error_code=f"action_execution_failed:{type(exc).__name__}")
+
+    action = outcome.action
+    return ToolResult(
+        status=ToolStatus.SUCCESS,
+        data={"message": outcome.message,
+              "action": action.model_dump() if action is not None else None},
+        evidence=[EvidenceReference(source_id=args.ticket_id, source_type="ticket", locator="execute_approved_reply")],
+    )
+
+
 def support_tool_registry() -> dict[str, ToolDefinition]:
     return {
         "search_knowledge_base": ToolDefinition("search_knowledge_base", "Read matching Support Copilot KB excerpts; never authorizes an action.", SearchKnowledgeArgs, ToolPermission.READ, search_knowledge_base),
@@ -165,6 +211,38 @@ def support_tool_registry() -> dict[str, ToolDefinition]:
         "get_ticket": ToolDefinition("get_ticket", "Read a persisted ticket workflow record; never authorizes or mutates.", GetTicketArgs, ToolPermission.READ, get_ticket),
         "get_ticket_history": ToolDefinition("get_ticket_history", "Read recent in-memory ticket history for one user.", TicketHistoryArgs, ToolPermission.READ, get_ticket_history),
     }
+
+
+def executor_tool_registry() -> dict[str, ToolDefinition]:
+    """Executor-only side-effect registry. Modeled as external/irreversible even
+    though the adapter is mock, because it simulates a real external side effect.
+
+    Kept SEPARATE from support_tool_registry so specialists and the agent tool
+    loop can never discover or force these tools.
+    """
+    return {
+        "execute_approved_reply": ToolDefinition(
+            "execute_approved_reply",
+            "Execute the human-approved mock reply for a ticket (executor-only; reads persisted approval, never caller-supplied).",
+            ExecuteApprovedReplyArgs, ToolPermission.EXTERNAL_OR_IRREVERSIBLE, execute_approved_reply,
+        ),
+    }
+
+
+def tools_for_scope(scope: str) -> list[ToolDefinition]:
+    """Capability discovery by scope. Specialists never see the executor set."""
+    if scope == "executor":
+        return list(executor_tool_registry().values())
+    return list(support_tool_registry().values())
+
+
+def executor_gateway(backend: Literal["local", "mcp"] = "local", **kw) -> ToolGateway:
+    """Executor-scoped gateway: discovers/executes only the approval-gated
+    side-effect tool. Specialists are never constructed with this gateway."""
+    return ToolGateway(
+        executor_tool_registry(), backend=backend,
+        allowed_permissions={ToolPermission.EXTERNAL_OR_IRREVERSIBLE}, **kw,
+    )
 
 
 # Specialist capability boundaries (A2A). Knowledge is exercised through a
@@ -199,6 +277,7 @@ class ScopedToolGateway:
         backend: Literal["local", "mcp"] = "local",
         tool_timeout_seconds: float = 3.0,
         ledger: Any = None,
+        allowed_permissions: set[ToolPermission] | None = None,
     ):
         self._registry = registry or support_tool_registry()
         if allowed_tool_names is None:
@@ -207,6 +286,7 @@ class ScopedToolGateway:
         self._gateway = ToolGateway(
             registry=self._registry, backend=backend,
             tool_timeout_seconds=tool_timeout_seconds, ledger=ledger,
+            allowed_permissions=allowed_permissions,
         )
 
     @property
@@ -324,19 +404,22 @@ class MCPToolAdapter:
 
 
 class ToolGateway:
-    def __init__(self, registry: dict[str, ToolDefinition] | None = None, backend: Literal["local", "mcp"] = "local", *, tool_timeout_seconds: float = 3.0, max_output_bytes: int = 20_000, ledger: Any = None):
+    def __init__(self, registry: dict[str, ToolDefinition] | None = None, backend: Literal["local", "mcp"] = "local", *, tool_timeout_seconds: float = 3.0, max_output_bytes: int = 20_000, ledger: Any = None, allowed_permissions: set[ToolPermission] | None = None):
         self.registry = registry or support_tool_registry()
         self.adapter = LocalToolAdapter() if backend == "local" else MCPToolAdapter()
+        # Default is READ-only (the specialist/agent plane). The executor scope
+        # passes {EXTERNAL_OR_IRREVERSIBLE} for the approval-gated action.
+        self.allowed_permissions = allowed_permissions or {ToolPermission.READ}
         self.backend, self.tool_timeout_seconds, self.max_output_bytes, self.ledger = backend, tool_timeout_seconds, max_output_bytes, ledger
 
     def available_tools(self) -> list[ToolDefinition]:
-        return [definition for definition in self.registry.values() if definition.permission == ToolPermission.READ]
+        return [d for d in self.registry.values() if d.permission in self.allowed_permissions]
 
     def execute(self, call_id: str, tool_name: str, raw_arguments: dict[str, Any], runtime: ToolRuntime, turn_index: int, retry_count: int = 0) -> ToolResult:
         definition = self.registry.get(tool_name)
         if definition is None:
             return ToolResult(status=ToolStatus.NOT_FOUND, error_code="tool_not_registered")
-        if definition.permission != ToolPermission.READ:
+        if definition.permission not in self.allowed_permissions:
             return ToolResult(status=ToolStatus.FORBIDDEN, error_code="tool_permission_denied")
         try:
             arguments = definition.args_model.model_validate(raw_arguments)

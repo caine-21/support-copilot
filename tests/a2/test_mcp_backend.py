@@ -57,9 +57,14 @@ def mcp_tools():
     return asyncio.run(_list())
 
 
-def test_mcp_exposes_exactly_four_read_tools(mcp_tools):
+def test_mcp_exposes_four_read_plus_executor(mcp_tools):
     names = {t.name for t in mcp_tools}
-    assert EXPECTED_READ_TOOLS == names
+    # The READ plane is exactly the four read tools.
+    assert EXPECTED_READ_TOOLS <= names
+    assert not (names & {"send_reply", "update_ticket", "delete_ticket"})
+    # A2B: the server (capability provider) also exposes ONE executor action,
+    # which is NOT part of the read plane.
+    assert "execute_approved_reply" in names
 
 
 def test_mcp_schema_semantic_parity(mcp_tools):

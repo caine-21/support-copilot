@@ -223,25 +223,82 @@ class TicketWorkflowService:
                 message="idempotent hit — action already executed once",
             )
 
-        # Evidence gate: an AUTO_REPLY with no grounding evidence may not be sent.
-        if ticket.decision == Decision.AUTO_REPLY.value and ticket.grounding_safe is not True:
-            raise NoEvidenceGate(
-                f"ticket {ticket_id} decision=AUTO_REPLY but grounding_safe={ticket.grounding_safe} — "
-                "evidence gate blocks reply; missing evidence cannot bypass the gate"
+        # Evidence gate + adapter execution + record (shared with execute_approved_reply).
+        draft = req.edited_draft if req.reviewer_action == ReviewerAction.EDITED and req.edited_draft else (ticket.draft_response or "")
+        record = self._perform_approved_action(
+            ticket, idem_key=idem_key, action_type=action_type,
+            draft=draft, review_decision=req.reviewer_action.value,
+        )
+        ticket.review_status = (
+            ReviewStatus.EDITED if req.reviewer_action == ReviewerAction.EDITED
+            else ReviewStatus.APPROVED
+        )
+        ticket.reviewer_action = req.reviewer_action.value
+        self.repo.update_ticket(ticket)
+        return ReviewOutcome(
+            ticket=ticket, action=record,
+            message=f"{action_type} executed once (mock) — action {record.status.value}",
+        )
+
+    def execute_approved_reply(self, ticket_id: str) -> ReviewOutcome:
+        """Executor-only: perform the human-approved mock reply for a ticket.
+
+        Loads persisted approval state. Never accepts caller-supplied content or
+        an approval flag — approval, evidence and idempotency all come from the
+        server-side persisted ticket/action records.
+        """
+        ticket = self.repo.get_ticket(ticket_id)
+        if ticket.review_status == ReviewStatus.REJECTED:
+            raise InvalidTransition("review rejected — action not executed")
+        if ticket.review_status != ReviewStatus.APPROVED:
+            raise InvalidTransition("approval_required — no persisted human approval")
+
+        action_type = ticket.action_type or _action_type_for(ticket.decision or "")
+        idem_key = self._idempotency_key(ticket.ticket_id, ticket.workflow_version, action_type)
+        existing = self.repo.get_action_by_key(idem_key)
+        if existing is not None and existing.status == ActionStatus.EXECUTED:
+            return ReviewOutcome(
+                ticket=ticket, action=existing,
+                message="already executed — idempotent, adapter not re-invoked",
             )
 
-        draft = req.edited_draft if req.reviewer_action == ReviewerAction.EDITED and req.edited_draft else (ticket.draft_response or "")
+        # Approved content = the persisted reviewed draft; caller cannot supply text.
+        draft = ticket.draft_response or ""
+        record = self._perform_approved_action(
+            ticket, idem_key=idem_key, action_type=action_type,
+            draft=draft, review_decision=ticket.reviewer_action or ReviewerAction.APPROVED.value,
+        )
+        return ReviewOutcome(
+            ticket=ticket, action=record,
+            message=f"execute_approved_reply: {action_type} executed once (mock)",
+        )
 
+    def _perform_approved_action(
+        self, ticket: TicketRecord, *, idem_key: str, action_type: str,
+        draft: str, review_decision: str,
+    ) -> ActionRecord:
+        """Execute the approved mock action once: evidence gate -> adapter -> record.
+
+        Shared by review_ticket (approved/edited) and execute_approved_reply so the
+        authorization policy has a single source of truth.
+        """
+        # Evidence gate: an AUTO_REPLY with no grounding evidence may not be sent,
+        # even after human approval.
+        if ticket.decision == Decision.AUTO_REPLY.value and ticket.grounding_safe is not True:
+            raise NoEvidenceGate(
+                f"ticket {ticket.ticket_id} decision=AUTO_REPLY but grounding_safe={ticket.grounding_safe} — "
+                "evidence gate blocks reply; missing evidence cannot bypass the gate"
+            )
         try:
             if action_type == "create_reply":
                 result = self.adapter.create_reply(
-                    ticket_id=ticket_id,
+                    ticket_id=ticket.ticket_id,
                     draft=draft,
                     evidence=ticket.retrieved_evidence or [],
                 )
             else:
                 result = self.adapter.create_escalation(
-                    ticket_id=ticket_id,
+                    ticket_id=ticket.ticket_id,
                     level=ticket.decision or "ESCALATE_L1",
                     reason=ticket.decision_reason or "",
                     evidence=ticket.retrieved_evidence or [],
@@ -249,9 +306,9 @@ class TicketWorkflowService:
         except Exception as exc:  # adapter failure → record it, never mark success
             self.repo.record_action(
                 idempotency_key=idem_key,
-                ticket_id=ticket_id,
+                ticket_id=ticket.ticket_id,
                 action_type=action_type,
-                review_decision=req.reviewer_action.value,
+                review_decision=review_decision,
                 status=ActionStatus.FAILED,
                 error=str(exc),
             )
@@ -261,24 +318,16 @@ class TicketWorkflowService:
 
         record = self.repo.record_action(
             idempotency_key=idem_key,
-            ticket_id=ticket_id,
+            ticket_id=ticket.ticket_id,
             action_type=action_type,
-            review_decision=req.reviewer_action.value,
+            review_decision=review_decision,
             status=ActionStatus.EXECUTED,
             result=result,
         )
-        ticket.review_status = (
-            ReviewStatus.EDITED if req.reviewer_action == ReviewerAction.EDITED
-            else ReviewStatus.APPROVED
-        )
-        ticket.reviewer_action = req.reviewer_action.value
         ticket.action_status = ActionStatus.EXECUTED.value
         ticket.idempotency_key = idem_key
         self.repo.update_ticket(ticket)
-        return ReviewOutcome(
-            ticket=ticket, action=record,
-            message=f"{action_type} executed once (mock) — action {record.status.value}",
-        )
+        return record
 
     # ── helpers ──────────────────────────────────────────────────────────────
     @staticmethod

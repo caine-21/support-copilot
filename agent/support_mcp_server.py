@@ -15,9 +15,9 @@ from pydantic import BaseModel, Field
 sys.path.insert(0, os.path.dirname(__file__))
 
 from mcp.server import MCPServer
-from .tooling import CustomerContextArgs, GetTicketArgs, SearchKnowledgeArgs, TicketHistoryArgs, ToolRuntime, get_customer_context as _get_customer_context, get_ticket as _get_ticket, get_ticket_history as _get_ticket_history, search_knowledge_base as _search_knowledge_base
+from .tooling import CustomerContextArgs, ExecuteApprovedReplyArgs, GetTicketArgs, SearchKnowledgeArgs, TicketHistoryArgs, ToolRuntime, execute_approved_reply as _execute_approved_reply, get_customer_context as _get_customer_context, get_ticket as _get_ticket, get_ticket_history as _get_ticket_history, search_knowledge_base as _search_knowledge_base
 
-mcp = MCPServer(name="support-copilot-operations", instructions="Read-only local support knowledge, context, and history. These tools never authorize customer actions.")
+mcp = MCPServer(name="support-copilot-operations", instructions="Local support read plane (knowledge/context/ticket/history) plus ONE executor-only side-effect tool: execute_approved_reply performs the human-approved mock reply, reading persisted approval state — it never accepts an approval flag or reply text from the caller.")
 
 
 class MCPToolEvidenceDTO(BaseModel):
@@ -70,6 +70,17 @@ def get_ticket_history(user_id: str) -> MCPToolResultDTO:
 def get_ticket(ticket_id: str) -> MCPToolResultDTO:
     """Read a persisted ticket workflow record (shared SUPPORT_DB_PATH); never authorizes."""
     return _to_mcp_result(_get_ticket(GetTicketArgs(ticket_id=ticket_id), ToolRuntime(user_id="mcp", ticket_text="")))
+
+
+@mcp.tool(structured_output=True)
+def execute_approved_reply(ticket_id: str) -> MCPToolResultDTO:
+    """Executor-only: perform the human-approved mock reply for a ticket.
+
+    Approval, evidence and idempotency are read from server-side persisted
+    state — the input carries no approval flag and no reply text, so a caller
+    cannot self-authorize or inject content.
+    """
+    return _to_mcp_result(_execute_approved_reply(ExecuteApprovedReplyArgs(ticket_id=ticket_id), ToolRuntime(user_id="mcp", ticket_text="")))
 
 
 if __name__ == "__main__":

@@ -84,15 +84,17 @@ def compile_grounding(draft: str, kb_snippets: list[dict], *, no_service: bool =
       "auto_reply_safe":  bool,     # grounding_ratio >= GROUNDING_REQUIRED
     }
 
-    Returns a safe default if draft or kb_snippets are empty (no claims to check).
+    Returns a fail-closed result if draft or kb_snippets are empty: absence of
+    evidence is not evidence of safety, so AUTO_REPLY must not be authorized.
     """
     if not draft or not kb_snippets:
         return {
             "claims":             [],
-            "grounding_ratio":    1.0,
-            "ungrounded_claims":  [],
-            "ungrounded_summary": "",
-            "auto_reply_safe":    True,
+            "grounding_ratio":    0.0,
+            "ungrounded_claims":  ["no claims checked: empty draft or empty KB evidence"],
+            "ungrounded_summary": "No grounding evidence was available to check.",
+            "auto_reply_safe":    False,
+            "reason_code":        "empty_draft_or_kb",
         }
 
     if no_service:
@@ -113,7 +115,8 @@ def compile_grounding(draft: str, kb_snippets: list[dict], *, no_service: bool =
         return {"claims": graph, "grounding_ratio": ratio,
                 "ungrounded_claims": ungrounded,
                 "ungrounded_summary": "Unsupported claims require human review." if ungrounded else "",
-                "auto_reply_safe": ratio >= GROUNDING_REQUIRED}
+                "auto_reply_safe": ratio >= GROUNDING_REQUIRED,
+                "reason_code": "no_service_empty_graph" if not graph else None}
 
     # Lazy import keeps deterministic/no-service runs from loading provider
     # configuration. This function remains the provider-backed path.
@@ -127,16 +130,34 @@ def compile_grounding(draft: str, kb_snippets: list[dict], *, no_service: bool =
         f"KB excerpts:\n{kb_block}"
     )
 
-    raw    = call_llm(_CLAIM_GRAPH_SYSTEM, user_msg)
-    parsed = safe_json_parse(raw)
+    try:
+        raw    = call_llm(_CLAIM_GRAPH_SYSTEM, user_msg)
+        parsed = safe_json_parse(raw)
+    except Exception as exc:
+        # Fail closed: a compiler exception must never become "safe". Preserve
+        # observability without letting the exception authorize AUTO_REPLY.
+        print(f"[grounding_compiler] claim-graph provider failed: {type(exc).__name__}: {exc}")
+        return {
+            "claims":             [],
+            "grounding_ratio":    0.0,
+            "ungrounded_claims":  [f"compiler exception: {type(exc).__name__}"],
+            "ungrounded_summary": f"Grounding compiler failed: {exc}",
+            "auto_reply_safe":    False,
+            "reason_code":        "compiler_exception",
+        }
 
     claims = parsed.get("claims", [])
-    # Recompute ratio from claims list (don't trust LLM's self-reported number)
+    # Recompute ratio from claims list (don't trust LLM's self-reported number).
     if claims:
         supported = sum(1 for c in claims if c.get("supported_by_kb", False))
         ratio = round(supported / len(claims), 3)
+        reason_code = None
     else:
-        ratio = 1.0   # no extractable claims → treat as grounded
+        # No verifiable claims -> no positive grounding evidence. In an
+        # authorization context, empty claims must not be a vacuous "all
+        # claims are grounded" that unlocks AUTO_REPLY.
+        ratio = 0.0
+        reason_code = "empty_claims"
 
     ungrounded = [c["text"] for c in claims if not c.get("supported_by_kb", True)]
 
@@ -146,4 +167,5 @@ def compile_grounding(draft: str, kb_snippets: list[dict], *, no_service: bool =
         "ungrounded_claims":  ungrounded,
         "ungrounded_summary": parsed.get("ungrounded_summary", ""),
         "auto_reply_safe":    ratio >= GROUNDING_REQUIRED,
+        "reason_code":        reason_code,
     }

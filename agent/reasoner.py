@@ -293,8 +293,9 @@ def synthesize(
             else _guard.check(ticket_text, kb_grounding)
         )
         gc = grounding_check or {}
-        gc_safe   = gc.get("auto_reply_safe", True)   # default True when compiler skipped
-        gc_ratio  = gc.get("grounding_ratio", 1.0)
+        # Fail closed: unknown/missing grounding must never authorize AUTO_REPLY.
+        gc_safe   = gc.get("auto_reply_safe", False)
+        gc_ratio  = gc.get("grounding_ratio", 0.0)
         gc_ungnd  = gc.get("ungrounded_claims", [])
 
         if not guard["safe"]:
@@ -366,8 +367,8 @@ def synthesize(
         "missing_info": missing_info,
         "intent_set": sorted(_intent_set),  # for RAGAS retrieval recall
         "grounding_check": {                # Milestone D: claim graph
-            "grounding_ratio":   (grounding_check or {}).get("grounding_ratio", 1.0),
-            "auto_reply_safe":   (grounding_check or {}).get("auto_reply_safe", True),
+            "grounding_ratio":   (grounding_check or {}).get("grounding_ratio", 0.0),
+            "auto_reply_safe":   (grounding_check or {}).get("auto_reply_safe", False),
             "ungrounded_claims": (grounding_check or {}).get("ungrounded_claims", []),
         },
         "assumption_trace": assumption_trace(   # Fact-Grounded Reasoning Protocol v0

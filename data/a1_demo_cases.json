@@ -1,0 +1,55 @@
+{
+  "_comment": "Synthetic demo cases for A1 unified request runtime. No real customer data. Expected behavior is NOT hardcoded in code — these run through the ordinary production path.",
+  "cases": [
+    {
+      "id": "A1-DEMO-01",
+      "label": "clean",
+      "request": {
+        "request_id": "A1-DEMO-01",
+        "channel": "ticket",
+        "raw_text": "How do I download my invoice?",
+        "metadata": {"source": "synthetic-demo", "purpose": "clean single-intent FAQ"}
+      }
+    },
+    {
+      "id": "A1-DEMO-02",
+      "label": "multi_intent",
+      "request": {
+        "request_id": "A1-DEMO-02",
+        "channel": "ticket",
+        "raw_text": "I cannot log in to my account and my invoice is missing",
+        "metadata": {"source": "synthetic-demo", "purpose": "two intents: password_reset + invoice_download"}
+      }
+    },
+    {
+      "id": "A1-DEMO-03",
+      "label": "high_risk",
+      "request": {
+        "request_id": "A1-DEMO-03",
+        "channel": "ticket",
+        "raw_text": "We have experienced SLA breach and downtime all week, this is unacceptable",
+        "metadata": {"source": "synthetic-demo", "purpose": "deterministic early-risk pre-guard"}
+      }
+    },
+    {
+      "id": "A1-DEMO-EMAIL",
+      "label": "email_routing_only",
+      "request": {
+        "request_id": "A1-DEMO-EMAIL",
+        "channel": "email",
+        "raw_text": "Can you confirm my invoice total for last month?",
+        "metadata": {"source": "synthetic-demo", "purpose": "email channel: contract + routing only"}
+      }
+    },
+    {
+      "id": "A1-DEMO-LEAD",
+      "label": "lead_routing_only",
+      "request": {
+        "request_id": "A1-DEMO-LEAD",
+        "channel": "lead",
+        "raw_text": "We are evaluating your platform for a 200-seat rollout",
+        "metadata": {"source": "synthetic-demo", "purpose": "lead channel: contract + routing only"}
+      }
+    }
+  ]
+}

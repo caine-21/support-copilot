@@ -136,7 +136,12 @@ async def test_mcp_v2_stdio_three_read_tools_and_clean_exit():
         env={"PYTHONPATH": project_root, "PYTHONDONTWRITEBYTECODE": "1"},
     )
     client = Client(stdio_client(params), raise_exceptions=True)
-    await asyncio.wait_for(client.__aenter__(), timeout=12)  # enter / child start
+    # Evidence-based startup deadline (scripts/diagnose_mcp_stdio.py): MCP
+    # initialize is cold-import bound, p95 ~10.6s / max ~11.7s on this Windows
+    # host. 12s was sitting on the tail and flaked under load; 30s matches the
+    # MCPToolAdapter startup deadline. list_tools / call_tool timeouts below
+    # are the post-startup tool-execution phase and stay tight.
+    await asyncio.wait_for(client.__aenter__(), timeout=30)  # enter / child start
     try:
         listed = await asyncio.wait_for(client.list_tools(), timeout=4)
         by_name = {tool.name: tool for tool in listed.tools}

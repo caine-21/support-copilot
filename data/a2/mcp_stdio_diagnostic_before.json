@@ -1,0 +1,287 @@
+{
+  "script": "scripts/diagnose_mcp_stdio.py",
+  "date": "2026-08-07",
+  "n_runs": 20,
+  "success_count": 20,
+  "timeout_count": 0,
+  "failure_count": 0,
+  "failure_stages": {},
+  "metrics": {
+    "client_enter_ms": {
+      "count": 20,
+      "p50": 70.3,
+      "p95": 104.1,
+      "max": 104.1,
+      "min": 43.5
+    },
+    "initialize_ms": {
+      "count": 20,
+      "p50": 4621.1,
+      "p95": 7978.1,
+      "max": 7978.1,
+      "min": 4225.5
+    },
+    "list_tools_ms": {
+      "count": 20,
+      "p50": 6.4,
+      "p95": 8.7,
+      "max": 8.7,
+      "min": 5.6
+    },
+    "first_tool_call_ms": {
+      "count": 20,
+      "p50": 9.0,
+      "p95": 27.5,
+      "max": 27.5,
+      "min": 7.6
+    },
+    "shutdown_ms": {
+      "count": 20,
+      "p50": 450.4,
+      "p95": 874.4,
+      "max": 874.4,
+      "min": 419.3
+    },
+    "total_ms": {
+      "count": 20,
+      "p50": 5141.6,
+      "p95": 8605.6,
+      "max": 8605.6,
+      "min": 4733.4
+    },
+    "process_spawn_ms": {
+      "not_separately_observable": true
+    },
+    "server_ready_ms": {
+      "not_separately_observable": true
+    },
+    "python_import_ms": {
+      "not_separately_observable": true
+    }
+  },
+  "per_run": [
+    {
+      "idx": 1,
+      "success": true,
+      "client_enter_ms": 101.3,
+      "initialize_ms": 7814.4,
+      "list_tools_ms": 8.7,
+      "first_tool_call_ms": 18.0,
+      "shutdown_ms": 491.9,
+      "total_ms": 8435.6,
+      "failure_stage": null
+    },
+    {
+      "idx": 2,
+      "success": true,
+      "client_enter_ms": 80.9,
+      "initialize_ms": 4398.2,
+      "list_tools_ms": 6.7,
+      "first_tool_call_ms": 8.4,
+      "shutdown_ms": 480.5,
+      "total_ms": 4975.6,
+      "failure_stage": null
+    },
+    {
+      "idx": 3,
+      "success": true,
+      "client_enter_ms": 104.1,
+      "initialize_ms": 4540.5,
+      "list_tools_ms": 6.6,
+      "first_tool_call_ms": 12.8,
+      "shutdown_ms": 447.7,
+      "total_ms": 5112.4,
+      "failure_stage": null
+    },
+    {
+      "idx": 4,
+      "success": true,
+      "client_enter_ms": 67.5,
+      "initialize_ms": 4437.1,
+      "list_tools_ms": 6.5,
+      "first_tool_call_ms": 27.5,
+      "shutdown_ms": 479.2,
+      "total_ms": 5018.6,
+      "failure_stage": null
+    },
+    {
+      "idx": 5,
+      "success": true,
+      "client_enter_ms": 85.7,
+      "initialize_ms": 4498.6,
+      "list_tools_ms": 7.4,
+      "first_tool_call_ms": 11.4,
+      "shutdown_ms": 455.7,
+      "total_ms": 5059.6,
+      "failure_stage": null
+    },
+    {
+      "idx": 6,
+      "success": true,
+      "client_enter_ms": 95.4,
+      "initialize_ms": 4908.5,
+      "list_tools_ms": 6.4,
+      "first_tool_call_ms": 7.6,
+      "shutdown_ms": 874.4,
+      "total_ms": 5892.9,
+      "failure_stage": null
+    },
+    {
+      "idx": 7,
+      "success": true,
+      "client_enter_ms": 70.3,
+      "initialize_ms": 4693.4,
+      "list_tools_ms": 6.2,
+      "first_tool_call_ms": 8.6,
+      "shutdown_ms": 449.8,
+      "total_ms": 5229.0,
+      "failure_stage": null
+    },
+    {
+      "idx": 8,
+      "success": true,
+      "client_enter_ms": 68.8,
+      "initialize_ms": 7978.1,
+      "list_tools_ms": 7.1,
+      "first_tool_call_ms": 17.0,
+      "shutdown_ms": 533.4,
+      "total_ms": 8605.6,
+      "failure_stage": null
+    },
+    {
+      "idx": 9,
+      "success": true,
+      "client_enter_ms": 94.7,
+      "initialize_ms": 4663.3,
+      "list_tools_ms": 5.6,
+      "first_tool_call_ms": 9.0,
+      "shutdown_ms": 484.3,
+      "total_ms": 5257.7,
+      "failure_stage": null
+    },
+    {
+      "idx": 10,
+      "success": true,
+      "client_enter_ms": 76.0,
+      "initialize_ms": 5223.6,
+      "list_tools_ms": 8.3,
+      "first_tool_call_ms": 10.7,
+      "shutdown_ms": 456.0,
+      "total_ms": 5775.2,
+      "failure_stage": null
+    },
+    {
+      "idx": 11,
+      "success": true,
+      "client_enter_ms": 65.9,
+      "initialize_ms": 5148.3,
+      "list_tools_ms": 6.4,
+      "first_tool_call_ms": 12.5,
+      "shutdown_ms": 455.7,
+      "total_ms": 5689.4,
+      "failure_stage": null
+    },
+    {
+      "idx": 12,
+      "success": true,
+      "client_enter_ms": 55.2,
+      "initialize_ms": 4430.4,
+      "list_tools_ms": 6.9,
+      "first_tool_call_ms": 8.6,
+      "shutdown_ms": 432.6,
+      "total_ms": 4934.4,
+      "failure_stage": null
+    },
+    {
+      "idx": 13,
+      "success": true,
+      "client_enter_ms": 46.5,
+      "initialize_ms": 4903.7,
+      "list_tools_ms": 6.7,
+      "first_tool_call_ms": 9.0,
+      "shutdown_ms": 429.7,
+      "total_ms": 5396.2,
+      "failure_stage": null
+    },
+    {
+      "idx": 14,
+      "success": true,
+      "client_enter_ms": 47.9,
+      "initialize_ms": 4557.8,
+      "list_tools_ms": 5.9,
+      "first_tool_call_ms": 8.5,
+      "shutdown_ms": 429.1,
+      "total_ms": 5049.8,
+      "failure_stage": null
+    },
+    {
+      "idx": 15,
+      "success": true,
+      "client_enter_ms": 66.7,
+      "initialize_ms": 4333.8,
+      "list_tools_ms": 6.0,
+      "first_tool_call_ms": 8.5,
+      "shutdown_ms": 419.3,
+      "total_ms": 4834.8,
+      "failure_stage": null
+    },
+    {
+      "idx": 16,
+      "success": true,
+      "client_enter_ms": 58.5,
+      "initialize_ms": 4378.8,
+      "list_tools_ms": 6.4,
+      "first_tool_call_ms": 8.8,
+      "shutdown_ms": 432.3,
+      "total_ms": 4886.0,
+      "failure_stage": null
+    },
+    {
+      "idx": 17,
+      "success": true,
+      "client_enter_ms": 70.3,
+      "initialize_ms": 4621.1,
+      "list_tools_ms": 6.4,
+      "first_tool_call_ms": 9.8,
+      "shutdown_ms": 433.3,
+      "total_ms": 5141.6,
+      "failure_stage": null
+    },
+    {
+      "idx": 18,
+      "success": true,
+      "client_enter_ms": 43.5,
+      "initialize_ms": 4225.5,
+      "list_tools_ms": 5.7,
+      "first_tool_call_ms": 7.8,
+      "shutdown_ms": 450.4,
+      "total_ms": 4733.4,
+      "failure_stage": null
+    },
+    {
+      "idx": 19,
+      "success": true,
+      "client_enter_ms": 53.8,
+      "initialize_ms": 5127.5,
+      "list_tools_ms": 6.0,
+      "first_tool_call_ms": 8.0,
+      "shutdown_ms": 436.0,
+      "total_ms": 5631.9,
+      "failure_stage": null
+    },
+    {
+      "idx": 20,
+      "success": true,
+      "client_enter_ms": 84.7,
+      "initialize_ms": 4593.1,
+      "list_tools_ms": 5.9,
+      "first_tool_call_ms": 9.4,
+      "shutdown_ms": 440.6,
+      "total_ms": 5134.3,
+      "failure_stage": null
+    }
+  ],
+  "platform": "Windows 11 Pro 10.0.26200",
+  "commit": "796d28d",
+  "_status": "ENVIRONMENT OBSERVATION EVIDENCE — not a deterministic benchmark, not a production performance result"
+}

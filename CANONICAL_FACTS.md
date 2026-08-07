@@ -29,12 +29,15 @@
 | Legacy clean | `31e409d` | committed legacy + service 切片 | **60 passed**（21–49s，离线） | pre-tooling 基线 |
 | Tooling clean | `c9e1ade` | committed bounded tooling + legacy + service | **70 passed**（29–48s，离线） | bounded tooling 基线 |
 | Grounding fail-closed | `2c13496` | + grounding fail-closed（11 safety tests） | **81 passed** | fail-closed 基线 |
-| A1 unified runtime | `2429c63` | + app/ + tests/a1（32 tests） | **113 passed** | **current clean test baseline** |
+| A1 unified runtime | `2429c63` | + app/ + tests/a1（32 tests） | **113 passed** | A1 基线 |
+| A2 typed/local tool plane | `6401fb4` | + get_ticket + scoped gateway + tests/a2（18） | **131 passed** | typed read plane |
+| A2 MCP parity | `1e1f238` | + MCP backend parity + A1-on-MCP | **148 passed** | MCP read plane |
+| A2 action gate | `ffc5eb8` | + execute_approved_reply（11 A2B tests） | **159 passed** | approval-gated action |
+| **A2 final** | `23b1415` | + FAILED-retry fix（2 tests） | **161 passed** | **current clean test baseline** |
 
-- 演进链是**架构里程碑**，不是单纯测试数量增长：60（确定性工作流）→ 70（bounded tooling）→ 81（fail-closed grounding）→ 113（unified request runtime）。
-- 113 = 81（前基线）+ 32（tests/a1）。
+- 演进链是**架构里程碑**，不是单纯测试数量增长：60（确定性工作流）→ 70（bounded tooling）→ 81（fail-closed grounding）→ 113（A1 unified runtime）→ 131（typed read plane）→ 148（MCP parity）→ 161（approval-gated action + FAILED semantics）。
 - 验证方法：`git archive <commit>` → 全新临时目录 → `py -B -m pytest tests -q`（**离线，无 API key，无 .env，无工作树未提交文件**）。
-- 实测：`c9e1ade` clean-room = 70；`2c13496` = 81；`2429c63` clean-room = **113 collected / 113 passed × 2 次**（2026-08-07）。docs commit（`a11ad85` / `c84c37b`）不改变 runtime/test surface，不作工程测试里程碑。
+- docs commit（`a11ad85` / `c84c37b` / `194d73f` 的 docs-only 与 test-harness 部分）不改变业务 test surface 的工程里程碑口径（194d73f 是 12s→30s 的 harness deadline 调整，不改变业务语义）。
 
 ---
 
@@ -162,7 +165,42 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 
 **Proposal / Authorization 分离**：Specialist 只产出 `proposal`；`AUTO_REPLY / ESCALATE_L1 / ESCALATE_L2` 由既有 deterministic evidence/risk gate（`agent.reasoner.synthesize`）决定。Specialist 无权产生业务授权。
 
-**Known flake（不归因 A1）**：`test_mcp_backend_matches_local_contract` / `test_mcp_v2_stdio_three_read_tools_and_clean_exit` 在 Windows 负载下偶发 stdio 子进程 12s 启动超时。证据：Commit 1 已观察；Commit 2 未改 MCP path；`2429c63` clean-room 连续 113/113。**pre-existing infrastructure flake，A2 处理，本轮不改 timeout。**
+**Known flake（不归因 A1）**：`test_mcp_backend_matches_local_contract` / `test_mcp_v2_stdio_three_read_tools_and_clean_exit` 在 Windows 负载下偶发 stdio 子进程 12s 启动超时。证据：Commit 1 已观察；Commit 2 未改 MCP path；`2429c63` clean-room 连续 113/113。**pre-existing infrastructure flake，A2 已用 3C 调整 harness deadline（非业务语义）处理。**
+
+### ⑤ A2 MCP Tool Plane（Commit A2，CURRENT VERIFIED）
+
+**架构**：A1 Runtime → injected `ScopedToolGateway` → canonical typed tool registry → Local / MCP stdio backend → same domain handlers。backend selection 在 composition root（`run_a1`），Specialist 无感。
+
+**Server capability set（`agent/support_mcp_server.py`）**：
+- READ：`search_knowledge_base` / `get_customer_context` / `get_ticket` / `get_ticket_history`
+- EXTERNAL_OR_IRREVERSIBLE：`execute_approved_reply`
+
+⚠️ **Server Capability Set ≠ Specialist Capability Set**（capability withholding：server 是 capability provider，不是把 tools/list 直接喂给模型）。
+
+**Knowledge Specialist capability（CURRENT VERIFIED）**：
+- 仅可见 `search_knowledge_base`；backend-agnostic（只依赖注入的 scoped tool interface，不感知 Local/MCP transport）
+- 不可发现 `get_ticket` / `execute_approved_reply`；forced 调用 → `FORBIDDEN specialist_tool_not_allowed`（backend 执行前）
+- MCP transport failure → Knowledge ERROR/no evidence → grounding fail-closed → AUTO_REPLY forbidden
+
+**Support Specialist scope**：read policy exists（`search_knowledge_base` / `get_customer_context` / `get_ticket_history`），**但当前 A1 Support path 不实际调用工具**（not exercised）。
+
+**Local/MCP parity（CURRENT VERIFIED）**：同一 fixture state（temp SQLite + SUPPORT_DB_PATH）下，4 个 read tools 的 status / business data / error_code / evidence semantics 一致；允许差异仅 transport metadata / latency / trace id。A1 CLEAN：Local final state = MCP final state（trace 仅 backend 不同）。A1 MULTI：2 intent slices → 2 次 MCP call → evidence 分离（FAQ-account-01 ∥ FAQ-billing-01）→ final state 不变。A1 HIGH-RISK：backend=mcp 配置 → early stop → **0 MCP tool contact** → ESCALATE_L2（lazy-connect）。
+
+**MCP failure semantics（CURRENT VERIFIED）**：MCP unavailable / timeout / malformed → `ToolResult ERROR/TIMEOUT` → Knowledge ERROR / no evidence → grounding fail-closed → AUTO_REPLY forbidden。
+
+**stdio diagnostics（ENVIRONMENT OBSERVATION，非 benchmark）**：before（`data/a2/mcp_stdio_diagnostic_before.json`，commit 796d28d）20/20 success，initialize 主导（p50≈4.6s / p95≈7.98s / max≈7.98s），total max≈8.61s；after（`..._after.json`，commit 1e1f238）20/20 success，initialize p95≈10.57s / total max≈11.67s。结论 `initialization_phase_dominates`；dependency import vs server init **not separately resolved**。3C 把 test harness 的 12s startup deadline 调到 30s（12s 落在正常观察尾部）——是 **test-harness robustness adjustment，不是证明 MCP cold-start root cause 已解决**。Connection lifecycle = **per tool call（每次 execute 一个新 stdio 子进程；MULTI 2 slices = 2 cold starts）**——已知限制，未引入 session pooling（prototype 优先验证 transport/permission/failure semantics）。
+
+**A2 action gate（CURRENT VERIFIED）**：`execute_approved_reply(ticket_id)`——input 仅 ticket_id，禁止 caller 提供 `approved/force/review_status/reply_text`；permission `EXTERNAL_OR_IRREVERSIBLE`；Specialist 不可发现不可执行；Executor 可发现。Server-side approval：直接 MCP 调用无 persisted approval → `approval_required`（adapter 0）；`approved=true` 注入 → `invalid_arguments`。**Agent cannot self-authorize through tool arguments.**
+
+**Approval/Execution coupling（LIMITATION，如实记录）**：当前正常 workflow `review_ticket(approved)` → `_perform_approved_action` → **立即** Mock execute → review_status=approved。`approval_execution_coupling = coupled`。`execute_approved_reply` 是 server-side approval-gated executor capability；**不要写**"正常 product flow 是 approval persisted → later MCP execution"（除非架构改变）。`review_status=approved 但 action 未成功` 的真实场景：adapter failure（FAILED 记录）/ test-constructed state。
+
+**Draft integrity（VERIFIED + LIMITATION）**：tool input 无 `reply_text` → caller 不能替换执行内容（VERIFIED）；当前 workflow 无正常 draft_response mutation path（VERIFIED）；executor 读 persisted `ticket.draft_response`。**NOT VERIFIED**：immutable approved-draft hash/version binding——"Execution reads persisted ticket draft rather than caller-supplied content. An immutable approved-draft hash/version binding is not yet implemented."（FUTURE）
+
+**Evidence gate（CURRENT VERIFIED）**：human approval alone ≠ execution authorization——approved + grounding unsafe → `grounding_not_authorized`（adapter 0）。
+
+**Idempotency / FAILED semantics（CURRENT VERIFIED）**：success duplicate → `already_executed`（adapter total=1）；adapter failure → `FAILED` recorded；后续调用 → `previous_execution_failed`（**manual retry required，adapter 不再调**）。**没有自动 retry 已实现。**（本次修复的真实 bug：FAILED + UNIQUE idempotency key → 旧代码二次执行 IntegrityError）
+
+**Exactly-once boundary（KNOWN LIMITATION）**：DB check → mock/external-equivalent call → DB record 存在 crash window；local prototype 无 distributed exactly-once guarantee；未实现 outbox / distributed transaction / external idempotency reconciliation。
 
 ---
 
@@ -233,13 +271,17 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 
 ## 12. FUTURE（未实现，不得写成 current）
 
-> A1 已完成项见 §6④（IncomingRequest / Router / Specialists / ContextProjection / trace 均已 CURRENT VERIFIED）。以下仍 FUTURE：
+> A1 已完成项见 §6④（IncomingRequest / Router / Specialists / ContextProjection / trace，CURRENT VERIFIED）。
+> A2 已完成项见 §6⑤（typed MCP read plane / Local-MCP parity / specialist scoped read capability / approval-gated mock MCP action，CURRENT VERIFIED）。
+> 以下仍 FUTURE：
 
-- **Unified Customer Operations MCP**（多工具企业级 MCP 服务器）——当前只有本地只读 stdio MCP server（A2）
 - **Skill Registry / Skill 系统**（A3）
-- **email / lead 完整 vertical slice**（当前 ticket=SUPPORTED，email/lead=ROUTING_ONLY；3-channel HITL 亦 FUTURE）
-- **真实发送 / 真实 CRM / 在线反馈闭环**
+- **email / lead 完整 vertical slice**（当前 ticket=SUPPORTED，email/lead=ROUTING_ONLY；3-channel HITL / checkpoint 亦 FUTURE）
+- **approved-draft hash/version binding**（当前执行读 persisted draft_response，无 immutable approved-draft hash）
+- **connection / session pooling**（当前 per-tool-call 子进程；未引入 pooling）
+- **真实发送 / 真实 CRM / 真实 side effect**
 - **Multi-Agent A/B/C 对照实验**（A5）
+- **统一多域企业级 MCP / production deployment / real exactly-once**
 
 ---
 

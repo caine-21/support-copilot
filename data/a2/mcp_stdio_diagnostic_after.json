@@ -1,0 +1,308 @@
+{
+  "script": "scripts/diagnose_mcp_stdio.py",
+  "date": "2026-08-07",
+  "n_runs": 20,
+  "success_count": 20,
+  "timeout_count": 0,
+  "failure_count": 0,
+  "first_call_success_count": 20,
+  "failure_stages": {},
+  "metrics": {
+    "client_enter_ms": {
+      "count": 20,
+      "p50": 116.8,
+      "p95": 234.6,
+      "max": 234.6,
+      "min": 59.0
+    },
+    "initialize_ms": {
+      "count": 20,
+      "p50": 4491.4,
+      "p95": 10568.9,
+      "max": 10568.9,
+      "min": 4073.0
+    },
+    "list_tools_ms": {
+      "count": 20,
+      "p50": 6.9,
+      "p95": 13.8,
+      "max": 13.8,
+      "min": 5.5
+    },
+    "first_tool_call_ms": {
+      "count": 20,
+      "p50": 52.9,
+      "p95": 1010.7,
+      "max": 1010.7,
+      "min": 30.5
+    },
+    "shutdown_ms": {
+      "count": 20,
+      "p50": 501.9,
+      "p95": 891.1,
+      "max": 891.1,
+      "min": 473.4
+    },
+    "total_ms": {
+      "count": 20,
+      "p50": 5167.2,
+      "p95": 11670.8,
+      "max": 11670.8,
+      "min": 4725.7
+    },
+    "process_spawn_ms": {
+      "not_separately_observable": true
+    },
+    "server_ready_ms": {
+      "not_separately_observable": true
+    },
+    "python_import_ms": {
+      "not_separately_observable": true
+    }
+  },
+  "per_run": [
+    {
+      "idx": 1,
+      "success": true,
+      "client_enter_ms": 117.7,
+      "initialize_ms": 4432.2,
+      "list_tools_ms": 8.2,
+      "first_tool_call_ms": 1010.7,
+      "first_call_succeeded": true,
+      "shutdown_ms": 498.3,
+      "total_ms": 6070.0,
+      "failure_stage": null
+    },
+    {
+      "idx": 2,
+      "success": true,
+      "client_enter_ms": 133.4,
+      "initialize_ms": 4640.1,
+      "list_tools_ms": 5.9,
+      "first_tool_call_ms": 131.8,
+      "first_call_succeeded": true,
+      "shutdown_ms": 491.6,
+      "total_ms": 5411.4,
+      "failure_stage": null
+    },
+    {
+      "idx": 3,
+      "success": true,
+      "client_enter_ms": 86.2,
+      "initialize_ms": 4603.3,
+      "list_tools_ms": 13.8,
+      "first_tool_call_ms": 76.8,
+      "first_call_succeeded": true,
+      "shutdown_ms": 621.9,
+      "total_ms": 5403.0,
+      "failure_stage": null
+    },
+    {
+      "idx": 4,
+      "success": true,
+      "client_enter_ms": 125.7,
+      "initialize_ms": 10568.9,
+      "list_tools_ms": 8.9,
+      "first_tool_call_ms": 75.0,
+      "first_call_succeeded": true,
+      "shutdown_ms": 891.1,
+      "total_ms": 11670.8,
+      "failure_stage": null
+    },
+    {
+      "idx": 5,
+      "success": true,
+      "client_enter_ms": 172.5,
+      "initialize_ms": 4460.6,
+      "list_tools_ms": 7.1,
+      "first_tool_call_ms": 39.0,
+      "first_call_succeeded": true,
+      "shutdown_ms": 534.9,
+      "total_ms": 5214.8,
+      "failure_stage": null
+    },
+    {
+      "idx": 6,
+      "success": true,
+      "client_enter_ms": 139.1,
+      "initialize_ms": 4613.5,
+      "list_tools_ms": 6.9,
+      "first_tool_call_ms": 95.6,
+      "first_call_succeeded": true,
+      "shutdown_ms": 478.3,
+      "total_ms": 5356.9,
+      "failure_stage": null
+    },
+    {
+      "idx": 7,
+      "success": true,
+      "client_enter_ms": 116.8,
+      "initialize_ms": 4536.0,
+      "list_tools_ms": 6.3,
+      "first_tool_call_ms": 46.2,
+      "first_call_succeeded": true,
+      "shutdown_ms": 523.4,
+      "total_ms": 5229.3,
+      "failure_stage": null
+    },
+    {
+      "idx": 8,
+      "success": true,
+      "client_enter_ms": 59.0,
+      "initialize_ms": 4397.9,
+      "list_tools_ms": 6.5,
+      "first_tool_call_ms": 53.3,
+      "first_call_succeeded": true,
+      "shutdown_ms": 490.1,
+      "total_ms": 5007.8,
+      "failure_stage": null
+    },
+    {
+      "idx": 9,
+      "success": true,
+      "client_enter_ms": 105.1,
+      "initialize_ms": 4438.5,
+      "list_tools_ms": 6.4,
+      "first_tool_call_ms": 30.5,
+      "first_call_succeeded": true,
+      "shutdown_ms": 520.2,
+      "total_ms": 5101.2,
+      "failure_stage": null
+    },
+    {
+      "idx": 10,
+      "success": true,
+      "client_enter_ms": 83.9,
+      "initialize_ms": 4521.2,
+      "list_tools_ms": 6.7,
+      "first_tool_call_ms": 37.8,
+      "first_call_succeeded": true,
+      "shutdown_ms": 511.5,
+      "total_ms": 5164.1,
+      "failure_stage": null
+    },
+    {
+      "idx": 11,
+      "success": true,
+      "client_enter_ms": 71.9,
+      "initialize_ms": 4481.3,
+      "list_tools_ms": 8.1,
+      "first_tool_call_ms": 43.6,
+      "first_call_succeeded": true,
+      "shutdown_ms": 487.3,
+      "total_ms": 5093.7,
+      "failure_stage": null
+    },
+    {
+      "idx": 12,
+      "success": true,
+      "client_enter_ms": 94.1,
+      "initialize_ms": 4490.4,
+      "list_tools_ms": 8.1,
+      "first_tool_call_ms": 52.9,
+      "first_call_succeeded": true,
+      "shutdown_ms": 483.0,
+      "total_ms": 5129.1,
+      "failure_stage": null
+    },
+    {
+      "idx": 13,
+      "success": true,
+      "client_enter_ms": 234.6,
+      "initialize_ms": 4560.0,
+      "list_tools_ms": 8.1,
+      "first_tool_call_ms": 41.8,
+      "first_call_succeeded": true,
+      "shutdown_ms": 501.9,
+      "total_ms": 5346.9,
+      "failure_stage": null
+    },
+    {
+      "idx": 14,
+      "success": true,
+      "client_enter_ms": 65.0,
+      "initialize_ms": 4491.4,
+      "list_tools_ms": 7.2,
+      "first_tool_call_ms": 58.0,
+      "first_call_succeeded": true,
+      "shutdown_ms": 497.7,
+      "total_ms": 5119.9,
+      "failure_stage": null
+    },
+    {
+      "idx": 15,
+      "success": true,
+      "client_enter_ms": 128.6,
+      "initialize_ms": 4583.5,
+      "list_tools_ms": 5.8,
+      "first_tool_call_ms": 51.0,
+      "first_call_succeeded": true,
+      "shutdown_ms": 525.6,
+      "total_ms": 5295.0,
+      "failure_stage": null
+    },
+    {
+      "idx": 16,
+      "success": true,
+      "client_enter_ms": 130.5,
+      "initialize_ms": 4510.8,
+      "list_tools_ms": 8.4,
+      "first_tool_call_ms": 42.4,
+      "first_call_succeeded": true,
+      "shutdown_ms": 473.4,
+      "total_ms": 5167.2,
+      "failure_stage": null
+    },
+    {
+      "idx": 17,
+      "success": true,
+      "client_enter_ms": 124.0,
+      "initialize_ms": 4098.7,
+      "list_tools_ms": 6.2,
+      "first_tool_call_ms": 61.6,
+      "first_call_succeeded": true,
+      "shutdown_ms": 487.4,
+      "total_ms": 4778.4,
+      "failure_stage": null
+    },
+    {
+      "idx": 18,
+      "success": true,
+      "client_enter_ms": 65.6,
+      "initialize_ms": 4073.0,
+      "list_tools_ms": 6.0,
+      "first_tool_call_ms": 61.2,
+      "first_call_succeeded": true,
+      "shutdown_ms": 514.6,
+      "total_ms": 4725.7,
+      "failure_stage": null
+    },
+    {
+      "idx": 19,
+      "success": true,
+      "client_enter_ms": 85.4,
+      "initialize_ms": 4156.1,
+      "list_tools_ms": 5.5,
+      "first_tool_call_ms": 39.9,
+      "first_call_succeeded": true,
+      "shutdown_ms": 508.5,
+      "total_ms": 4796.0,
+      "failure_stage": null
+    },
+    {
+      "idx": 20,
+      "success": true,
+      "client_enter_ms": 80.9,
+      "initialize_ms": 4174.5,
+      "list_tools_ms": 6.8,
+      "first_tool_call_ms": 46.6,
+      "first_call_succeeded": true,
+      "shutdown_ms": 484.1,
+      "total_ms": 4793.4,
+      "failure_stage": null
+    }
+  ],
+  "platform": "Windows 11 Pro 10.0.26200",
+  "commit": "1e1f238",
+  "_status": "ENVIRONMENT OBSERVATION EVIDENCE — not a deterministic benchmark, not a production performance result"
+}

@@ -122,6 +122,10 @@ Honest channel boundary: **ticket = SUPPORTED** (full vertical slice); **email /
 
 Four typed read tools (`search_knowledge_base` / `get_customer_context` / `get_ticket` / `get_ticket_history`) run on either a Local or a real stdio MCP backend with identical business semantics; the A1 Knowledge Specialist uses an injected scoped gateway and never sees the transport. Specialists are capability-withheld: Knowledge sees only `search_knowledge_base`; the server additionally exposes one `EXTERNAL_OR_IRREVERSIBLE` action — `execute_approved_reply(ticket_id)` — which is executor-only and reads persisted human approval, evidence and idempotency (a caller cannot pass approval or reply text). All external effects remain mock (`MockTicketActionAdapter`, `sent_mock`). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6⑤.
 
+## Skills
+
+A Skill is not a tool, not a Specialist, and not a policy — it is a typed, deterministically selected capability package (Prompt/Context/Tool/Policy composition). One skill is currently implemented (`knowledge_lookup`, a deterministic read skill). Selection is deterministic by specialist + intent; skill context is a minimal subset of the Specialist projection, and tool capability is the intersection of Specialist scope and Skill allowed tools (registration and runtime both reject any widening). Skills can never expand capability or grant authorization. See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6⑥.
+
 ## Historical model-evaluation snapshot (HISTORICAL)
 
 > ⚠️ The table below is a **historical model-evaluation artifact** (`data/reports/report_epistemic-r3.json`): it requires a real provider API key, is non-deterministic, and was **not re-run** as part of the `c9e1ade` clean committed baseline. Cite it as a historical snapshot, not as the current committed result.

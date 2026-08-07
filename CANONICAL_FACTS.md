@@ -33,9 +33,10 @@
 | A2 typed/local tool plane | `6401fb4` | + get_ticket + scoped gateway + tests/a2（18） | **131 passed** | typed read plane |
 | A2 MCP parity | `1e1f238` | + MCP backend parity + A1-on-MCP | **148 passed** | MCP read plane |
 | A2 action gate | `ffc5eb8` | + execute_approved_reply（11 A2B tests） | **159 passed** | approval-gated action |
-| **A2 final** | `23b1415` | + FAILED-retry fix（2 tests） | **161 passed** | **current clean test baseline** |
+| **A2 final** | `23b1415` | + FAILED-retry fix（2 tests） | **161 passed** | A2 基线 |
+| **A3 skill registry** | `45adff8` | + app/skills + knowledge_lookup skill + tests/a3（20） | **181 passed** | **current clean test baseline** |
 
-- 演进链是**架构里程碑**，不是单纯测试数量增长：60（确定性工作流）→ 70（bounded tooling）→ 81（fail-closed grounding）→ 113（A1 unified runtime）→ 131（typed read plane）→ 148（MCP parity）→ 161（approval-gated action + FAILED semantics）。
+- 演进链是**架构里程碑**，不是单纯测试数量增长：60（确定性工作流）→ 70（bounded tooling）→ 81（fail-closed grounding）→ 113（A1 unified runtime）→ 131（typed read plane）→ 148（MCP parity）→ 161（approval-gated action + FAILED semantics）→ 181（typed skill registry）。
 - 验证方法：`git archive <commit>` → 全新临时目录 → `py -B -m pytest tests -q`（**离线，无 API key，无 .env，无工作树未提交文件**）。
 - docs commit（`a11ad85` / `c84c37b` / `194d73f` 的 docs-only 与 test-harness 部分）不改变业务 test surface 的工程里程碑口径（194d73f 是 12s→30s 的 harness deadline 调整，不改变业务语义）。
 
@@ -202,6 +203,35 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 
 **Exactly-once boundary（KNOWN LIMITATION）**：DB check → mock/external-equivalent call → DB record 存在 crash window；local prototype 无 distributed exactly-once guarantee；未实现 outbox / distributed transaction / external idempotency reconciliation。
 
+### ⑥ A3 Skill Registry（Commit A3，CURRENT VERIFIED）
+
+| 字段 | 值 |
+|---|---|
+| Commit | `45adff8 feat: add typed skill registry and minimal skill selection` |
+| Clean-room | **181 passed** |
+| Implemented skills | **1**：`knowledge_lookup`（deterministic tool skill，无 LLM prompt） |
+| 未 Skill 化 | `support_proposal` —— 评估为 deterministic function（无独立 context/tool/prompt boundary），强行包装只增加 indirection |
+
+**架构**：IncomingRequest → Deterministic Router → Specialist → **Deterministic Skill Selector** → Skill Registry → Skill Context Projection → Scoped Tool Capability → Skill Result → existing grounding → existing authorization。
+
+**SkillSpec（静态 Python declaration = runtime source of truth）**：name / version / description / specialist / applicability / input_schema / output_schema / required_context / allowed_tools / prompt_ref / policy_refs / completion_contract。SKILL.md 是 human-readable evidence，**runtime 不解析 Markdown 执行权限**。
+
+**Skill 边界（五者区别）**：Specialist = 领域角色/orchestration；Skill = 具体任务能力包；Tool = 原子执行能力；Policy = 不可被 Skill 覆盖的规则；Executor = 授权后的副作用能力。
+
+**确定性选择**：`select_skills(specialist, intent_set)` 无 LLM；无 applicable → 显式 `NO_SKILL`（非随机 default）。
+
+**Context minimization**：Skill context ⊆ Specialist projection（registration 校验 required_context ⊆ `SPECIALIST_CONTEXT_FIELDS`）；knowledge_lookup 仅得 `{request_id, query, intent, top_k}`，无 authorization/executor/idempotency/review。
+
+**Permission intersection（CURRENT VERIFIED，核心安全规则）**：`effective_tools = Specialist scope ∩ Skill allowed_tools`。两层保护：registration-time（Skill 请求超能力工具/context → 拒绝） + runtime（即使绕过 registration，scoped gateway 仍 FORBIDDEN）。恶意 Skill 请求 `get_ticket` / `execute_approved_reply` / EXTERNAL permission → 全拒绝。
+
+**Skill 不能提权**：Skill → AUTO_REPLY authority / execute_approved_reply / override Router / override Specialist capability 全部禁止。
+
+**Completion semantics**：SUCCESS / NO_EVIDENCE / BLOCKED / ERROR（非 LLM free text）。MCP failure → Skill ERROR → no evidence → grounding fail-closed → non-AUTO（与 A1/A2 invariant 串联）。
+
+**Trace**：新增 `skill_selected` / `skill_started` / `skill_completed`（复用 A1 trace，非第二套）；字段 skill_name / skill_version / reason_codes / context_refs / tool_names / status；不记录完整 prompt/customer context。HIGH-RISK：0 skill_selected / 0 tool / 0 MCP / ESCALATE_L2（Registry 不在 risk gate 前 eager load）。
+
+**A1/A2 invariants 保持**：CLEAN final state 不变（新增仅 skill trace 事件）；MULTI 2 slices → 2 次 skill execution（各自 intent/context）；A2 capability（Knowledge 仅 search / get_ticket & execute_approved_reply forbidden / MCP failure fail-closed / FAILED≠EXECUTED）全部保持。
+
 ---
 
 ## 7. Tooling（bounded read-only agent tooling，CURRENT VERIFIED）
@@ -273,9 +303,10 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 
 > A1 已完成项见 §6④（IncomingRequest / Router / Specialists / ContextProjection / trace，CURRENT VERIFIED）。
 > A2 已完成项见 §6⑤（typed MCP read plane / Local-MCP parity / specialist scoped read capability / approval-gated mock MCP action，CURRENT VERIFIED）。
+> A3 已完成项见 §6⑥（typed Skill Registry / deterministic selector / minimal context / permission intersection / 1 implemented skill：knowledge_lookup，CURRENT VERIFIED）。
 > 以下仍 FUTURE：
 
-- **Skill Registry / Skill 系统**（A3）
+- **更多 Skill**（当前仅 knowledge_lookup；support_proposal 评估为不值得 Skill 化）
 - **email / lead 完整 vertical slice**（当前 ticket=SUPPORTED，email/lead=ROUTING_ONLY；3-channel HITL / checkpoint 亦 FUTURE）
 - **approved-draft hash/version binding**（当前执行读 persisted draft_response，无 immutable approved-draft hash）
 - **connection / session pooling**（当前 per-tool-call 子进程；未引入 pooling）

@@ -1,8 +1,10 @@
 """Knowledge Specialist: read-only KB retrieval + evidence selection.
 
-Reuses the existing `search_knowledge_base` tool (wraps agent.kb.search) and
-the existing intent->FAQ map for per-intent evidence selection. Read-only;
-cannot draft or authorize. Errors fail closed via SpecialistStatus.ERROR.
+Uses an INJECTED scoped tool gateway. The specialist never reads env vars,
+never selects a backend, and never constructs an MCP client — the runtime
+composition root decides transport. Transport failures keep their failure
+semantics (ERROR), never degrade into an empty success. Read-only; cannot
+draft or authorize.
 """
 from __future__ import annotations
 
@@ -13,22 +15,47 @@ from .contracts import (
 )
 
 
-def _kb_search(query: str, top_k: int) -> list[dict]:
-    from agent.tooling import SearchKnowledgeArgs, search_knowledge_base
+def run_knowledge_specialist(kinput: KnowledgeSpecialistInput, *, gateway) -> KnowledgeSpecialistResult:
+    """gateway: an object exposing execute(call_id, tool_name, raw_args, runtime, turn_index)
+    returning a ToolResult-compatible object (status / data / error_code)."""
+    from agent.tooling import ToolRuntime
 
-    result = search_knowledge_base(SearchKnowledgeArgs(query=query, top_k=top_k), None)
-    return result.data or []
-
-
-def run_knowledge_specialist(kinput: KnowledgeSpecialistInput) -> KnowledgeSpecialistResult:
     try:
-        rows = _kb_search(kinput.query, kinput.top_k)
-    except Exception as exc:  # fail closed: an error is never success
+        result = gateway.execute(
+            "a1-kb",
+            "search_knowledge_base",
+            {"query": kinput.query, "top_k": kinput.top_k},
+            ToolRuntime(user_id=kinput.request_id, ticket_text=kinput.query),
+            turn_index=0,
+        )
+    except Exception as exc:  # fail closed: an exception is never success
         return KnowledgeSpecialistResult(
             request_id=kinput.request_id,
             intent=kinput.intent,
             status=SpecialistStatus.ERROR,
-            reason_codes=[f"kb_error:{type(exc).__name__}"],
+            reason_codes=[f"tool_exception:{type(exc).__name__}"],
+        )
+
+    status = getattr(result, "status", None)
+    status_value = getattr(status, "value", None) if status is not None else None
+
+    if status_value == "success":
+        rows = result.data or []
+    elif status_value == "not_found":
+        # A genuine empty KB result is NO_EVIDENCE, not an error.
+        return KnowledgeSpecialistResult(
+            request_id=kinput.request_id,
+            intent=kinput.intent,
+            status=SpecialistStatus.NO_EVIDENCE,
+            reason_codes=["no_kb_evidence"],
+        )
+    else:
+        # Transport / permission / domain failure keeps its failure semantics.
+        return KnowledgeSpecialistResult(
+            request_id=kinput.request_id,
+            intent=kinput.intent,
+            status=SpecialistStatus.ERROR,
+            reason_codes=[f"tool_{status_value or 'unknown'}:{getattr(result, 'error_code', '')}"],
         )
 
     if not rows:

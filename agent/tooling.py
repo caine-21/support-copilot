@@ -257,37 +257,66 @@ class LocalToolAdapter:
 
 
 class MCPToolAdapter:
-    """Stdio MCP client adapter. MCP objects never escape this boundary."""
+    """Stdio MCP client adapter. MCP objects never escape this boundary.
+
+    Startup (spawn + initialize + list_tools) has a DEDICATED deadline so a
+    cold-start tail never consumes the tool-execution timeout. The tool call
+    itself keeps the caller-supplied timeout. Both are bounded separately.
+    """
     backend = "mcp"
-    def __init__(self, command: str | None = None, args: list[str] | None = None, cwd: str | None = None):
+
+    def __init__(self, command: str | None = None, args: list[str] | None = None,
+                 cwd: str | None = None, env: dict | None = None,
+                 startup_deadline_s: float = 30.0):
         # Use the running interpreter rather than the Windows `py` launcher so
         # the SDK can terminate exactly the process it created on stdio close.
         command = command or sys.executable
-        self.command, self.args, self.cwd = command, args or ["-u", "-B", "-m", "agent.support_mcp_server"], cwd or os.path.dirname(os.path.dirname(__file__))
+        self.command = command
+        self.args = args or ["-u", "-B", "-m", "agent.support_mcp_server"]
+        self.cwd = cwd or os.path.dirname(os.path.dirname(__file__))
+        # Default to inheriting the parent env so config like SUPPORT_DB_PATH
+        # reaches the subprocess for shared-state parity.
+        self.env = env if env is not None else dict(os.environ)
+        self._startup_deadline_s = startup_deadline_s
 
     def execute(self, definition: ToolDefinition, arguments: BaseModel, _: ToolRuntime, timeout_seconds: float) -> ToolResult:
         async def call() -> ToolResult:
-            from mcp import Client
+            from mcp import ClientSession
             from mcp.client.stdio import StdioServerParameters
             from mcp.client.stdio import stdio_client
-            params = StdioServerParameters(command=self.command, args=self.args, cwd=self.cwd)
-            async with Client(stdio_client(params)) as client:
-                    listed = await client.list_tools()
-                    if definition.name not in {tool.name for tool in listed.tools}:
-                        return ToolResult(status=ToolStatus.NOT_FOUND, error_code="mcp_tool_not_found")
-                    response = await client.call_tool(definition.name, arguments.model_dump())
-                    if response.is_error:
-                        return ToolResult(status=ToolStatus.ERROR, error_code="mcp_tool_error", retryable=True)
-                    structured = response.structured_content
-                    # FastMCP serializes a plain dictionary into a JSON text
-                    # content block unless an explicit output schema is given.
-                    # Normalize that SDK representation back to our contract.
-                    if structured is None:
-                        text_blocks = [getattr(item, "text", None) for item in response.content]
-                        structured = json.loads(next(text for text in text_blocks if text is not None))
-                    return ToolResult.model_validate(structured)
+            params = StdioServerParameters(command=self.command, args=self.args, cwd=self.cwd, env=self.env)
+            # The MCP SDK defaults errlog to the parent's sys.stderr; on Windows
+            # a child writing non-ASCII server diagnostics ([KB] ...) to that
+            # shared console stream raises EINVAL. Route server logs to NUL —
+            # error semantics still flow via the MCP protocol.
+            devnull = open(os.devnull, "w", encoding="utf-8")
+            try:
+                async with stdio_client(params, errlog=devnull) as (read, write):
+                    async with ClientSession(read, write) as session:
+                        # Startup phase: bounded by its own deadline (cold import dominated).
+                        await asyncio.wait_for(session.initialize(), timeout=self._startup_deadline_s)
+                        listed = await asyncio.wait_for(session.list_tools(), timeout=self._startup_deadline_s)
+                        if definition.name not in {tool.name for tool in listed.tools}:
+                            return ToolResult(status=ToolStatus.NOT_FOUND, error_code="mcp_tool_not_found")
+                        # Tool-execution phase: caller-supplied timeout only.
+                        response = await asyncio.wait_for(
+                            session.call_tool(definition.name, arguments.model_dump()),
+                            timeout=timeout_seconds,
+                        )
+                        if getattr(response, "is_error", False):
+                            return ToolResult(status=ToolStatus.ERROR, error_code="mcp_tool_error", retryable=True)
+                        structured = getattr(response, "structured_content", None)
+                        # FastMCP serializes a plain dictionary into a JSON text
+                        # content block unless an explicit output schema is given.
+                        # Normalize that SDK representation back to our contract.
+                        if structured is None:
+                            text_blocks = [getattr(item, "text", None) for item in getattr(response, "content", [])]
+                            structured = json.loads(next(text for text in text_blocks if text is not None))
+                        return ToolResult.model_validate(structured)
+            finally:
+                devnull.close()
         try:
-            return asyncio.run(asyncio.wait_for(call(), timeout=timeout_seconds))
+            return asyncio.run(asyncio.wait_for(call(), timeout=self._startup_deadline_s + timeout_seconds))
         except TimeoutError:
             return ToolResult(status=ToolStatus.TIMEOUT, error_code="mcp_timeout", retryable=True)
         except Exception as exc:

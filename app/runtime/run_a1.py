@@ -9,6 +9,9 @@ owned by the existing agent.* modules; this orchestrator only coordinates.
 """
 from __future__ import annotations
 
+import os
+import time
+
 from pydantic import BaseModel, Field
 
 from ..contracts.incoming_request import (
@@ -137,10 +140,29 @@ def _finish(state: SharedRuntimeState, route: RouteDecision, trace: TraceCollect
     )
 
 
-def run_a1(request: IncomingRequest, *, clock=None) -> A1RunResult:
+def _compose_knowledge_gateway(tool_gateway=None):
+    """Composition root: build the scoped gateway for the Knowledge Specialist.
+
+    The Specialist never sees backend selection. When no gateway is injected,
+    the root picks the backend from SUPPORT_TOOL_BACKEND (default local). The
+    MCP process is only started lazily on the first actual tool execute, so a
+    high-risk early stop never pays a cold-start cost.
+    """
+    if tool_gateway is not None:
+        return tool_gateway
+    from agent.tooling import ScopedToolGateway, support_tool_registry
+
+    backend = os.environ.get("SUPPORT_TOOL_BACKEND", "local")
+    return ScopedToolGateway(
+        support_tool_registry(), specialist="knowledge", backend=backend,
+    )
+
+
+def run_a1(request: IncomingRequest, *, clock=None, tool_gateway=None) -> A1RunResult:
     trace = TraceCollector(request.request_id, clock=clock)
     trace.emit("request_received", "runtime", stage="ingest",
                payload={"channel": request.channel.value})
+    knowledge_gateway = _compose_knowledge_gateway(tool_gateway)
 
     norm = _normalize(request.raw_text)
     intent_set = norm.get("intent_set", ["unknown"])
@@ -202,11 +224,16 @@ def run_a1(request: IncomingRequest, *, clock=None) -> A1RunResult:
         trace.emit("context_projected", "projection", stage="knowledge",
                    payload={"intent": intent})
         trace.emit("lane_started", "knowledge", payload={"intent": intent})
-        kres = run_knowledge_specialist(kinput)
+        _tool_t0 = time.monotonic()
+        kres = run_knowledge_specialist(kinput, gateway=knowledge_gateway)
         trace.emit("tool_called", "knowledge",
-                   payload={"tool": "search_knowledge_base", "intent": intent,
+                   payload={"tool": "search_knowledge_base",
+                            "backend": getattr(knowledge_gateway, "backend", "local"),
+                            "permission": "read",
+                            "intent": intent,
                             "status": kres.status.value,
-                            "evidence_count": len(kres.evidence)})
+                            "evidence_count": len(kres.evidence),
+                            "duration_ms": round((time.monotonic() - _tool_t0) * 1000, 2)})
         trace.emit("lane_completed", "knowledge",
                    payload={"intent": intent, "coverage": kres.coverage,
                             "status": kres.status.value})

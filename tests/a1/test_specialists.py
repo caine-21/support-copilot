@@ -1,5 +1,9 @@
-"""Specialist lanes: independent contracts, read-only, fail-closed."""
-from unittest import mock
+"""Specialist lanes: independent contracts, read-only, fail-closed.
+
+Knowledge Specialist receives an injected scoped tool gateway (it never
+selects a backend itself). A fake raising gateway proves errors fail closed.
+"""
+from agent.tooling import ScopedToolGateway, support_tool_registry
 
 from app.specialists.contracts import (
     KnowledgeSpecialistInput,
@@ -10,24 +14,51 @@ from app.specialists.knowledge_specialist import run_knowledge_specialist
 from app.specialists.support_specialist import run_support_specialist
 
 
+def _knowledge_gateway():
+    return ScopedToolGateway(support_tool_registry(), specialist="knowledge")
+
+
+class _RaisingGateway:
+    def execute(self, *_a, **_k):
+        raise RuntimeError("boom")
+
+
 def test_knowledge_known_intent_returns_faq_evidence():
-    k = run_knowledge_specialist(KnowledgeSpecialistInput(
-        request_id="r", query="How do I download my invoice?", intent="invoice_download", top_k=3))
+    k = run_knowledge_specialist(
+        KnowledgeSpecialistInput(
+            request_id="r", query="How do I download my invoice?",
+            intent="invoice_download", top_k=3),
+        gateway=_knowledge_gateway(),
+    )
     assert k.status is SpecialistStatus.SUCCESS
     assert k.evidence
     assert any(e["doc_id"] == "FAQ-billing-01" for e in k.evidence)
-    # A specialist never carries authorization.
     assert not hasattr(k, "authorization")
 
 
 def test_knowledge_error_fails_closed():
-    with mock.patch("app.specialists.knowledge_specialist._kb_search",
-                    side_effect=RuntimeError("boom")):
-        k = run_knowledge_specialist(KnowledgeSpecialistInput(
-            request_id="r", query="q", intent="x", top_k=3))
+    k = run_knowledge_specialist(
+        KnowledgeSpecialistInput(request_id="r", query="q", intent="x", top_k=3),
+        gateway=_RaisingGateway(),
+    )
     assert k.status is SpecialistStatus.ERROR
     assert k.evidence == []
     assert not hasattr(k, "authorization")
+
+
+def test_knowledge_not_found_is_no_evidence_not_error():
+    class _NotFoundGateway:
+        def execute(self, *_a, **_k):
+            from agent.tooling import ToolResult, ToolStatus
+
+            return ToolResult(status=ToolStatus.NOT_FOUND, data=[], error_code="knowledge_not_found")
+
+    k = run_knowledge_specialist(
+        KnowledgeSpecialistInput(request_id="r", query="zzz nothing", intent="zzz", top_k=3),
+        gateway=_NotFoundGateway(),
+    )
+    assert k.status is SpecialistStatus.NO_EVIDENCE
+    assert k.evidence == []
 
 
 def test_support_proposal_grounded_from_evidence():

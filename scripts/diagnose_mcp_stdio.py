@@ -55,9 +55,13 @@ async def one_run(idx: int) -> dict:
         env=_env(),
     )
     run = {"idx": idx}
+    # Route the child's stderr to NUL: the server writes [KB] diagnostics to
+    # stderr, and on Windows writing non-ASCII to the shared parent console
+    # stream raises EINVAL (same fix as the MCPToolAdapter).
+    devnull = open(os.devnull, "w", encoding="utf-8")
     try:
         async with asyncio.timeout(PER_RUN_DEADLINE_S):
-            async with stdio_client(params) as (read, write):
+            async with stdio_client(params, errlog=devnull) as (read, write):
                 run["client_enter_ms"] = round((time.perf_counter() - started) * 1000, 1)
                 t0 = time.perf_counter()
                 async with ClientSession(read, write) as session:
@@ -68,11 +72,12 @@ async def one_run(idx: int) -> dict:
                     run["list_tools_ms"] = round((time.perf_counter() - t0) * 1000, 1)
                     run["tool_count"] = len(tools.tools)
                     t0 = time.perf_counter()
-                    await session.call_tool(
+                    resp = await session.call_tool(
                         "search_knowledge_base",
                         {"query": "download my invoice", "top_k": 1},
                     )
                     run["first_tool_call_ms"] = round((time.perf_counter() - t0) * 1000, 1)
+                    run["first_call_succeeded"] = not getattr(resp, "is_error", False)
                 t0 = time.perf_counter()
         run["shutdown_ms"] = round((time.perf_counter() - t0) * 1000, 1)
         run["total_ms"] = round((time.perf_counter() - started) * 1000, 1)
@@ -86,6 +91,8 @@ async def one_run(idx: int) -> dict:
         run["success"] = False
         run["failure_stage"] = type(exc).__name__
         run["error"] = str(exc)[:300]
+    finally:
+        devnull.close()
     return run
 
 
@@ -133,12 +140,13 @@ async def main() -> None:
         "success_count": len(successes),
         "timeout_count": sum(1 for r in runs if r["failure_stage"] == "run_deadline"),
         "failure_count": args.runs - len(successes),
+        "first_call_success_count": sum(1 for r in runs if r.get("first_call_succeeded")),
         "failure_stages": {s: sum(1 for r in runs if r["failure_stage"] == s) for s in
                            sorted({r["failure_stage"] for r in runs if not r["success"]})},
         "metrics": metrics,
         "per_run": [{k: r.get(k) for k in ("idx", "success", "client_enter_ms", "initialize_ms",
-                                            "list_tools_ms", "first_tool_call_ms", "shutdown_ms",
-                                            "total_ms", "failure_stage")} for r in runs],
+                                            "list_tools_ms", "first_tool_call_ms", "first_call_succeeded",
+                                            "shutdown_ms", "total_ms", "failure_stage")} for r in runs],
     }
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)

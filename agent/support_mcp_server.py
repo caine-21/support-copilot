@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 sys.path.insert(0, os.path.dirname(__file__))
 
 from mcp.server import MCPServer
-from .tooling import CustomerContextArgs, SearchKnowledgeArgs, TicketHistoryArgs, ToolRuntime, get_customer_context as _get_customer_context, get_ticket_history as _get_ticket_history, search_knowledge_base as _search_knowledge_base
+from .tooling import CustomerContextArgs, GetTicketArgs, SearchKnowledgeArgs, TicketHistoryArgs, ToolRuntime, get_customer_context as _get_customer_context, get_ticket as _get_ticket, get_ticket_history as _get_ticket_history, search_knowledge_base as _search_knowledge_base
 
 mcp = MCPServer(name="support-copilot-operations", instructions="Read-only local support knowledge, context, and history. These tools never authorize customer actions.")
 
@@ -64,6 +64,12 @@ def get_customer_context_service(args):
 def get_ticket_history(user_id: str) -> MCPToolResultDTO:
     """Read local in-memory history. A fresh stdio server has no persisted CRM data."""
     return _to_mcp_result(_get_ticket_history(TicketHistoryArgs(user_id=user_id), ToolRuntime(user_id=user_id, ticket_text="")))
+
+
+@mcp.tool(structured_output=True)
+def get_ticket(ticket_id: str) -> MCPToolResultDTO:
+    """Read a persisted ticket workflow record (shared SUPPORT_DB_PATH); never authorizes."""
+    return _to_mcp_result(_get_ticket(GetTicketArgs(ticket_id=ticket_id), ToolRuntime(user_id="mcp", ticket_text="")))
 
 
 if __name__ == "__main__":

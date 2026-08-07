@@ -108,6 +108,28 @@
 **允许引用指标**：Scenario 20/20（正常 + 故障注入均产生预期观察，**不代表 Manager 次次选对**）；Manager Selection Accuracy 18/20=0.90；Multi-intent Coverage 4/5=0.80；Off/Shadow/Delta unsafe AUTO_REPLY = 0/0/0；21 个 valid specialist slice；multi-specialist 5/5 用不同 slice；missing / identical / shared-full-ticket = 0。
 **绝不合并为「120-case Multi-Agent Eval」**。
 
+### ③ Grounding Authorization Fail-Closed（Commit 1，CURRENT VERIFIED）
+
+| 字段 | 值 |
+|---|---|
+| Commit | `2c13496 fix: make grounding authorization fail closed` |
+| clean-room | **81 passed**（70 existing + 11 new fail-closed tests；`git archive 2c13496` → temp 复现） |
+| Invariant | **Missing, empty, malformed, or failed grounding cannot authorize AUTO_REPLY; valid strong grounding remains eligible** |
+| Deterministic evals | customer-context **30/30 unchanged**；multi-agent shadow **20/20 unchanged** |
+| Provider 100-case model eval | **not rerun**（95/100 仍 HISTORICAL，见 §9） |
+
+**Failure Matrix（真实 before/after，来自 characterization tests）**：
+
+| Condition | Authorization semantics |
+|---|---|
+| empty draft / empty KB | AUTO forbidden |
+| empty claims（含 malformed response） | AUTO forbidden |
+| compiler exception | AUTO forbidden（fail-closed + 可观测日志） |
+| missing / `{}` / malformed grounding_check | AUTO forbidden（`synthesize` 默认 False/0.0） |
+| valid strong grounding | **AUTO still eligible**（positive control） |
+
+Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍授权 AUTO——修复未关闭正常路径。
+
 ---
 
 ## 7. Tooling（bounded read-only agent tooling，CURRENT VERIFIED）
@@ -171,7 +193,7 @@
 - customer-context 与 multi-agent 评测均为合成/scripted 数据；oracle 非客服专家标注。
 - 记忆（`AgentMemory`）纯内存，无持久化。
 - 指标只说明：确定性门控在固定合成数据集上的正确性与回归稳定性；不能说明真实解决率 / ROI / 线上准确率。
-- Grounding 已知边界：`grounding_compiler` 空输入 / 空 claims / compiler 未跑时的默认语义待收敛（见 Commit 1，FUTURE）。
+- Grounding fail-closed invariant 已落地（Commit 1 `2c13496`）：missing/empty/malformed/failed grounding 不能授权 AUTO_REPLY；valid strong grounding 仍可（positive control）。详见 §6③。剩余边界：`grounding_compiler` 各 reason_code 未纳入运行时消费（仅测试断言），非 fail-open 风险。
 
 ---
 
@@ -181,7 +203,6 @@
 - **Skill Registry / Skill 系统**
 - **三通道（ticket/email/lead）统一 runtime**（当前仅 ticket）
 - **真实发送 / 真实 CRM / 在线反馈闭环**
-- **grounding fail-closed 修复**（Commit 1）
 - **Multi-Agent A/B/C 对照实验**
 
 ---
@@ -211,11 +232,13 @@
 6. 「v21 根因是 KB snippet 截断 300 字符把关键事实藏起来——改 600 才解决。检索层截断，不是模型能力问题。」
 7. 「bounded tooling 是 committed baseline：只读工具 + 代码层权限门 + 有界循环，clean-room 70 passed。」（c9e1ade）
 8. 「当前是本地验证原型：无真实工单系统、无发送，AUTO_REPLY 只是决策输出，ticket 副作用走 Mock adapter。」
+9. 「我修过一个授权链的 fail-open：grounding 未运行、空 claims 或 compiler 异常原本可能被默认解释成 safe。我把 unknown/error 统一改成 fail-closed，并用 positive control 确认强证据路径仍然可以 AUTO。」（Commit 1 `2c13496`，11 个 fail-closed 测试）
 
 ### Forbidden claims
 
 - ❌ 任何「98% / L2 100% / 99/100 / stable」作为当前结果。
-- ❌ 把 95/100 说成 `c9e1ade` 的评测结果（未重跑）。
+- ❌ 把 95/100 说成 `c9e1ade` / `2c13496` 的评测结果（未重跑）。
+- ❌ 「grounding 现在绝对不会出错」/「生产安全问题已解决」/「81 tests 证明线上安全」。
 - ❌ 「已接真实工单系统 / 已在生产 / 线上准确率」。
 - ❌ 「已自动发送客服回复」。
 - ❌ 「Multi-Agent 改进正式路由」或「Multi-Agent 是正式链路」。

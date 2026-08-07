@@ -88,6 +88,8 @@ This is the current guard against plan-tier and region-specific false-safe answe
 
 The draft reply is decomposed into factual claims. Each claim is checked against the retrieved KB snippets. If the draft exceeds the KB boundary, `AUTO_REPLY` is downgraded to `ESCALATE_L1`.
 
+Grounding authorization is fail-closed: missing, empty, malformed, or failed evidence checks cannot unlock `AUTO_REPLY`; valid strong grounding remains eligible (commit `2c13496`). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6③.
+
 ### 5. Append-only run ledger
 
 Each eval run can write immutable artifacts under `data/runs/<run_id>/`:

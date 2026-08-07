@@ -31,7 +31,7 @@ class ToolStatus(str, Enum):
 
 class EvidenceReference(BaseModel):
     source_id: str
-    source_type: Literal["knowledge_base", "customer_context", "ticket_history"]
+    source_type: Literal["knowledge_base", "customer_context", "ticket_history", "ticket"]
     locator: str
 
 
@@ -57,6 +57,11 @@ class CustomerContextArgs(BaseModel):
 class TicketHistoryArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
     user_id: str = Field(min_length=1, max_length=128)
+
+
+class GetTicketArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    ticket_id: str = Field(min_length=1, max_length=128)
 
 
 class ToolPermission(str, Enum):
@@ -122,12 +127,105 @@ def get_ticket_history(args: TicketHistoryArgs, runtime: ToolRuntime) -> ToolRes
                       evidence=[EvidenceReference(source_id=args.user_id, source_type="ticket_history", locator="memory:last5")])
 
 
+def get_ticket(args: GetTicketArgs, _: ToolRuntime) -> ToolResult:
+    """Read a persisted ticket workflow record from the shared repository.
+
+    Read-only. The repository DB path is resolved the same way for local and
+    MCP execution (SUPPORT_DB_PATH env), so both backends see the same state.
+    """
+    from service.repository import TicketNotFound, TicketRepository
+
+    try:
+        repo = TicketRepository()
+    except Exception:
+        return ToolResult(status=ToolStatus.ERROR, data={}, error_code="ticket_repository_error")
+    try:
+        try:
+            rec = repo.get_ticket(args.ticket_id)
+        except TicketNotFound:
+            return ToolResult(status=ToolStatus.NOT_FOUND, data={}, error_code="ticket_not_found")
+        return ToolResult(
+            status=ToolStatus.SUCCESS,
+            data=rec.model_dump(),
+            evidence=[EvidenceReference(source_id=args.ticket_id, source_type="ticket", locator="repository")],
+        )
+    except Exception:
+        return ToolResult(status=ToolStatus.ERROR, data={}, error_code="ticket_repository_error")
+    finally:
+        try:
+            repo.close()
+        except Exception:
+            pass
+
+
 def support_tool_registry() -> dict[str, ToolDefinition]:
     return {
         "search_knowledge_base": ToolDefinition("search_knowledge_base", "Read matching Support Copilot KB excerpts; never authorizes an action.", SearchKnowledgeArgs, ToolPermission.READ, search_knowledge_base),
         "get_customer_context": ToolDefinition("get_customer_context", "Read supplied local/synthetic customer context; never changes customer data.", CustomerContextArgs, ToolPermission.READ, get_customer_context),
+        "get_ticket": ToolDefinition("get_ticket", "Read a persisted ticket workflow record; never authorizes or mutates.", GetTicketArgs, ToolPermission.READ, get_ticket),
         "get_ticket_history": ToolDefinition("get_ticket_history", "Read recent in-memory ticket history for one user.", TicketHistoryArgs, ToolPermission.READ, get_ticket_history),
     }
+
+
+# Specialist capability boundaries (A2A). Knowledge is exercised through a
+# scoped gateway in A1. Support's allowlist is policy-prepared but NOT
+# exercised yet: A1 Support receives evidence as input and does not call tools.
+SPECIALIST_TOOL_ALLOWLISTS: dict[str, list[str]] = {
+    "knowledge": ["search_knowledge_base"],
+    "support": ["search_knowledge_base", "get_customer_context", "get_ticket_history"],
+}
+
+
+def tools_for_specialist(registry: dict[str, ToolDefinition], specialist: str) -> list[ToolDefinition]:
+    """Discovery view: allowlist ∩ READ permission. Write tools are never shown."""
+    allowed = set(SPECIALIST_TOOL_ALLOWLISTS.get(specialist, ()))
+    return [d for d in registry.values() if d.permission == ToolPermission.READ and d.name in allowed]
+
+
+class ScopedToolGateway:
+    """Specialist-scoped gateway: BOTH discovery and execution are bounded to the
+    allowlist. Forcing a non-allowlisted tool fails FORBIDDEN before the backend
+    runs, so capability withholding holds even if the caller bypasses discovery.
+
+    backend selection lives here (composition root), never in the Specialist.
+    """
+
+    def __init__(
+        self,
+        registry: dict[str, ToolDefinition] | None = None,
+        *,
+        specialist: str | None = None,
+        allowed_tool_names: list[str] | None = None,
+        backend: Literal["local", "mcp"] = "local",
+        tool_timeout_seconds: float = 3.0,
+        ledger: Any = None,
+    ):
+        self._registry = registry or support_tool_registry()
+        if allowed_tool_names is None:
+            allowed_tool_names = SPECIALIST_TOOL_ALLOWLISTS.get(specialist or "", [])
+        self._allowed = set(allowed_tool_names)
+        self._gateway = ToolGateway(
+            registry=self._registry, backend=backend,
+            tool_timeout_seconds=tool_timeout_seconds, ledger=ledger,
+        )
+
+    @property
+    def backend(self) -> str:
+        return self._gateway.backend
+
+    def available_tools(self) -> list[ToolDefinition]:
+        return [d for d in self._gateway.available_tools() if d.name in self._allowed]
+
+    def execute(
+        self, call_id: str, tool_name: str, raw_arguments: dict[str, Any],
+        runtime: ToolRuntime, turn_index: int, retry_count: int = 0,
+    ) -> ToolResult:
+        if tool_name not in self._allowed:
+            return ToolResult(
+                status=ToolStatus.FORBIDDEN, data={},
+                error_code="specialist_tool_not_allowed",
+            )
+        return self._gateway.execute(call_id, tool_name, raw_arguments, runtime, turn_index, retry_count)
 
 
 def _redact_arguments(arguments: dict[str, Any]) -> dict[str, Any]:

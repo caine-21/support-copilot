@@ -11,6 +11,10 @@ import re
 sys.stdout.reconfigure(encoding='utf-8')
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
+# kb.search lazily imports sibling modules (intent_normalizer) by bare name;
+# make agent/ importable regardless of the import chain that reached us.
+sys.path.insert(0, os.path.dirname(__file__))
+
 _FAQ_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'faq', 'acme_collab_faq.json')
 
 _faqs: list[dict] = []

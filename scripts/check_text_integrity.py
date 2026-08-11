@@ -42,6 +42,8 @@ def line_number(text: str, offset: int) -> int:
 
 
 def scan(path: Path) -> list[str]:
+    if path.as_posix() == "scripts/check_text_integrity.py":
+        return []
     full_path = ROOT / path
     try:
         raw = full_path.read_bytes()

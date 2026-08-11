@@ -17,7 +17,8 @@
 | Deployable entrypoint | `service.operable:app` (the older `service.api:app` is compatibility-only) |
 | Canonical authorization owner | A1 deterministic `run_a1`; A5 Manager/Multi-Agent remains experimental/shadow and is not promoted |
 | Pre-A6 baseline | `9a94bf2e82ffbc2d0e28268bc738846e8ad88664`; full offline `196 passed` |
-| A6 evidence | final full offline pytest 213 passed; `tests/ops`: 17 passed; failure matrix 17/17; local staging HTTP smoke 9/9; local burst 32/32, p95 230.77ms, unsafe AUTO 0 |
+| A6 historical local evidence | final full offline pytest 213 passed; `tests/ops`: 17 passed; failure matrix 17/17; local staging HTTP smoke 9/9; local burst 32/32, p95 230.77ms, unsafe AUTO 0 |
+| Current PR #1 GitHub Actions evidence | full offline pytest 234 passed; failure matrix 17/17; unsafe AUTO 0; container build/smoke PASS; text integrity PASS; provider calls disabled; external effects 0 |
 | Remote staging | **NOT CREATED / NOT VERIFIED**. `render.yaml` and workflow exist; account connection, secret setup, deploy, and remote smoke remain external steps. |
 | Container | Dockerfile + CI build/smoke gate added; local build/run **BLOCKED** because Docker Desktop engine did not start. Do not claim an image was locally built. |
 | External effects | Still MOCK/no-send. No real Zendesk/Intercom/email/CRM adapter. |

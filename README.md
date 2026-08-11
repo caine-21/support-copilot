@@ -27,7 +27,8 @@ The deployable boundary is `service.operable:app`: authenticated staging mode, s
 Verified in this working branch:
 
 - pre-A6 full offline baseline: `196 passed`; Customer Context Beta `30/30`; Multi-Agent Shadow `20/20` (synthetic/scripted evidence boundaries still apply),
-- final full offline regression after A6: `213 passed`,
+- historical A6 local evidence: `213 passed` (preserved as a historical artifact),
+- current PR #1 GitHub Actions verification: `234 passed`; failure matrix `17/17`; unsafe automatic actions `0`; text integrity, container build, and container smoke all PASS,
 - A6 operations tests: `17 passed`,
 - fault matrix: `17/17`, unsafe automatic actions `0`,
 - local staging Uvicorn HTTP smoke: `9/9`,

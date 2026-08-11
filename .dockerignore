@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.env.*
+__pycache__
+*.py[cod]
+.pytest_cache
+.tmp
+data/service
+data/runs
+data/customer_context_beta/evidence/runs
+ops/evidence
+artifacts
+notes
+tests

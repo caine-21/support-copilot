@@ -1,5 +1,7 @@
 # Production Gap and POC Roadmap
 
+> A6 update (2026-08-10): this older roadmap predates the Operable Beta slice. Standard JSON events/metrics/traces, health/version endpoints, protected staging configuration, provider failure taxonomy, atomic idempotency, a failure-to-eval candidate tool, Docker/Render/CI files, incident/runbook documents, and local fault/load/smoke evidence are now implemented. The system is still not production: hosted staging, durable state/telemetry, SSO/RBAC, real integrations, real users, and distributed exactly-once remain gaps. See `README.md`, `CANONICAL_FACTS.md`, and `docs/OPERATIONS.md` for current status.
+
 ## 1. Current Position
 
 Support Copilot is an offline-evaluated POC. It is not connected to a real

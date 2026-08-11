@@ -14,11 +14,29 @@ license: mit
 
 ## One-line pitch
 
-Support Copilot is an offline-evaluated AI support triage POC: it classifies SaaS customer tickets, retrieves KB evidence, drafts grounded replies, and decides whether the ticket is eligible for `AUTO_REPLY` or must be routed to `ESCALATE_L1` / `ESCALATE_L2`.
+Support Copilot is an **A6 Operable Beta (local verified, deployment ready)** for AI support triage: it classifies SaaS customer tickets, retrieves KB evidence, drafts grounded replies, and decides whether the ticket is eligible for `AUTO_REPLY` or must be routed to `ESCALATE_L1` / `ESCALATE_L2`.
 
 It is not a generic support chatbot. The core question is:
 
 > Under what evidence is an AI system allowed to answer a customer automatically?
+
+## A6 operational status
+
+The deployable boundary is `service.operable:app`: authenticated staging mode, separate liveness/readiness/version endpoints, JSON events, W3C trace correlation, Prometheus-format metrics, protected bounded traces, body/concurrency/rate/deadline limits, feature kill switches, atomic action claims, Docker/Render configuration, CI gates, rollback runbook, and a 17-case fault challenge.
+
+Verified in this working branch:
+
+- pre-A6 full offline baseline: `196 passed`; Customer Context Beta `30/30`; Multi-Agent Shadow `20/20` (synthetic/scripted evidence boundaries still apply),
+- historical A6 local evidence: `213 passed` (preserved as a historical artifact),
+- current PR #1 GitHub Actions verification: `234 passed`; failure matrix `17/17`; unsafe automatic actions `0`; text integrity, container build, and container smoke all PASS,
+- A6 operations tests: `17 passed`,
+- fault matrix: `17/17`, unsafe automatic actions `0`,
+- local staging Uvicorn HTTP smoke: `9/9`,
+- local 32-request burst: `32/32`, p95 `230.77ms`, unsafe automatic actions `0`.
+
+The Dockerfile and Render Blueprint are deployment-ready, but **no remote staging resource was created and no remote smoke was run**. The local Docker build/run was blocked because this host's Docker Desktop Linux engine could not start; CI now gates image build and container smoke. This is not production, not a real support-system integration, and not a real-model effectiveness claim.
+
+Operational references: [Operations](docs/OPERATIONS.md), [Runbook](docs/RUNBOOK.md), [Security review](docs/SECURITY_REVIEW.md), [ADR-003](docs/adr/003-a6-operability-stack.md), and [evidence pack](ops/evidence/).
 
 **Canonical facts / reproducibility:** [`./CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) — 唯一事实口径（reproducible test baselines、CURRENT/HISTORICAL eval 标签、复现命令、allowed/forbidden claims）。
 
@@ -30,7 +48,13 @@ This project treats support automation as a routing and safety decision system, 
 
 ## Architecture
 
-### Multi-Agent Shadow (offline-evaluated)
+### Default: deterministic `run_a1`
+
+The canonical default is `app.runtime.run_a1.run_a1`: Intent → Risk Gate → KB Retrieval → Grounding → deterministic Authorization → `AUTO_REPLY | ESCALATE_L1 | ESCALATE_L2`. Model output can inform the pipeline but cannot authorize itself. Existing CLI, Gradio, and service compatibility surfaces still call the legacy deterministic implementation; they are not a second architecture authority.
+
+Tool Loop and MCP are optional adapters. Manager + Specialists (A5 Lane C), Multi-Agent Shadow, and the A5 harness are experimental. See [ADR-002](docs/adr/002-freeze-run-a1-as-default.md).
+
+### Experimental: Multi-Agent Shadow (offline-evaluated)
 
 Multi-Agent Shadow is an offline-evaluated advisory layer with an independent Support Manager, Billing Specialist, Technical Specialist, domain-isolated ticket slices, explicit KB domains, deterministic merging, safe component errors, and a data-driven three-layer Oracle. Shadow does not change the formal routing or auto-reply authorization decision.
 
@@ -41,6 +65,8 @@ py -B -m agent.multi_agent_eval
 ```
 
 Current offline result: Scenario `20/20`, Manager Accuracy `0.90`, Multi-intent Coverage `0.80`, and Off/Shadow Unsafe AUTO_REPLY `0/0` (delta `0`). These are not real-model effectiveness or production-validation claims. See [Multi-Agent Shadow documentation](docs/MULTI_AGENT_SHADOW.md) for architecture, Eval semantics, and the evidence boundary.
+
+The separate A5 A/B/C experiment found Lane A workflow and Lane C Manager layering both at task success `0.633`; Lane C had higher P50 latency (`1278.7ms` vs `656.5ms`), more model calls (`0.73` vs `0.0` per case), and the same multi-intent result (`5/8`). The bounded conclusion is: **the current Manager layering did not prove value in this benchmark**. It is not evidence that Multi-Agent systems have no value in general.
 
 ```
 ticket_in
@@ -108,9 +134,9 @@ The reasoner separates deterministic facts from LLM-inferred assumptions such as
 
 `assumption_replay` asks: if a model assumption were neutralized, would the action change? This identifies decisions that are fact-grounded versus assumption-driven.
 
-## Reproducible test baseline (current clean)
+## Reproducible test baseline
 
-Bounded agent tooling is committed at `c9e1ade`; clean-room verification (`git archive <commit>` → temp → offline pytest) gives **70 passed** (60 legacy/service + 10 tooling). Current clean baseline is **113 passed** at `2429c63` (A1 unified runtime). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §2 for the baseline table.
+Commit-pinned milestones remain recorded in [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §2. The current `dd7ca87` runtime/test files plus this docs-only architecture-freeze diff passed the full offline suite: **196 passed in 242.61s** on 2026-08-10. This is a HEAD-equivalent runtime regression, not a new clean-room commit claim.
 
 ## A1 Unified Request Runtime (`app/`)
 
@@ -184,7 +210,7 @@ Deterministic / scripted evaluations that **are** reproducible (no provider): Cu
 
 ## Known Limitations (documented, not papered over)
 
-This project is an offline-evaluated POC, not a production system. It demonstrates the decision flow and evaluation loop without a real customer-service integration.
+This project is an operable, locally verified beta, not a production system. It demonstrates the decision flow, evaluation loop, protected service boundary, and release/rollback evidence without a real customer-service integration or a verified hosted staging instance.
 
 1. **No real customer system integration**  
    There is no Zendesk / Intercom / Freshdesk adapter. Tickets are provided through CLI, Gradio, or eval fixtures.
@@ -198,17 +224,35 @@ This project is an offline-evaluated POC, not a production system. It demonstrat
 4. **Tone and churn inference still use LLM signals**  
    Deterministic L2 signals cover SLA and hidden-cancel patterns, but some churn decisions remain assumption-driven and are tracked by assumption replay.
 
-5. **No online feedback loop**  
-   Human agent corrections do not yet feed back into the eval dataset or policy worklist.
+5. **Review-gated feedback candidate loop only**
+   Failures can be sanitized into `pending_human_review` candidates, but no human agent correction is automatically promoted into the eval dataset or policy.
 
 6. **Demo UI is explanatory, not an agent console**  
    The Gradio app is for interview/demo inspection. It is not a full support dashboard.
 
+7. **Single-instance staging state and telemetry**
+   SQLite, rate limits, metrics, and trace retention are process-local. Render free-tier disk is ephemeral; there is no distributed exactly-once or durable observability claim.
+
+8. **Provider and retry boundary**
+   Provider mode performs one primary attempt and at most one fallback attempt. Same-provider exponential-backoff retries are deliberately not automatic in A6 to cap duplicate egress and cost.
+
 ## Quick Start
+
+### A6 service (provider-free local demo)
+
+```powershell
+$env:SUPPORT_DEPLOYMENT_MODE='demo'
+$env:ENABLE_PROVIDER_CALLS='false'
+$env:ENABLE_PUBLIC_DEMO='true'
+$env:ENABLE_EXECUTOR='false'
+py -B -m uvicorn service.operable:app --host 127.0.0.1 --port 7860 --no-access-log
+```
+
+Then inspect `/livez`, `/readyz`, and `/version`. For staging auth and smoke commands, use [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 ### Bounded agent tooling (local / no-service test harness)
 
-The default remains the Legacy safety workflow. The optional tool loop uses native provider function calls in production and a scripted adapter in tests; Risk, grounding and authorization remain deterministic gates. See [Agent Tooling](docs/AGENT_TOOLING.md).
+The canonical default is the deterministic `run_a1` architecture. The optional tool loop uses native provider function calls in production and a scripted adapter in tests; MCP remains an optional backend. Risk, grounding and authorization remain deterministic gates. See [Agent Tooling](docs/AGENT_TOOLING.md).
 
 ```powershell
 $env:SUPPORT_AGENT_MODE="tool_loop"

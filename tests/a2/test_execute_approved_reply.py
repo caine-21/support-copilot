@@ -16,6 +16,7 @@ from agent.tooling import (
     ToolGateway,
     ToolRuntime,
     ToolStatus,
+    execute_approved_reply,
     executor_gateway,
     executor_tool_registry,
     support_tool_registry,
@@ -67,6 +68,19 @@ def _actions(db_path):
 
 def _rt():
     return ToolRuntime(user_id="u-1", ticket_text="x")
+
+
+@pytest.fixture(autouse=True)
+def _enable_mock_executor_for_contract_tests(monkeypatch):
+    """Positive execution contracts use the built-in mock adapter only."""
+    monkeypatch.setenv("ENABLE_EXECUTOR", "true")
+
+
+def test_executor_disabled_fails_closed(monkeypatch):
+    monkeypatch.setenv("ENABLE_EXECUTOR", "false")
+    result = execute_approved_reply(ExecuteApprovedReplyArgs(ticket_id="T-A2B-001"), _rt())
+    assert result.status is ToolStatus.FORBIDDEN
+    assert result.error_code == "executor_disabled"
 
 
 # ── contract: no self-approval fields ───────────────────────────────────────

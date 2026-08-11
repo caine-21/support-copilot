@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import threading
 from typing import Any, Optional
 
 from .domain import (
@@ -66,6 +67,7 @@ DEFAULT_DB_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "data", "service", "tickets.db",
 )
+SCHEMA_VERSION = "2"
 
 
 class TicketNotFound(Exception):
@@ -83,6 +85,7 @@ class NoEvidenceGate(Exception):
 class TicketRepository:
     def __init__(self, db_path: Optional[str] = None):
         self.db_path = db_path or os.environ.get("SUPPORT_DB_PATH") or DEFAULT_DB_PATH
+        self._lock = threading.RLock()
         parent = os.path.dirname(self.db_path)
         if parent:
             os.makedirs(parent, exist_ok=True)
@@ -104,12 +107,23 @@ class TicketRepository:
         self._conn.commit()
 
     def close(self) -> None:
-        self._conn.close()
+        with self._lock:
+            self._conn.close()
+
+    def ping(self) -> None:
+        """Readiness check: connection, schema, and the A4 integrity columns."""
+        with self._lock:
+            self._conn.execute("SELECT 1").fetchone()
+            cols = {row[1] for row in self._conn.execute("PRAGMA table_info(tickets)").fetchall()}
+        required = {"ticket_id", "approved_payload", "approved_payload_hash", "review_version"}
+        if not required.issubset(cols):
+            raise sqlite3.DatabaseError("ticket schema incomplete")
 
     # ── tickets ─────────────────────────────────────────────────────────────
     def save_ticket(self, record: TicketRecord) -> TicketRecord:
-        self._conn.execute(
-            """INSERT OR REPLACE INTO tickets (
+        with self._lock:
+            self._conn.execute(
+                """INSERT OR REPLACE INTO tickets (
                  ticket_id, request_payload, normalized_input, decision,
                  decision_reason, risk_level, retrieved_evidence, draft_response,
                  grounding_safe, workflow_status, review_status, reviewer_action,
@@ -141,23 +155,25 @@ class TicketRepository:
                 record.review_version,
                 record.created_at,
                 record.updated_at,
-            ),
-        )
-        self._conn.commit()
+                ),
+            )
+            self._conn.commit()
         return record
 
     def get_ticket(self, ticket_id: str) -> TicketRecord:
-        row = self._conn.execute(
-            "SELECT * FROM tickets WHERE ticket_id = ?", (ticket_id,)
-        ).fetchone()
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM tickets WHERE ticket_id = ?", (ticket_id,)
+            ).fetchone()
         if row is None:
             raise TicketNotFound(ticket_id)
         return self._row_to_ticket(row)
 
     def list_tickets(self, limit: int = 50) -> list[TicketRecord]:
-        rows = self._conn.execute(
-            "SELECT * FROM tickets ORDER BY created_at DESC LIMIT ?", (limit,)
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM tickets ORDER BY created_at DESC LIMIT ?", (limit,)
+            ).fetchall()
         return [self._row_to_ticket(r) for r in rows]
 
     def update_ticket(self, record: TicketRecord) -> TicketRecord:
@@ -166,17 +182,19 @@ class TicketRepository:
 
     # ── actions (audit + idempotency) ───────────────────────────────────────
     def get_action_by_key(self, idempotency_key: str) -> Optional[ActionRecord]:
-        row = self._conn.execute(
-            "SELECT * FROM ticket_actions WHERE idempotency_key = ?",
-            (idempotency_key,),
-        ).fetchone()
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM ticket_actions WHERE idempotency_key = ?",
+                (idempotency_key,),
+            ).fetchone()
         return self._row_to_action(row) if row else None
 
     def list_actions(self, ticket_id: str) -> list[ActionRecord]:
-        rows = self._conn.execute(
-            "SELECT * FROM ticket_actions WHERE ticket_id = ? ORDER BY id",
-            (ticket_id,),
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM ticket_actions WHERE ticket_id = ? ORDER BY id",
+                (ticket_id,),
+            ).fetchall()
         return [self._row_to_action(r) for r in rows]
 
     def record_action(
@@ -190,8 +208,9 @@ class TicketRepository:
         result: Optional[dict[str, Any]] = None,
         error: Optional[str] = None,
     ) -> ActionRecord:
-        cur = self._conn.execute(
-            """INSERT INTO ticket_actions (
+        with self._lock:
+            cur = self._conn.execute(
+                """INSERT INTO ticket_actions (
                  idempotency_key, ticket_id, action_type, review_decision,
                  status, result, error, created_at
                ) VALUES (?,?,?,?,?,?,?,?)""",
@@ -204,12 +223,95 @@ class TicketRepository:
                 json.dumps(result, ensure_ascii=False) if result is not None else None,
                 error,
                 utc_now(),
-            ),
-        )
-        self._conn.commit()
-        row = self._conn.execute(
-            "SELECT * FROM ticket_actions WHERE id = ?", (cur.lastrowid,)
-        ).fetchone()
+                ),
+            )
+            self._conn.commit()
+            row = self._conn.execute(
+                "SELECT * FROM ticket_actions WHERE id = ?", (cur.lastrowid,)
+            ).fetchone()
+        return self._row_to_action(row)
+
+    def claim_action(
+        self,
+        *,
+        idempotency_key: str,
+        ticket_id: str,
+        action_type: str,
+        review_decision: str,
+    ) -> tuple[ActionRecord, bool]:
+        """Atomically claim a logical action before invoking its adapter.
+
+        The UNIQUE key is the cross-process boundary; the lock keeps one shared
+        sqlite connection transaction-safe across FastAPI worker threads.
+        """
+        with self._lock:
+            try:
+                self._conn.execute("BEGIN IMMEDIATE")
+                cur = self._conn.execute(
+                    """INSERT INTO ticket_actions (
+                         idempotency_key, ticket_id, action_type, review_decision,
+                         status, result, error, created_at
+                       ) VALUES (?,?,?,?,?,?,?,?)""",
+                    (
+                        idempotency_key,
+                        ticket_id,
+                        action_type,
+                        review_decision,
+                        ActionStatus.IN_PROGRESS.value,
+                        None,
+                        None,
+                        utc_now(),
+                    ),
+                )
+                self._conn.commit()
+                row = self._conn.execute(
+                    "SELECT * FROM ticket_actions WHERE id = ?", (cur.lastrowid,)
+                ).fetchone()
+                return self._row_to_action(row), True
+            except sqlite3.IntegrityError:
+                self._conn.rollback()
+                row = self._conn.execute(
+                    "SELECT * FROM ticket_actions WHERE idempotency_key = ?",
+                    (idempotency_key,),
+                ).fetchone()
+                if row is None:
+                    raise
+                return self._row_to_action(row), False
+            except Exception:
+                self._conn.rollback()
+                raise
+
+    def complete_action(
+        self,
+        idempotency_key: str,
+        *,
+        status: ActionStatus,
+        result: Optional[dict[str, Any]] = None,
+        error: Optional[str] = None,
+    ) -> ActionRecord:
+        if status not in {ActionStatus.EXECUTED, ActionStatus.FAILED}:
+            raise ValueError("claimed action can complete only as EXECUTED or FAILED")
+        with self._lock:
+            cur = self._conn.execute(
+                """UPDATE ticket_actions
+                   SET status = ?, result = ?, error = ?
+                   WHERE idempotency_key = ? AND status = ?""",
+                (
+                    status.value,
+                    json.dumps(result, ensure_ascii=False) if result is not None else None,
+                    error,
+                    idempotency_key,
+                    ActionStatus.IN_PROGRESS.value,
+                ),
+            )
+            if cur.rowcount != 1:
+                self._conn.rollback()
+                raise InvalidTransition("action claim is not in progress")
+            self._conn.commit()
+            row = self._conn.execute(
+                "SELECT * FROM ticket_actions WHERE idempotency_key = ?",
+                (idempotency_key,),
+            ).fetchone()
         return self._row_to_action(row)
 
     # ── helpers ─────────────────────────────────────────────────────────────

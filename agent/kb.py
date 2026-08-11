@@ -300,7 +300,7 @@ def _intent_index_search(intent_id: str) -> list[dict] | None:
     return results
 
 
-def search(query: str, top_k: int = 3) -> list[dict]:
+def search(query: str, top_k: int = 3, *, allow_llm: bool = True) -> list[dict]:
     """
     Return top-k FAQ matches.
 
@@ -314,7 +314,7 @@ def search(query: str, top_k: int = 3) -> list[dict]:
       4. intent_set == ["unknown"] → hybrid search (BM25 + embedding fused via RRF)
     """
     from intent_normalizer import normalize, normalize_multi
-    multi = normalize_multi(query)
+    multi = normalize_multi(query, allow_llm=allow_llm)
 
     if multi["requires_clarification"]:
         print(f"[KB] INL: clarification required — unknown entity '{multi['unknown_entity']}'")
@@ -328,7 +328,7 @@ def search(query: str, top_k: int = 3) -> list[dict]:
             return set_result
 
     # Fallback: hybrid search (embedding + BM25 via RRF) for unknown intents
-    inl = normalize(query)
+    inl = normalize(query) if allow_llm else {"canonical_query": query}
     effective_query = inl.get("canonical_query", query)
     if effective_query != query:
         print(f"[KB] INL fallback: '{query[:55]}' → '{effective_query[:55]}'")

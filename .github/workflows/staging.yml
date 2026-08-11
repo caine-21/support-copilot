@@ -1,0 +1,49 @@
+name: deploy-staging
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: support-copilot-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy-and-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Trigger Render deploy
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          test -n "$DEPLOY_HOOK"
+          curl --fail --silent --show-error --request POST "$DEPLOY_HOOK"
+      - name: Wait for readiness
+        env:
+          BASE_URL: ${{ vars.STAGING_BASE_URL }}
+        run: |
+          test -n "$BASE_URL"
+          for attempt in {1..60}; do
+            if curl --fail --silent "$BASE_URL/readyz" >/dev/null; then exit 0; fi
+            sleep 5
+          done
+          exit 1
+      - name: Staging smoke
+        env:
+          SUPPORT_API_TOKEN: ${{ secrets.SUPPORT_API_TOKEN }}
+          BASE_URL: ${{ vars.STAGING_BASE_URL }}
+        run: python scripts/smoke_staging.py --base-url "$BASE_URL" --output artifacts/ops/staging_smoke.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a6-staging-smoke
+          path: artifacts/ops
+          if-no-files-found: warn

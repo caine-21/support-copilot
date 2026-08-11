@@ -1,7 +1,7 @@
 # CANONICAL_FACTS.md — support-copilot
 
 > 本文件是 support-copilot **唯一事实口径**。所有公开结论（README、Portfolio、简历、面试）必须与本文件一致；冲突时以本文件 + 其引用的机器可读证据为准。
-> 收敛日期：2026-08-07（Commit 0B，docs-only）。
+> 收敛日期：2026-08-10（架构冻结；runtime code unchanged）。
 > 标签体系：`CURRENT VERIFIED` / `HISTORICAL` / `EXPERIMENTAL` / `MOCK` / `FUTURE` / `DEPRECATED` / `UNRESOLVED`。
 > 规则：机器证据优先；clean commit 与 working-tree 严格分开；每个重要数字指向 commit / command / artifact。
 
@@ -9,20 +9,36 @@
 
 ## 1. Canonical identity
 
+### A6 status update (2026-08-10)
+
+| Field | Current fact |
+|---|---|
+| Maturity | **A6 Operable Beta — local verified, deployment ready** |
+| Deployable entrypoint | `service.operable:app` (the older `service.api:app` is compatibility-only) |
+| Canonical authorization owner | A1 deterministic `run_a1`; A5 Manager/Multi-Agent remains experimental/shadow and is not promoted |
+| Pre-A6 baseline | `9a94bf2e82ffbc2d0e28268bc738846e8ad88664`; full offline `196 passed` |
+| A6 historical local evidence | final full offline pytest 213 passed; `tests/ops`: 17 passed; failure matrix 17/17; local staging HTTP smoke 9/9; local burst 32/32, p95 230.77ms, unsafe AUTO 0 |
+| Current PR #1 GitHub Actions evidence | full offline pytest 234 passed; failure matrix 17/17; unsafe AUTO 0; container build/smoke PASS; text integrity PASS; provider calls disabled; external effects 0 |
+| Remote staging | **NOT CREATED / NOT VERIFIED**. `render.yaml` and workflow exist; account connection, secret setup, deploy, and remote smoke remain external steps. |
+| Container | Dockerfile + CI build/smoke gate added; local build/run **BLOCKED** because Docker Desktop engine did not start. Do not claim an image was locally built. |
+| External effects | Still MOCK/no-send. No real Zendesk/Intercom/email/CRM adapter. |
+
+A6 adds deployment/operations controls, not proof of production correctness or real-user effectiveness. Source-of-truth artifacts are under `ops/evidence/`; operator procedures are `docs/OPERATIONS.md` and `docs/RUNBOOK.md`.
+
 | 字段 | 值 |
 |---|---|
 | Project | support-copilot（SaaS 客服智能分诊） |
 | Runtime baseline commit | `c9e1ade chore: pin bounded agent tooling baseline`（bounded tooling 已入 git，clean-room 70 passed） |
-| 本文档所在 commit | Commit 0B（docs-only 收敛；runtime tree 与 `c9e1ade` 一致） |
-| Verified date | 2026-08-07 |
-| Current architecture label | **Deterministic routing workflow**（LLM 作子过程）+ **bounded read-only tool loop**（opt-in）+ **A1 unified request runtime**（ticket vertical slice）+ deterministic authorization gates + **read-only Multi-Agent Shadow**（EXPERIMENTAL，非正式业务车道） |
+| 本轮架构冻结 | 2026-08-10 working tree，待 Reviewer / commit；runtime code unchanged |
+| Verified date | 2026-08-10 |
+| Current architecture label | **A1 deterministic workflow (`app.runtime.run_a1.run_a1`) is the canonical default**；tool loop / MCP backend / Manager layering / Multi-Agent Shadow / A5 harness 均为 optional 或 experimental，不能成为授权源 |
 | Current maturity label | **Local Verified Prototype**（离线评测 POC；无真实工单系统、无部署、无发送） |
 
 ---
 
 ## 2. Reproducibility Baselines
 
-> 这是当前唯一可复现的测试基线。`60` 是历史演进证据，`70` 是当前 clean baseline。
+> 下表区分 commit-pinned clean-room 里程碑与本轮 HEAD-equivalent 回归；不要把旧子集数字当成当前全量数量。
 
 | Baseline | Commit | Scope | Result | Meaning |
 |---|---|---|---|---|
@@ -35,7 +51,8 @@
 | A2 action gate | `ffc5eb8` | + execute_approved_reply（11 A2B tests） | **159 passed** | approval-gated action |
 | **A2 final** | `23b1415` | + FAILED-retry fix（2 tests） | **161 passed** | A2 基线 |
 | **A3 skill registry** | `45adff8` | + app/skills + knowledge_lookup skill + tests/a3（20） | **181 passed** | A3 基线 |
-| **A4 hitl checkpoint** | `437b805` | + review checkpoint + approval/execution separation + tests/a4（10） | **191 passed** | **current clean test baseline** |
+| **A4 hitl checkpoint** | `437b805` | + review checkpoint + approval/execution separation + tests/a4（10） | **191 passed** | A4 clean milestone |
+| **A5 architecture evidence** | `dd7ca87` runtime/test files + docs-only working-tree diff | full offline suite | **196 passed**（2026-08-10，242.61s） | current HEAD-equivalent regression；非 clean-room claim |
 
 - 演进链是**架构里程碑**，不是单纯测试数量增长：60（确定性工作流）→ 70（bounded tooling）→ 81（fail-closed grounding）→ 113（A1 unified runtime）→ 131（typed read plane）→ 148（MCP parity）→ 161（approval-gated action + FAILED semantics）→ 181（typed skill registry）→ 191（HITL checkpoint + approval/execution separation）。
 - 验证方法：`git archive <commit>` → 全新临时目录 → `py -B -m pytest tests -q`（**离线，无 API key，无 .env，无工作树未提交文件**）。
@@ -57,9 +74,15 @@
 
 ## 4. Architecture classification
 
-**主要架构名称：Deterministic Workflow + bounded read-only tool loop。**
+**冻结决策：Deterministic Workflow / `run_a1` 是唯一 canonical default。**
 
-- **为什么这样命名**：控制流是固定 DAG + 确定性门（`agent_loop.py` 自述 "hybrid parallel/sequential pipeline"）；`reasoner.synthesize()` 是纯函数（无 LLM 调用）。默认模式 `SUPPORT_AGENT_MODE=legacy`（`run_agent` 默认参数 None → legacy）。
+默认主链路：Intent → Risk Gate → KB Retrieval → Grounding → Authorization → `AUTO_REPLY | ESCALATE_L1 | ESCALATE_L2`。`run_a1` 通过确定性 router、context projection 和既有授权门协调该链路；模型可以生成数据或建议，但不持有授权。
+
+以下统一标为 **EXPERIMENTAL / OPTIONAL**，不是第二条默认主链路：model-mediated Manager + Specialists（A5 Lane C）、Multi-Agent Shadow、bounded Tool Loop、MCP runtime/backend、A5 experiment harness。A1 内部名为 Knowledge/Support Specialist 的确定性 lane module 不等于 Manager 驱动的 Multi-Agent 授权架构。
+
+`agent.main`、Gradio 与 service 中仍有调用 `run_agent` 的兼容表面；它们复用同一 deterministic risk/grounding/authorization policy，不构成另一套 architecture decision。新架构论述与 request-level runtime 以 `run_a1` 为默认。详见 `docs/adr/002-freeze-run-a1-as-default.md`。
+
+- **为什么这样命名**：控制流是固定 DAG + 确定性门；`reasoner.synthesize()` 是纯函数（无 LLM 调用）。兼容入口的 `run_agent` 在 `SUPPORT_AGENT_MODE` 未设置时仍走 legacy deterministic path；这不改变 `run_a1` 的 canonical default 地位。
 - **bounded read-only tool loop**（CURRENT VERIFIED，c9e1ade）：opt-in `SUPPORT_AGENT_MODE=tool_loop`。模型可选只读工具（`search_knowledge_base` / `get_customer_context` / `get_ticket_history`），loop 有界（≤4 turns / ≤6 calls / ≤15s），最终授权仍过 `synthesize()` 确定性门；loop 不完整时**只能保留或升级**，永不解锁 `AUTO_REPLY`（`tool_loop.py` 不变式）。工具权限在代码层强制（非 READ → FORBIDDEN），非 prompt 约束。
 - **为什么不是更开放的 Agent**：分诊路径可预先画成状态图；「下一步」由证据等级决定。tool_loop 只是检索的有界扩展，不改变授权。
 - **为什么不是 Multi-Agent（正式车道）**：正式授权源保持单链可审计；Multi-Agent 只作为**只读 Shadow 咨询层**（EXPERIMENTAL），未证明更安全前不进入正式 Reasoner/Authorization。
@@ -280,14 +303,14 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 | C（manager + specialists） | 0.633 | 0 | 0.73 | 0.50 | 1.3s / 6.9s |
 
 **关键发现**：
-- **A 与 C 在全部 30 例上 task_success 与 final_authorization 完全一致**——Manager+Specialists 相比确定性工作流零增益，却多花 0.73 model calls/case + ~2× 延迟。确定性工作流已通过 INTENT_FAQ_MAP 逐 intent 检索，specialist 分层未提供额外价值。
+- **A 与 C 在全部 30 例上 task_success 与 final_authorization 完全一致**。在这份 frozen synthetic/offline benchmark 中，当前 Lane C 的 Manager layering 没有证明价值：它增加 0.73 model calls/case，P50 latency 从 656.5ms 增至 1278.7ms，而 multi-intent 仍为 5/8。这个结果不代表完整自治 Multi-Agent，也不能外推为“Multi-Agent 没有价值”。
 - **B 明显更差**（0.300）：single agent 的 LLM 草稿超出 KB 边界 → fail-closed grounding → L1 降级（10 个分歧 case 全部 A/C=P、B=F）。
 - 所有 lane unsafe_auto=0（共享授权 gate 公平约束）。
 - Multi-intent subset：A 5/8 = C 5/8，B 0/8（C 未超 A 15%）。
 
-**架构决策：KEEP_WORKFLOW_MAIN。** Multi-Agent 保持 experimental/read-only shadow，不 promotion（数据未支持）。这是成功的 A5——证明的是架构判断，不是 buzzword accumulation。**评估数据是 synthetic/offline，不是线上指标。**
+**架构决策：KEEP_WORKFLOW_MAIN。** 当前 Manager layering 与 Multi-Agent Shadow 保持 experimental，不 promotion（数据未支持）。这是一次架构判断证据，不是对 Multi-Agent 范式的普遍否定。**评估数据是 synthetic/offline，不是线上指标。**
 
-**限制**：4 个 ambiguous case 用 malformed partial customer_context fixture → 三 lane 同等报错（0/4，排除于相对比较）；token usage 未 instrumented（adapter 不暴露），成本以 model_calls + latency 度量。
+**限制**：4 个 ambiguous case 用 malformed partial customer_context fixture → 三 lane 同等报错（0/4，排除于相对比较）。该 frozen artifact 不原地改写；修正 fixture 必须形成新版 benchmark 并重跑三 lane。token usage 未 instrumented（artifact 中的 0 表示“未采集”，不是零 token）；因此本次不能给 token cost，只能引用 model_calls + latency。
 
 ---
 
@@ -295,7 +318,7 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 
 - **已提交**：`c9e1ade`（bounded tooling baseline）。
 - **内容**：`tool_loop.py`（有界只读工具循环）/ `tooling.py`（`ToolPermission`：read / reversible_write / external_or_irreversible；`ToolGateway` code-level 权限强制）/ `function_calling.py`（native function calling adapter）/ `support_mcp_server.py`（本地 stdio MCP server，read-only）/ `tool_eval.py`（编排/契约指标脚手架）。
-- **默认模式**：`SUPPORT_AGENT_MODE` 未设 → `legacy`（旧路径行为不变）。tool_loop 是 opt-in。
+- **`run_agent` 兼容模式默认值**：`SUPPORT_AGENT_MODE` 未设 → `legacy`（旧入口行为不变）。canonical architecture default 仍是 §4 的 `run_a1`；tool_loop 是 opt-in。
 - **只读**：当前注册工具全为 READ（`search_knowledge_base` / `get_customer_context` / `get_ticket_history`）；无 write/side-effect 工具。
 - **clean-room**：`c9e1ade` = **70 passed**。
 - **边界**：model 可提议回应 + 请求只读工具，**不能**选 Risk policy / grounding 校验 / customer-context 授权 / PII / 最终 action。失败/超时/loop 上限只能保留或升级，**不能解锁 AUTO_REPLY**。
@@ -333,7 +356,7 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 > 环境：Windows。**必须用 `py`**（`python` 不在 PATH）。密钥只能来自环境变量，禁止写死。
 
 - **Environment**：`py -m pip install -r requirements.txt`
-- **全量离线 pytest（CURRENT，70 passed，~30–50s）**：`py -B -m pytest tests -q`（含 tooling tests + 本地 stdio MCP spawn，**离线，无 API key**）
+- **全量离线 pytest（CURRENT，196 passed，242.61s on 2026-08-10）**：`py -B -m pytest tests -q`（含 tooling tests + 本地 stdio MCP spawn，**离线，无 API key**；本轮只有 docs diff，因此是 HEAD-equivalent runtime/test regression，不冒充 clean-room）
 - **确定性/scripted canonical（可复现）**：
   - customer-context：`py -B -m agent.customer_context_eval --dataset-version v2`（默认目录；复现会新增 run 文件夹，勿覆盖 commit-pinned）
   - multi-agent shadow：`py -B -m agent.multi_agent_eval`
@@ -346,6 +369,14 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 
 ## 11. Current limitations
 
+- A6 is locally verified and deployment-ready, but no hosted staging service or remote smoke artifact exists yet.
+- Docker image build/run is not locally verified because the host Docker engine failed to start; CI contains the required build and container smoke gate.
+- Observability, rate limiting, and SQLite state are process-local; Render free-tier disk is ephemeral. A6 is single-instance and cannot claim distributed exactly-once.
+- Staging auth is a coarse bearer token, not SSO/RBAC. Admin uses a separate token and is disabled by default.
+- Provider behavior is one primary call plus at most one fallback. There is no same-provider automatic retry/backoff.
+- `service.api:app` remains an unauthenticated compatibility entrypoint; only `service.operable:app` is a supported deployment target.
+- The deterministic A6 password-reset smoke currently routes conservatively to L1 under the frozen customer-context envelope. This is safe but does not prove the positive AUTO path through A1 context projection.
+
 - 无真实工单系统 / Zendesk / CRM 适配器；无真实用户；无部署。
 - 无发送动作：`AUTO_REPLY` 是决策输出，不是执行；发送需外部 HITL（FUTURE）。
 - 100 例正式路由 eval 依赖真实 provider，非确定，未在 `c9e1ade` 固化重跑（HISTORICAL/UNRESOLVED）。
@@ -357,6 +388,11 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 ---
 
 ## 12. FUTURE（未实现，不得写成 current）
+
+- Hosted staging creation and retained remote smoke evidence.
+- Durable/distributed telemetry, gateway rate limiting, persistent database, multiple replicas, and real exactly-once delivery.
+- Identity-aware RBAC and secret rotation before real customer data.
+- A separately reviewed A1 customer-context projection fix; must rerun Customer Context Beta and the full suite.
 
 > A1 已完成项见 §6④（IncomingRequest / Router / Specialists / ContextProjection / trace，CURRENT VERIFIED）。
 > A2 已完成项见 §6⑤（typed MCP read plane / Local-MCP parity / specialist scoped read capability / approval-gated mock MCP action，CURRENT VERIFIED）。
@@ -390,6 +426,8 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 
 ## 14. Allowed interview claims
 
+0. 「我把本地验证原型推进到了 A6 Operable Beta：增加了受保护的 FastAPI 运行边界、live/ready/version、结构化 trace/metrics、kill switches、原子幂等 claim、Docker/Render/CI、17 项故障挑战和 rollback runbook。当前证据是本地 17/17 fault matrix 与 9/9 HTTP smoke；远端 staging 和本地容器构建没有冒充完成。」
+
 1. 「确定性路由工作流：模型负责理解与起草，代码持有授权——意图用确定性表、风险用正则信号、证据用 grounding 门，3 条规则纯函数路由，没有一步是模型自批。」（`agent_loop.py` / `reasoner.py`）
 2. 「授权门在固定数据集上的确定性：customer-context 30 例、provider none、复现 2 次一致、30/30、错误自动回复 0。」（commit-pinned JSON）
 3. 「Multi-Agent 我做过，但只让它当只读 Shadow：Manager 调度 Billing/Technical，20 例离线 20/20、Manager 选择 0.90、断言不改正式 action。」（`multi_agent_eval.py`）
@@ -409,7 +447,7 @@ Positive control 证明：valid strong grounding（claims，ratio≥0.75）仍�
 - ❌ 把 95/100 说成 `c9e1ade` / `2c13496` 的评测结果（未重跑）。
 - ❌ 「grounding 现在绝对不会出错」/「生产安全问题已解决」/「81 tests 证明线上安全」。
 - ❌ 「已实现完整 ticket/email/lead 三通道 Agent」（当前仅 ticket=SUPPORTED；email/lead=ROUTING_ONLY）。
-- ❌ 把 A1 说成 Multi-Agent 生产架构（A1 是确定性 Router + Specialist lanes + 既有 gate；Multi-Agent A/B/C 仍 FUTURE）。
+- ❌ 把 A1 说成 Multi-Agent 生产架构（A1 是确定性 Router + Specialist lanes + 既有 gate；A5 A/B/C 已完成但仍是 EXPERIMENTAL evidence）。
 - ❌ 「已接真实工单系统 / 已在生产 / 线上准确率」。
 - ❌ 「已自动发送客服回复」。
 - ❌ 「Multi-Agent 改进正式路由」或「Multi-Agent 是正式链路」。

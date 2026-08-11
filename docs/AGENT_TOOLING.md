@@ -2,7 +2,7 @@
 
 > **Verified baseline**: `c9e1ade chore: pin bounded agent tooling baseline` — clean-room `70 passed`（`git archive c9e1ade` → 全新临时目录 → `py -B -m pytest tests -q`，离线无 API key）。本文件描述 c9e1ade 的真实实现。
 
-`SUPPORT_AGENT_MODE=legacy` keeps the existing pipeline. `tool_loop` adds a model-driven, read-only retrieval loop after normalization and the deterministic Risk pre-guard. `SUPPORT_TOOL_BACKEND=local|mcp` selects the protocol adapter; the default remains Legacy + local compatibility.
+`SUPPORT_AGENT_MODE=legacy` keeps the `run_agent` compatibility pipeline. `tool_loop` adds a model-driven, read-only retrieval loop after normalization and the deterministic Risk pre-guard. `SUPPORT_TOOL_BACKEND=local|mcp` selects the protocol adapter; local remains the adapter default and MCP is opt-in. The canonical architecture default is the deterministic `app.runtime.run_a1.run_a1` path; this optional tooling never becomes an authorization source.
 
 **Tool permission**（`agent/tooling.py`, `ToolPermission`）: `read / reversible_write / external_or_irreversible`。当前注册工具全部为 `read`（`search_knowledge_base` / `get_customer_context` / `get_ticket_history`）; code-level 强制（`available_tools()` 只返回 read; `ToolGateway.execute` 非 read → `tool_permission_denied`）。没有 write / side-effect 工具对 agent 开放。
 

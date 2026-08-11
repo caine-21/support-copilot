@@ -42,7 +42,8 @@ TESTS = [
 RESULTS = []
 
 for t in TESTS:
-    result = compile_grounding(t["draft"], t["kb"])
+    # This spot-test is part of the offline suite; never call a real provider here.
+    result = compile_grounding(t["draft"], t["kb"], no_service=True)
     print(f"=== {t['id']} ===")
     print(f"  gc_ratio:    {result['grounding_ratio']}")
     print(f"  safe:        {result['auto_reply_safe']}")

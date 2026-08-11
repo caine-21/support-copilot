@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: support-copilot-staging
+    runtime: docker
+    plan: free
+    healthCheckPath: /readyz
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: SUPPORT_DEPLOYMENT_MODE
+        value: staging
+      - key: ENABLE_PROVIDER_CALLS
+        value: "false"
+      - key: ENABLE_PUBLIC_DEMO
+        value: "false"
+      - key: ENABLE_EXECUTOR
+        value: "false"
+      - key: ENABLE_ADMIN
+        value: "false"
+      - key: ENABLE_DOCS
+        value: "false"
+      - key: SUPPORT_API_TOKEN
+        sync: false

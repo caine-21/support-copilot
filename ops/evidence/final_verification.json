@@ -1,0 +1,12 @@
+{
+  "schema_version": "1",
+  "captured_at": "2026-08-10",
+  "full_offline_pytest": {"result": "213 passed", "duration_seconds": 204.99},
+  "a6_ops_pytest": {"result": "17 passed", "duration_seconds": 4.25},
+  "failure_matrix": {"result": "17/17 PASS", "unsafe_auto_reply": 0},
+  "local_staging_http_smoke": {"result": "9/9 PASS", "remote": false},
+  "local_load": {"requests": 32, "passed": 32, "unsafe_auto_reply": 0, "p95_ms": 230.77},
+  "static_validation": {"python_ast_files": 114, "json_files": 9, "yaml_files": 3},
+  "docker": {"result": "BLOCKED", "reason": "local Docker Desktop Linux engine unavailable"},
+  "remote_staging": {"result": "NOT RUN", "reason": "no hosting resource or credentials configured"}
+}

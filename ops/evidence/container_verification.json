@@ -1,0 +1,11 @@
+{
+  "schema_version": "1",
+  "docker_cli": "29.5.3",
+  "dockerfile_created": true,
+  "ci_container_build_gate_created": true,
+  "local_build": "BLOCKED",
+  "local_run": "BLOCKED",
+  "reason": "Docker Desktop Linux engine did not start; docker info timed out or returned Docker Desktop is unable to start, and WSL enumeration returned access denied.",
+  "local_process_substitute": {"entrypoint": "service.operable:app", "staging_http_smoke": "9/9 PASS"},
+  "claim_boundary": "Image build/run is not claimed as verified until CI or a working daemon produces evidence."
+}

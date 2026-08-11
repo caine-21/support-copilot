@@ -11,3 +11,6 @@ data/runs/
 
 # ticket workflow slice: local SQLite runtime db (not source)
 data/service/
+
+# A6 local process logs (machine-readable JSON summaries are committed)
+ops/evidence/*.log

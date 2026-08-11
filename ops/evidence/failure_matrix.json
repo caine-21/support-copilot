@@ -1,0 +1,166 @@
+{
+  "schema_version": "1",
+  "suite": "a6-failure-matrix",
+  "provider_calls": "synthetic_only",
+  "external_side_effects": 0,
+  "summary": {
+    "total": 17,
+    "passed": 17,
+    "failed": 0
+  },
+  "cases": [
+    {
+      "case_id": "F01",
+      "fault": "primary provider timeout",
+      "expected": "single fallback succeeds",
+      "observed": "primary=1,fallback=1,result=success",
+      "safety_assertion": "no duplicate egress",
+      "status": "PASS",
+      "duration_ms": 2.23
+    },
+    {
+      "case_id": "F02",
+      "fault": "provider HTTP 429",
+      "expected": "single fallback succeeds",
+      "observed": "primary=1,fallback=1,result=success",
+      "safety_assertion": "no retry storm",
+      "status": "PASS",
+      "duration_ms": 1.73
+    },
+    {
+      "case_id": "F03",
+      "fault": "malformed provider output",
+      "expected": "explicit total failure",
+      "observed": "explicit_failure,provider_calls=2,authorized=false",
+      "safety_assertion": "malformed output never authorizes",
+      "status": "PASS",
+      "duration_ms": 1.52
+    },
+    {
+      "case_id": "F04",
+      "fault": "primary provider unavailable",
+      "expected": "fallback succeeds",
+      "observed": "primary=1,fallback=1,result=success",
+      "safety_assertion": "one call per provider",
+      "status": "PASS",
+      "duration_ms": 1.28
+    },
+    {
+      "case_id": "F05",
+      "fault": "both providers unavailable",
+      "expected": "workflow failed",
+      "observed": "workflow=failed,decision=UNKNOWN,actions=0",
+      "safety_assertion": "no action record",
+      "status": "PASS",
+      "duration_ms": 59.6
+    },
+    {
+      "case_id": "F06",
+      "fault": "MCP unavailable",
+      "expected": "fail closed",
+      "observed": "authorization=ESCALATE_L1,grounding_safe=false",
+      "safety_assertion": "AUTO_REPLY blocked",
+      "status": "PASS",
+      "duration_ms": 73.33
+    },
+    {
+      "case_id": "F07",
+      "fault": "MCP deadline",
+      "expected": "timeout stays explicit",
+      "observed": "authorization=ESCALATE_L1,grounding_safe=false",
+      "safety_assertion": "AUTO_REPLY blocked",
+      "status": "PASS",
+      "duration_ms": 1.17
+    },
+    {
+      "case_id": "F08",
+      "fault": "database unavailable",
+      "expected": "readiness fails",
+      "observed": "ready=false,database=error",
+      "safety_assertion": "traffic gate blocks",
+      "status": "PASS",
+      "duration_ms": 29.65
+    },
+    {
+      "case_id": "F09",
+      "fault": "duplicate action claim",
+      "expected": "one atomic claimant",
+      "observed": "claims=1,duplicate=in_progress",
+      "safety_assertion": "external adapter not duplicated",
+      "status": "PASS",
+      "duration_ms": 115.54
+    },
+    {
+      "case_id": "F10",
+      "fault": "approved payload changed",
+      "expected": "integrity gate blocks",
+      "observed": "blocked=stale_approved_draft,adapter_calls=0",
+      "safety_assertion": "adapter calls zero",
+      "status": "PASS",
+      "duration_ms": 70.62
+    },
+    {
+      "case_id": "F11",
+      "fault": "restart after approval",
+      "expected": "resume once",
+      "observed": "restart_execute=success,replay=idempotent,adapter_calls=1",
+      "safety_assertion": "replay idempotent",
+      "status": "PASS",
+      "duration_ms": 98.03
+    },
+    {
+      "case_id": "F12",
+      "fault": "knowledge version drift",
+      "expected": "readiness fails",
+      "observed": "ready=false,current=sha256:9a4c8ad126d55,expected=mismatch",
+      "safety_assertion": "release mismatch blocks traffic",
+      "status": "PASS",
+      "duration_ms": 27.37
+    },
+    {
+      "case_id": "F13",
+      "fault": "hostile prompt injection",
+      "expected": "escalate or deny",
+      "observed": "authorization=ESCALATE_L2,guard=prompt_injection_pattern,side_effect=none",
+      "safety_assertion": "no side effect",
+      "status": "PASS",
+      "duration_ms": 0.03
+    },
+    {
+      "case_id": "F14",
+      "fault": "32-request burst",
+      "expected": "success and bounded p95",
+      "observed": "requests=32,success=32,unsafe_auto=0,p95_ms=230.77",
+      "safety_assertion": "unsafe AUTO count zero",
+      "status": "PASS",
+      "duration_ms": 988.54
+    },
+    {
+      "case_id": "F15",
+      "fault": "slow dependency",
+      "expected": "latency visible",
+      "observed": "workflow=completed,latency_ms=111.42",
+      "safety_assertion": "workflow semantics unchanged",
+      "status": "PASS",
+      "duration_ms": 137.37
+    },
+    {
+      "case_id": "F16",
+      "fault": "broken readiness dependency",
+      "expected": "HTTP 503",
+      "observed": "status_code=503,deploy_gate=blocked",
+      "safety_assertion": "deployment gate blocks",
+      "status": "PASS",
+      "duration_ms": 76.48
+    },
+    {
+      "case_id": "F17",
+      "fault": "bad release rollback",
+      "expected": "restore last good",
+      "observed": "new=not_ready,rollback=ready,version=old-good",
+      "safety_assertion": "version proves rollback",
+      "status": "PASS",
+      "duration_ms": 201.36
+    }
+  ]
+}

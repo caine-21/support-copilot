@@ -89,15 +89,37 @@ class TicketWorkflowService:
         adapter: Optional[TicketActionAdapter] = None,
         db_path: Optional[str] = None,
         enable_ledger: bool = True,
+        telemetry: Any = None,
     ):
         self.repo = repo or TicketRepository(db_path)
         self.decision_fn = decision_fn or default_decision_fn
         self.adapter = adapter or MockTicketActionAdapter()
         self.enable_ledger = enable_ledger
+        self.telemetry = telemetry
+
+    def _event(self, event: str, *, ticket_id: str | None = None, level: str = "INFO", **fields: Any) -> None:
+        if self.telemetry is not None:
+            self.telemetry.event(event, ticket_id=ticket_id, level=level, **fields)
+            if event == "authorization_decided":
+                self.telemetry.metrics.inc(
+                    "support_decision_count_total",
+                    {"action": str(fields.get("action") or "UNKNOWN")},
+                )
+            elif event.startswith("review_"):
+                self.telemetry.metrics.inc(
+                    "support_review_count_total",
+                    {"decision": event.removeprefix("review_")},
+                )
+            elif event.startswith("execution_"):
+                self.telemetry.metrics.inc(
+                    "support_execution_count_total",
+                    {"status": event.removeprefix("execution_")},
+                )
 
     # ── create + run ─────────────────────────────────────────────────────────
     def create_ticket(self, payload: TicketCreate) -> TicketRecord:
         ticket_id = (payload.ticket_id or f"T-{uuid.uuid4().hex[:8].upper()}")
+        self._event("request_received", ticket_id=ticket_id, route="ticket_create")
         normalized = payload.ticket_text.strip()
         if not normalized:
             raise InvalidTransition("ticket_text must be non-empty after normalization")
@@ -125,6 +147,7 @@ class TicketWorkflowService:
         self.repo.update_ticket(record)
 
         ledger = self._make_ledger(ticket_id)
+        self._event("routing_started", ticket_id=ticket_id, route="canonical_workflow")
         try:
             result = self.decision_fn(
                 normalized,
@@ -140,9 +163,26 @@ class TicketWorkflowService:
             if ledger is not None:
                 ledger.finalize({"mode": "service-api", "ticket_id": ticket_id, "status": "failed"})
             self.repo.update_ticket(record)
+            self._event(
+                "routing_completed",
+                ticket_id=ticket_id,
+                level="ERROR",
+                route="canonical_workflow",
+                error_type=type(exc).__name__,
+                execution_state=WorkflowStatus.FAILED.value,
+            )
             return record
 
         action = result.get("action") or Decision.UNKNOWN.value
+        for trace_event in result.get("trace", []) if isinstance(result.get("trace"), list) else []:
+            if not isinstance(trace_event, dict):
+                continue
+            self._event(
+                str(trace_event.get("event_type") or "decision_trace_event"),
+                ticket_id=ticket_id,
+                route=str(trace_event.get("component") or "a1"),
+                latency_ms=trace_event.get("payload", {}).get("duration_ms") if isinstance(trace_event.get("payload"), dict) else None,
+            )
         record.decision = action
         record.decision_reason = result.get("reason")
         record.risk_level = _risk_level(result)
@@ -154,6 +194,44 @@ class TicketWorkflowService:
         record.idempotency_key = self._idempotency_key(ticket_id, payload.workflow_version, record.action_type)
         record.review_status = ReviewStatus.PENDING
         record.action_status = ActionStatus.PENDING.value
+        from .runtime import kb_version
+
+        current_kb_version = kb_version()
+        self._event(
+            "routing_completed",
+            ticket_id=ticket_id,
+            route="canonical_workflow",
+            intent=result.get("intent"),
+            action=action,
+            grounding_level=result.get("grounding"),
+            model=result.get("model_version"),
+            kb_version=current_kb_version,
+        )
+        self._event(
+            "grounding_checked",
+            ticket_id=ticket_id,
+            action=action,
+            grounding_level=result.get("grounding"),
+            kb_version=current_kb_version,
+        )
+        self._event(
+            "authorization_decided",
+            ticket_id=ticket_id,
+            action=action,
+            grounding_level=result.get("grounding"),
+            review_state=ReviewStatus.PENDING.value,
+            kb_version=current_kb_version,
+        )
+        if action == Decision.AUTO_REPLY.value and record.grounding_safe is not True:
+            if self.telemetry is not None:
+                self.telemetry.metrics.inc("support_unsafe_auto_violation_count_total")
+            self._event(
+                "unsafe_auto_violation",
+                ticket_id=ticket_id,
+                level="CRITICAL",
+                action=action,
+                grounding_level="unsafe_or_unknown",
+            )
 
         if ledger is not None:
             ledger.log_output(ticket_id, {
@@ -203,6 +281,10 @@ class TicketWorkflowService:
             ticket.reviewer_action = ReviewerAction.REJECTED.value
             ticket.action_status = ActionStatus.SKIPPED.value
             self.repo.update_ticket(ticket)
+            self._event(
+                "review_rejected", ticket_id=ticket_id,
+                action=ticket.decision, review_state=ReviewStatus.REJECTED.value,
+            )
             return ReviewOutcome(ticket=ticket, message="rejected — no action taken")
 
         # approved / edited → persist the reviewed payload + SHA-256 binding and
@@ -222,6 +304,13 @@ class TicketWorkflowService:
         ticket.reviewer_action = req.reviewer_action.value
         ticket.action_status = ActionStatus.READY_FOR_EXECUTION.value
         self.repo.update_ticket(ticket)
+        self._event(
+            "review_approved",
+            ticket_id=ticket_id,
+            action=ticket.decision,
+            review_state=ticket.review_status.value,
+            execution_state=ActionStatus.READY_FOR_EXECUTION.value,
+        )
         return ReviewOutcome(
             ticket=ticket, action=None,
             message="approved — READY_FOR_EXECUTION, mock action pending explicit resume",
@@ -254,6 +343,8 @@ class TicketWorkflowService:
             # (the UNIQUE idempotency key cannot hold two attempts). Explicit
             # manual resolution required.
             raise InvalidTransition("previous_execution_failed — manual retry required")
+        if existing is not None and existing.status == ActionStatus.IN_PROGRESS:
+            raise InvalidTransition("execution_in_progress_or_unknown — reconcile before retry")
 
         # Approved content binding: what was approved is what may be executed.
         # The caller cannot supply content; the persisted reviewed payload is
@@ -263,10 +354,24 @@ class TicketWorkflowService:
         if self._payload_hash(ticket.approved_payload) != ticket.approved_payload_hash:
             raise InvalidTransition("stale_approved_draft — reviewed content was modified after approval")
 
+        self._event(
+            "execution_started",
+            ticket_id=ticket_id,
+            action=ticket.decision,
+            review_state=ticket.review_status.value,
+            execution_state=ActionStatus.IN_PROGRESS.value,
+        )
         record = self._perform_approved_action(
             ticket, idem_key=idem_key, action_type=action_type,
             draft=ticket.approved_payload,
             review_decision=ticket.reviewer_action or ReviewerAction.APPROVED.value,
+        )
+        self._event(
+            "execution_completed",
+            ticket_id=ticket_id,
+            action=ticket.decision,
+            review_state=ticket.review_status.value,
+            execution_state=record.status.value,
         )
         return ReviewOutcome(
             ticket=ticket, action=record,
@@ -296,10 +401,32 @@ class TicketWorkflowService:
         # Evidence gate: an AUTO_REPLY with no grounding evidence may not be sent,
         # even after human approval.
         if ticket.decision == Decision.AUTO_REPLY.value and ticket.grounding_safe is not True:
+            self._event(
+                "execution_blocked",
+                ticket_id=ticket.ticket_id,
+                level="ERROR",
+                action=ticket.decision,
+                grounding_level="unsafe_or_unknown",
+                error_type="NoEvidenceGate",
+                execution_state=ActionStatus.SKIPPED.value,
+            )
             raise NoEvidenceGate(
                 f"ticket {ticket.ticket_id} decision=AUTO_REPLY but grounding_safe={ticket.grounding_safe} — "
                 "evidence gate blocks reply; missing evidence cannot bypass the gate"
             )
+        claimed_record, claimed = self.repo.claim_action(
+            idempotency_key=idem_key,
+            ticket_id=ticket.ticket_id,
+            action_type=action_type,
+            review_decision=review_decision,
+        )
+        if not claimed:
+            if claimed_record.status == ActionStatus.EXECUTED:
+                return claimed_record
+            if claimed_record.status == ActionStatus.FAILED:
+                raise InvalidTransition("previous_execution_failed — manual retry required")
+            raise InvalidTransition("execution_in_progress_or_unknown — reconcile before retry")
+
         try:
             if action_type == "create_reply":
                 result = self.adapter.create_reply(
@@ -314,24 +441,26 @@ class TicketWorkflowService:
                     reason=ticket.decision_reason or "",
                     evidence=ticket.retrieved_evidence or [],
                 )
-        except Exception as exc:  # adapter failure → record it, never mark success
-            self.repo.record_action(
-                idempotency_key=idem_key,
-                ticket_id=ticket.ticket_id,
-                action_type=action_type,
-                review_decision=review_decision,
+        except Exception as exc:  # adapter failure → complete the claim as failed
+            self.repo.complete_action(
+                idem_key,
                 status=ActionStatus.FAILED,
                 error=str(exc),
             )
             ticket.action_status = ActionStatus.FAILED.value
             self.repo.update_ticket(ticket)
+            self._event(
+                "execution_failed",
+                ticket_id=ticket.ticket_id,
+                level="ERROR",
+                action=ticket.decision,
+                error_type=type(exc).__name__,
+                execution_state=ActionStatus.FAILED.value,
+            )
             raise
 
-        record = self.repo.record_action(
-            idempotency_key=idem_key,
-            ticket_id=ticket.ticket_id,
-            action_type=action_type,
-            review_decision=review_decision,
+        record = self.repo.complete_action(
+            idem_key,
             status=ActionStatus.EXECUTED,
             result=result,
         )

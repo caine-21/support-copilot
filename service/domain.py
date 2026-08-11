@@ -76,6 +76,26 @@ class TicketCreate(BaseModel):
     workflow_version: int = Field(default=1, ge=1)
 
 
+class CustomerTicketRequest(BaseModel):
+    """Minimal public payload for the customer-facing web channel."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ticket_text: str = Field(..., min_length=1, max_length=2_000)
+
+
+class CustomerTicketResponse(BaseModel):
+    """Redacted response contract for an anonymous customer channel."""
+
+    ticket_id: str
+    status: str
+    decision: Optional[str] = None
+    reply: Optional[str] = None
+    grounding_safe: Optional[bool] = None
+    reason: Optional[str] = None
+    next_step: str
+
+
 class ReviewRequest(BaseModel):
     """Human review of a completed ticket before the mock action executes."""
 

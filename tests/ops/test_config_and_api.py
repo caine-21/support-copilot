@@ -86,10 +86,37 @@ def test_root_exposes_public_service_landing_page(tmp_path):
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
-    assert "support-copilot" in response.text
-    assert 'href="/readyz"' in response.text
-    assert 'href="/version"' in response.text
-    assert "Bearer" in response.text
+    assert "Support Copilot" in response.text
+    assert "/customer/tickets" in response.text
+    assert "Bearer" not in response.text
+
+
+def test_customer_portal_returns_redacted_safe_contract(tmp_path):
+    cfg = settings(
+        SUPPORT_DEPLOYMENT_MODE="staging",
+        SUPPORT_API_TOKEN="test-only-token",
+        ENABLE_CUSTOMER_PORTAL="true",
+    )
+    client, _ = app_client(tmp_path, cfg)
+
+    response = client.post("/customer/tickets", json={"ticket_text": "How do I reset my password?"})
+
+    assert response.status_code == 201
+    body = response.json()
+    assert set(body) == {"ticket_id", "status", "decision", "reply", "grounding_safe", "reason", "next_step"}
+    assert body["ticket_id"].startswith("T-")
+    assert body["status"] == "completed"
+    assert "request_payload" not in body
+    assert "retrieved_evidence" not in body
+    assert "TypeError" not in (body["reason"] or "")
+
+
+def test_customer_portal_is_disabled_by_default(tmp_path):
+    client, _ = app_client(tmp_path, settings(SUPPORT_DEPLOYMENT_MODE="staging", SUPPORT_API_TOKEN="test-only-token"))
+
+    response = client.post("/customer/tickets", json={"ticket_text": "hello"})
+
+    assert response.status_code == 404
 
 
 def test_staging_requires_auth_and_readiness_reports_missing_token(tmp_path):

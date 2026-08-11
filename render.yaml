@@ -12,11 +12,15 @@ services:
         value: "false"
       - key: ENABLE_PUBLIC_DEMO
         value: "false"
+      - key: ENABLE_CUSTOMER_PORTAL
+        value: "true"
       - key: ENABLE_EXECUTOR
         value: "false"
       - key: ENABLE_ADMIN
         value: "false"
       - key: ENABLE_DOCS
         value: "false"
+      - key: SUPPORT_RATE_LIMIT_PER_MINUTE
+        value: "12"
       - key: SUPPORT_API_TOKEN
         sync: false

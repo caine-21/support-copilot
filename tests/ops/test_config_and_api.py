@@ -79,6 +79,19 @@ def test_health_contract_version_and_trace_headers(tmp_path):
     assert legacy.headers["traceparent"].startswith("00-")
 
 
+def test_root_exposes_public_service_landing_page(tmp_path):
+    client, _ = app_client(tmp_path, settings())
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "support-copilot" in response.text
+    assert 'href="/readyz"' in response.text
+    assert 'href="/version"' in response.text
+    assert "Bearer" in response.text
+
+
 def test_staging_requires_auth_and_readiness_reports_missing_token(tmp_path):
     cfg = settings(SUPPORT_DEPLOYMENT_MODE="staging")
     client, _ = app_client(tmp_path, cfg)

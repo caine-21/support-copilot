@@ -28,9 +28,17 @@ SUPPORT_API_TOKEN=<secret>
 ENABLE_PROVIDER_CALLS=false
 ENABLE_EXECUTOR=false
 ENABLE_PUBLIC_DEMO=false
+ENABLE_CUSTOMER_PORTAL=false
 ENABLE_ADMIN=false
 ENABLE_DOCS=false
 ```
+
+The optional customer portal is a same-origin web channel at `/`. Set
+`ENABLE_CUSTOMER_PORTAL=true` only when provider calls and executor actions are
+both disabled. The browser calls `/customer/tickets`, which accepts only the
+customer's text and returns a redacted decision/reply contract; it must never
+receive `SUPPORT_API_TOKEN`. This is a beta channel, not a durable production
+conversation system.
 
 Optional release controls:
 

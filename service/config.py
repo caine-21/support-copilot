@@ -73,6 +73,7 @@ class RuntimeSettings:
     enable_tool_loop: bool
     enable_multi_agent_shadow: bool
     enable_public_demo: bool
+    enable_customer_portal: bool
     enable_executor: bool
     enable_fault_injection: bool
     enable_admin: bool
@@ -122,6 +123,7 @@ class RuntimeSettings:
             enable_tool_loop=_flag(env, "ENABLE_TOOL_LOOP", False),
             enable_multi_agent_shadow=_flag(env, "ENABLE_MULTI_AGENT_SHADOW", False),
             enable_public_demo=_flag(env, "ENABLE_PUBLIC_DEMO", False),
+            enable_customer_portal=_flag(env, "ENABLE_CUSTOMER_PORTAL", False),
             enable_executor=_flag(env, "ENABLE_EXECUTOR", executor_default),
             enable_fault_injection=_flag(env, "ENABLE_FAULT_INJECTION", False),
             enable_admin=_flag(env, "ENABLE_ADMIN", False),
@@ -151,3 +153,8 @@ class RuntimeSettings:
             and self.enable_public_demo
             and not self.enable_provider_calls
         )
+
+    @property
+    def customer_portal_allowed(self) -> bool:
+        """Allow the redacted public channel only when no external effects are enabled."""
+        return self.enable_customer_portal and not self.enable_provider_calls and not self.enable_executor

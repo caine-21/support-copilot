@@ -16,8 +16,11 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .api import create_app as create_legacy_app
 from .config import DeploymentMode, RuntimeSettings
+from .domain import CustomerTicketRequest, CustomerTicketResponse, TicketCreate
 from .engine import TicketWorkflowService
 from .observability import Telemetry, bind_context, new_request_context
+from .public_ui import PUBLIC_LANDING_PAGE as PUBLIC_PORTAL_PAGE
+from .repository import InvalidTransition
 from .runtime import readiness, runtime_decision_fn, version_payload
 
 
@@ -58,40 +61,14 @@ def _route_label(path: str) -> str:
     return path
 
 
-PUBLIC_LANDING_PAGE = """<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>support-copilot</title>
-  <style>
-    :root { color-scheme: light; font-family: system-ui, -apple-system, sans-serif; }
-    body { margin: 0; background: #f5f7fb; color: #172033; }
-    main { max-width: 720px; margin: 12vh auto; padding: 0 24px; }
-    section { background: #fff; border: 1px solid #dfe5ef; border-radius: 14px; padding: 32px; box-shadow: 0 12px 30px rgba(29, 45, 73, .08); }
-    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -.02em; }
-    p { color: #526078; line-height: 1.6; }
-    ul { padding-left: 20px; line-height: 1.9; }
-    a { color: #2459c3; }
-    code { background: #eef2f8; border-radius: 4px; padding: 2px 5px; }
-    .status { color: #1f7a45; font-weight: 650; }
-  </style>
-</head>
-<body>
-  <main>
-    <section>
-      <h1>support-copilot</h1>
-      <p class="status">Service is running.</p>
-      <p>This is an API service for deterministic support-ticket triage. It does not expose a browser ticket console.</p>
-      <ul>
-        <li><a href="/readyz">Readiness</a> — dependency and configuration check</li>
-        <li><a href="/version">Version</a> — release and policy metadata</li>
-      </ul>
-      <p>Ticket endpoints require a <code>Bearer</code> token in staging.</p>
-    </section>
-  </main>
-</body>
-</html>"""
+def _customer_reason(decision: str | None) -> str:
+    """Translate internal routing details into a stable customer-facing explanation."""
+    return {
+        "AUTO_REPLY": "已找到可用的帮助中心依据，可以先参考这条回复。",
+        "ESCALATE_L1": "当前依据不足以直接回答，建议人工客服进一步确认。",
+        "ESCALATE_L2": "这个问题可能涉及账户或高风险操作，建议人工优先处理。",
+        "UNKNOWN": "系统暂时无法完成判断，建议人工客服处理。",
+    }.get(decision, "系统没有足够依据直接回答，建议人工客服处理。")
 
 
 def create_operable_app(
@@ -203,7 +180,7 @@ def create_operable_app(
             if too_large:
                 ops.metrics.inc("support_request_error_count_total", {"error_type": "request_too_large"})
                 response = JSONResponse(status_code=413, content={"detail": "request body too large"})
-            elif path == "/tickets" and request.method == "POST" and cfg.deployment_mode is not DeploymentMode.LOCAL and not await limiter.allow(request.client.host if request.client else "unknown"):
+            elif path in {"/tickets", "/customer/tickets"} and request.method == "POST" and cfg.deployment_mode is not DeploymentMode.LOCAL and not await limiter.allow(request.client.host if request.client else "unknown"):
                 ops.metrics.inc("support_request_error_count_total", {"error_type": "rate_limit"})
                 response = JSONResponse(status_code=429, content={"detail": "demo rate limit exceeded"})
             else:
@@ -245,7 +222,32 @@ def create_operable_app(
 
     @app.get("/", response_class=HTMLResponse)
     def landing_page() -> HTMLResponse:
-        return HTMLResponse(content=PUBLIC_LANDING_PAGE)
+        return HTMLResponse(content=PUBLIC_PORTAL_PAGE)
+
+    @app.post("/customer/tickets", response_model=CustomerTicketResponse, status_code=201)
+    def create_customer_ticket(payload: CustomerTicketRequest) -> CustomerTicketResponse:
+        if not cfg.customer_portal_allowed:
+            raise HTTPException(status_code=404, detail="customer portal disabled")
+        try:
+            record = svc.create_ticket(TicketCreate(ticket_text=payload.ticket_text, user_id="anonymous-web"))
+        except InvalidTransition as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+        decision = record.decision
+        next_step = {
+            "AUTO_REPLY": "customer_can_continue",
+            "ESCALATE_L1": "human_review_recommended",
+            "ESCALATE_L2": "priority_human_review_recommended",
+        }.get(decision, "human_review_recommended")
+        return CustomerTicketResponse(
+            ticket_id=record.ticket_id,
+            status=record.workflow_status.value,
+            decision=decision,
+            reply=record.draft_response,
+            grounding_safe=record.grounding_safe,
+            reason=_customer_reason(decision),
+            next_step=next_step,
+        )
 
     @app.get("/readyz")
     def readyz():

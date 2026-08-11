@@ -11,7 +11,7 @@ import time
 from collections import defaultdict, deque
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .api import create_app as create_legacy_app
@@ -56,6 +56,42 @@ def _route_label(path: str) -> str:
     if path.startswith("/ops/traces/"):
         return "/ops/traces/{trace_id}"
     return path
+
+
+PUBLIC_LANDING_PAGE = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>support-copilot</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; background: #f5f7fb; color: #172033; }
+    main { max-width: 720px; margin: 12vh auto; padding: 0 24px; }
+    section { background: #fff; border: 1px solid #dfe5ef; border-radius: 14px; padding: 32px; box-shadow: 0 12px 30px rgba(29, 45, 73, .08); }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -.02em; }
+    p { color: #526078; line-height: 1.6; }
+    ul { padding-left: 20px; line-height: 1.9; }
+    a { color: #2459c3; }
+    code { background: #eef2f8; border-radius: 4px; padding: 2px 5px; }
+    .status { color: #1f7a45; font-weight: 650; }
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <h1>support-copilot</h1>
+      <p class="status">Service is running.</p>
+      <p>This is an API service for deterministic support-ticket triage. It does not expose a browser ticket console.</p>
+      <ul>
+        <li><a href="/readyz">Readiness</a> — dependency and configuration check</li>
+        <li><a href="/version">Version</a> — release and policy metadata</li>
+      </ul>
+      <p>Ticket endpoints require a <code>Bearer</code> token in staging.</p>
+    </section>
+  </main>
+</body>
+</html>"""
 
 
 def create_operable_app(
@@ -206,6 +242,10 @@ def create_operable_app(
     @app.get("/livez")
     def livez() -> dict[str, str]:
         return {"status": "alive"}
+
+    @app.get("/", response_class=HTMLResponse)
+    def landing_page() -> HTMLResponse:
+        return HTMLResponse(content=PUBLIC_LANDING_PAGE)
 
     @app.get("/readyz")
     def readyz():

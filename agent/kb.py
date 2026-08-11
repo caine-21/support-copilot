@@ -1,7 +1,7 @@
 """
 FAQ knowledge base with two-tier search:
   Primary:  deterministic INTENT_FAQ_MAP lookup (known intents)
-  Fallback: hybrid search — dense embedding + BM25 fused via RRF (unknown intents)
+  Fallback: hybrid search ? dense embedding + BM25 fused via RRF (unknown intents)
 """
 import sys
 import os
@@ -53,7 +53,7 @@ def _try_load_embeddings():
         _use_embeddings = False
 
 
-# ── BM25 ──────────────────────────────────────────────────────────────────────
+# ?? BM25 ??????????????????????????????????????????????????????????????????????
 
 def _tokenize(text: str) -> list[str]:
     return re.findall(r'\w+', text.lower())
@@ -184,11 +184,11 @@ def _embedding_search(query: str, top_k: int = 3) -> list[dict]:
     return results
 
 
-# ── Intent → FAQ index (v7 deterministic lookup) ─────────────────────────────
+# ?? Intent ? FAQ index (v7 deterministic lookup) ?????????????????????????????
 #
 # Maps stable intent_id (from INL) to FAQ doc_id list.
-# Score 1.0 = perfect grounding — no embedding uncertainty.
-# Empty list = no KB coverage → reasoner sees grounding=none → L1/L2 by policy.
+# Score 1.0 = perfect grounding ? no embedding uncertainty.
+# Empty list = no KB coverage ? reasoner sees grounding=none ? L1/L2 by policy.
 #
 # Embedding search is fallback-only for intent_id == "unknown".
 
@@ -196,28 +196,28 @@ INTENT_FAQ_MAP: dict[str, list[str]] = {
     "payment_methods":    ["FAQ-billing-06"],
     "cancellation_fee":   ["FAQ-billing-07"],
     "refund_eligibility": ["FAQ-billing-08", "FAQ-billing-03"],
-    "refund_status":      [],               # needs agent lookup → L1
-    "invoice_customize":  [],               # not self-serve → L1
+    "refund_status":      [],               # needs agent lookup ? L1
+    "invoice_customize":  [],               # not self-serve ? L1
     "plan_change":        ["FAQ-account-02"],
     "seat_management":    ["FAQ-billing-05"],
-    "cancel_subscription":[],               # no self-serve answer → L2 (churn)
+    "cancel_subscription":[],               # no self-serve answer ? L2 (churn)
     "password_reset":     ["FAQ-account-01"],
     "data_export":        ["FAQ-feature-04"],
     "permission_levels":  ["FAQ-feature-02"],
     "invitation_issue":   ["FAQ-troubleshoot-06"],
-    "feature_feedback":   [],               # no self-serve path → L1
+    "feature_feedback":   [],               # no self-serve path ? L1
     "version_history":    ["FAQ-feature-07"],
-    "sso_issue":          [],               # SSO broken needs investigation → L1
+    "sso_issue":          [],               # SSO broken needs investigation ? L1
     "sso_setup":          ["FAQ-security-01"],
     "audit_logs":         ["FAQ-security-03"],
     "signup_issue":       ["FAQ-troubleshoot-01"],
-    "workspace_setup":    [],               # no FAQ → L1
-    "upload_error":       [],               # L1 — FAQ doesn't resolve size/format issues
-    "ui_preferences":     [],               # feature availability → L1
+    "workspace_setup":    [],               # no FAQ ? L1
+    "upload_error":       [],               # L1 ? FAQ doesn't resolve size/format issues
+    "ui_preferences":     [],               # feature availability ? L1
     "account_deletion":   [],               # escalate
     "sla_uptime":         ["FAQ-policy-01"],
     "invoice_download":   ["FAQ-billing-01"],
-    "unknown_plan":       [],               # requires_clarification → L1
+    "unknown_plan":       [],               # requires_clarification ? L1
 }
 
 
@@ -231,11 +231,11 @@ def _intent_set_search(intent_set: list[str]) -> list[dict] | None:
     Multi-intent FAQ lookup (v8).
 
     Coverage policy:
-    - All intents have non-empty FAQ → return merged results, score=1.0 (full)
-    - Any intent has []              → cap score at _PARTIAL_COVERAGE_SCORE (partial; grounding=weak → L1)
-    - All intents have []            → return [] (no coverage → L1)
+    - All intents have non-empty FAQ ? return merged results, score=1.0 (full)
+    - Any intent has []              ? cap score at _PARTIAL_COVERAGE_SCORE (partial; grounding=weak ? L1)
+    - All intents have []            ? return [] (no coverage ? L1)
 
-    Returns None if any intent_id is unknown (not in INTENT_FAQ_MAP) — caller
+    Returns None if any intent_id is unknown (not in INTENT_FAQ_MAP) ? caller
     should fall through to embedding search.
     """
     all_results: list[dict] = []
@@ -245,10 +245,10 @@ def _intent_set_search(intent_set: list[str]) -> list[dict] | None:
     for intent_id in intent_set:
         faq_ids = INTENT_FAQ_MAP.get(intent_id)
         if faq_ids is None:
-            return None          # unknown intent → fall through to embedding
+            return None          # unknown intent ? fall through to embedding
         if not faq_ids:
             has_gap = True
-            print(f"[KB] intent_set gap: {intent_id} → no KB coverage")
+            print(f"[KB] intent_set gap: {intent_id} ? no KB coverage")
             continue
         has_cover = True
         results = _intent_index_search(intent_id) or []
@@ -259,16 +259,16 @@ def _intent_set_search(intent_set: list[str]) -> list[dict] | None:
     deduped = [r for r in all_results if not (r["doc_id"] in seen or seen.add(r["doc_id"]))]
 
     if not has_cover:
-        print(f"[KB] intent_set: {intent_set} → all gaps, no KB coverage")
+        print(f"[KB] intent_set: {intent_set} ? all gaps, no KB coverage")
         return []
 
     if has_gap:
-        # Partial coverage: cap score below _GROUNDING_STRONG (0.60) → grounding=weak → L1
+        # Partial coverage: cap score below _GROUNDING_STRONG (0.60) ? grounding=weak ? L1
         capped = [{**r, "score": min(r["score"], _PARTIAL_COVERAGE_SCORE), "method": "intent_set_partial"} for r in deduped]
-        print(f"[KB] intent_set: {intent_set} → partial coverage, score capped → L1")
+        print(f"[KB] intent_set: {intent_set} ? partial coverage, score capped ? L1")
         return capped
 
-    print(f"[KB] intent_set: {intent_set} → full coverage, {len(deduped)} FAQ(s)")
+    print(f"[KB] intent_set: {intent_set} ? full coverage, {len(deduped)} FAQ(s)")
     return deduped
 
 
@@ -277,13 +277,13 @@ def _intent_index_search(intent_id: str) -> list[dict] | None:
     Deterministic FAQ lookup by intent_id.
 
     Returns:
-      None  — intent_id not in INTENT_FAQ_MAP (caller should fall through to embedding)
-      []    — intent_id mapped to no FAQs (no KB coverage; caller returns empty)
-      [...]  — FAQs found; score=1.0, method=intent_index
+      None  ? intent_id not in INTENT_FAQ_MAP (caller should fall through to embedding)
+      []    ? intent_id mapped to no FAQs (no KB coverage; caller returns empty)
+      [...]  ? FAQs found; score=1.0, method=intent_index
     """
     faq_ids = INTENT_FAQ_MAP.get(intent_id)
     if faq_ids is None:
-        return None         # not in map → fall through to embedding
+        return None         # not in map ? fall through to embedding
     if not faq_ids:
         return []           # known intent with no KB coverage
     faqs = _load_faqs()
@@ -300,24 +300,24 @@ def _intent_index_search(intent_id: str) -> list[dict] | None:
     return results
 
 
-def search(query: str, top_k: int = 3) -> list[dict]:
+def search(query: str, top_k: int = 3, *, allow_llm: bool = True) -> list[dict]:
     """
     Return top-k FAQ matches.
 
-    Pipeline (v9 — hybrid fallback):
-      1. normalize_multi() → intent_set (all matching intents)
-      2. If requires_clarification → return [] (reasoner → L1)
+    Pipeline (v9 ? hybrid fallback):
+      1. normalize_multi() ? intent_set (all matching intents)
+      2. If requires_clarification ? return [] (reasoner ? L1)
       3. _intent_set_search(intent_set):
-           full coverage  → merged results, score=1.0
-           partial        → merged results, score capped at 0.59 → grounding=weak → L1
-           all gaps       → []
-      4. intent_set == ["unknown"] → hybrid search (BM25 + embedding fused via RRF)
+           full coverage  ? merged results, score=1.0
+           partial        ? merged results, score capped at 0.59 ? grounding=weak ? L1
+           all gaps       ? []
+      4. intent_set == ["unknown"] ? hybrid search (BM25 + embedding fused via RRF)
     """
     from intent_normalizer import normalize, normalize_multi
-    multi = normalize_multi(query)
+    multi = normalize_multi(query, allow_llm=allow_llm)
 
     if multi["requires_clarification"]:
-        print(f"[KB] INL: clarification required — unknown entity '{multi['unknown_entity']}'")
+        print(f"[KB] INL: clarification required ? unknown entity '{multi['unknown_entity']}'")
         return []
 
     intent_set = multi["intent_set"]
@@ -328,10 +328,10 @@ def search(query: str, top_k: int = 3) -> list[dict]:
             return set_result
 
     # Fallback: hybrid search (embedding + BM25 via RRF) for unknown intents
-    inl = normalize(query)
+    inl = normalize(query) if allow_llm else {"canonical_query": query}
     effective_query = inl.get("canonical_query", query)
     if effective_query != query:
-        print(f"[KB] INL fallback: '{query[:55]}' → '{effective_query[:55]}'")
+        print(f"[KB] INL fallback: '{query[:55]}' ? '{effective_query[:55]}'")
 
     return _hybrid_search(effective_query, top_k)
 

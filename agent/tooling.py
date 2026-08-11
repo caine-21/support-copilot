@@ -20,6 +20,19 @@ from typing import Any, Callable, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
+_tool_observer = None
+
+
+def set_tool_observer(observer) -> None:
+    global _tool_observer
+    _tool_observer = observer
+
+
+def _tool_event(event: str, **fields: Any) -> None:
+    if _tool_observer is not None:
+        _tool_observer(event, fields)
+
+
 class ToolStatus(str, Enum):
     SUCCESS = "success"
     NOT_FOUND = "not_found"
@@ -69,7 +82,7 @@ class ExecuteApprovedReplyArgs(BaseModel):
 
     Minimal on purpose: no `approved`, `force`, `review_status` or `reply_text`
     fields. Approval, evidence, integrity and idempotency all come from
-    server-side persisted state — the caller cannot pass an approval flag.
+    server-side persisted state ? the caller cannot pass an approval flag.
     """
     model_config = ConfigDict(extra="forbid")
     ticket_id: str = Field(min_length=1, max_length=128)
@@ -177,6 +190,10 @@ def execute_approved_reply(args: ExecuteApprovedReplyArgs, _: ToolRuntime) -> To
     """
     from service.engine import InvalidTransition, NoEvidenceGate, TicketWorkflowService
     from service.repository import TicketNotFound
+    from service.config import RuntimeSettings
+
+    if not RuntimeSettings.from_env().enable_executor:
+        return ToolResult(status=ToolStatus.FORBIDDEN, data={}, error_code="executor_disabled")
 
     try:
         svc = TicketWorkflowService(enable_ledger=False)
@@ -193,10 +210,12 @@ def execute_approved_reply(args: ExecuteApprovedReplyArgs, _: ToolRuntime) -> To
             return ToolResult(status=ToolStatus.FORBIDDEN, data={}, error_code="review_rejected")
         if "previous_execution_failed" in msg:
             return ToolResult(status=ToolStatus.ERROR, data={}, error_code="previous_execution_failed")
+        if "execution_in_progress_or_unknown" in msg:
+            return ToolResult(status=ToolStatus.ERROR, data={}, error_code="execution_in_progress_or_unknown")
         if "stale_approved_draft" in msg:
             return ToolResult(status=ToolStatus.ERROR, data={}, error_code="stale_approved_draft")
         return ToolResult(status=ToolStatus.ERROR, data={}, error_code="action_not_executable")
-    except Exception as exc:  # noqa: BLE001 — boundary maps any failure to the envelope
+    except Exception as exc:  # noqa: BLE001 ? boundary maps any failure to the envelope
         return ToolResult(status=ToolStatus.ERROR, data={}, error_code=f"action_execution_failed:{type(exc).__name__}")
 
     action = outcome.action
@@ -259,7 +278,7 @@ SPECIALIST_TOOL_ALLOWLISTS: dict[str, list[str]] = {
 
 
 def tools_for_specialist(registry: dict[str, ToolDefinition], specialist: str) -> list[ToolDefinition]:
-    """Discovery view: allowlist ∩ READ permission. Write tools are never shown."""
+    """Discovery view: allowlist ? READ permission. Write tools are never shown."""
     allowed = set(SPECIALIST_TOOL_ALLOWLISTS.get(specialist, ()))
     return [d for d in registry.values() if d.permission == ToolPermission.READ and d.name in allowed]
 
@@ -371,7 +390,7 @@ class MCPToolAdapter:
             params = StdioServerParameters(command=self.command, args=self.args, cwd=self.cwd, env=self.env)
             # The MCP SDK defaults errlog to the parent's sys.stderr; on Windows
             # a child writing non-ASCII server diagnostics ([KB] ...) to that
-            # shared console stream raises EINVAL. Route server logs to NUL —
+            # shared console stream raises EINVAL. Route server logs to NUL ?
             # error semantics still flow via the MCP protocol.
             devnull = open(os.devnull, "w", encoding="utf-8")
             try:
@@ -430,6 +449,7 @@ class ToolGateway:
         except ValidationError:
             return ToolResult(status=ToolStatus.INVALID_ARGUMENTS, error_code="invalid_tool_arguments")
         started = time.monotonic()
+        _tool_event("tool_call_started", tool=tool_name, backend=self.backend, turn_index=turn_index)
         # Read tools may receive one bounded retry. The registry currently does
         # not expose writes, so this rule cannot replay a side effect.
         attempts = retry_count
@@ -442,4 +462,12 @@ class ToolGateway:
             result = ToolResult(status=ToolStatus.ERROR, error_code="tool_output_too_large")
         if self.ledger is not None:
             self.ledger.log_tool_execution(runtime.ticket_id, turn_index=turn_index, call_id=call_id, tool_name=tool_name, backend=self.backend, redacted_arguments=_redact_arguments(raw_arguments), result_status=result.status.value, evidence=[item.model_dump() for item in result.evidence], latency_ms=round((time.monotonic()-started)*1000, 2), retry_count=attempts)
+        _tool_event(
+            "tool_call_completed",
+            tool=tool_name,
+            backend=self.backend,
+            status=result.status.value,
+            latency_ms=round((time.monotonic() - started) * 1000, 2),
+            retry_count=attempts,
+        )
         return result

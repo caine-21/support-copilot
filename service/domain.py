@@ -1,7 +1,7 @@
 """Domain types for the ticket workflow slice.
 
 The decision set mirrors agent/reasoner.py string constants. IMPORTANT: the
-reasoner emits exactly {AUTO_REPLY, ESCALATE_L1, ESCALATE_L2} — there is no
+reasoner emits exactly {AUTO_REPLY, ESCALATE_L1, ESCALATE_L2} ? there is no
 ABSTAIN in the source. UNKNOWN is a service-level fallback for runs where the
 decision flow itself failed (never emitted by the reasoner).
 """
@@ -11,7 +11,7 @@ import datetime as _dt
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 def utc_now() -> str:
@@ -51,6 +51,7 @@ class ReviewerAction(str, Enum):
 class ActionStatus(str, Enum):
     PENDING = "pending"
     READY_FOR_EXECUTION = "ready_for_execution"
+    IN_PROGRESS = "in_progress"
     EXECUTED = "executed"
     DUPLICATE = "duplicate"
     FAILED = "failed"
@@ -60,11 +61,17 @@ class ActionStatus(str, Enum):
 class TicketCreate(BaseModel):
     """Inbound ticket request body."""
 
-    ticket_text: str = Field(..., min_length=1, description="raw ticket text")
+    model_config = ConfigDict(extra="forbid")
+
+    ticket_text: str = Field(..., min_length=1, max_length=4_000, description="raw ticket text")
     ticket_id: Optional[str] = Field(
-        default=None, description="caller-supplied id; auto-generated if omitted"
+        default=None,
+        min_length=1,
+        max_length=128,
+        pattern=r"^[A-Za-z0-9._:-]+$",
+        description="caller-supplied id; auto-generated if omitted",
     )
-    user_id: str = Field(default="U-?", description="customer id for history lookup")
+    user_id: str = Field(default="U-?", min_length=1, max_length=128, description="customer id for history lookup")
     customer_context: Optional[dict[str, Any]] = Field(default=None)
     workflow_version: int = Field(default=1, ge=1)
 
@@ -72,18 +79,23 @@ class TicketCreate(BaseModel):
 class ReviewRequest(BaseModel):
     """Human review of a completed ticket before the mock action executes."""
 
+    model_config = ConfigDict(extra="forbid")
+
     reviewer_action: ReviewerAction
-    reviewer_id: str = Field(default="reviewer", min_length=1)
+    reviewer_id: str = Field(
+        default="reviewer", min_length=1, max_length=128,
+        pattern=r"^[A-Za-z0-9._:@+-]+$",
+    )
     reason_code: Optional[str] = Field(
         default=None, description="e.g. safe_to_send / content_risk / policy_violation"
     )
     edited_draft: Optional[str] = Field(
-        default=None, description="only for reviewer_action=edited"
+        default=None, max_length=4_000, description="only for reviewer_action=edited"
     )
 
 
 class TicketRecord(BaseModel):
-    """Persisted state for one ticket workflow (see §7.3 of the upgrade brief)."""
+    """Persisted state for one ticket workflow (see ?7.3 of the upgrade brief)."""
 
     ticket_id: str
     request_payload: dict[str, Any]

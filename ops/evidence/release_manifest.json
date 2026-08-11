@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "maturity": "A6 Operable Beta - local verified, deployment ready",
+  "remote_deployment": "NOT CREATED",
+  "remote_smoke": "NOT RUN",
+  "deployment_target": "Render Docker Blueprint",
+  "entrypoint": "service.operable:app",
+  "health_gate": "/readyz",
+  "local_staging_smoke": "9/9 PASS",
+  "failure_matrix": "17/17 PASS",
+  "container_build": "BLOCKED BY LOCAL DOCKER ENGINE",
+  "external_actions_required": [
+    "Connect repository to Render and apply render.yaml",
+    "Set SUPPORT_API_TOKEN in Render and GitHub staging environment",
+    "Run deploy-staging workflow and retain its artifact"
+  ]
+}

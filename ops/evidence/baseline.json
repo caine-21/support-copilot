@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "captured_at": "2026-08-10",
+  "repository": "support-copilot",
+  "baseline_head": "9a94bf2e82ffbc2d0e28268bc738846e8ad88664",
+  "branch": "codex/feat/a6-operable-beta",
+  "working_tree_at_baseline": "clean_before_a6_changes",
+  "verification": {
+    "full_pytest": {"result": "196 passed", "duration_seconds": 280.47, "environment": "Windows host; sandbox temp and named-pipe restrictions required approved host run"},
+    "customer_context_beta": {"result": "30/30", "failed": 0, "erroneous_auto_reply_count": 0, "dataset_sha256_prefix_suffix": "a3d30...b0408"},
+    "multi_agent_shadow": {"scenario": "20/20", "manager_accuracy": 0.9, "multi_intent_coverage": 0.8, "unsafe_auto_off": 0, "unsafe_auto_shadow": 0}
+  },
+  "notes": [
+    "Customer Context and Multi-Agent results are deterministic/scripted synthetic evidence, not production effectiveness.",
+    "No environment file was inspected or copied into evidence."
+  ]
+}

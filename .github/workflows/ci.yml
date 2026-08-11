@@ -1,0 +1,70 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  offline-verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install --requirement requirements-runtime.txt pytest httpx
+      - name: Compile
+        run: python -m compileall -q agent app service ops scripts tests
+      - name: Full offline regression
+        env:
+          SUPPORT_DEPLOYMENT_MODE: demo
+          ENABLE_PROVIDER_CALLS: 'false'
+          ENABLE_EXECUTOR: 'false'
+        run: python -m pytest -q
+      - name: Failure matrix evidence
+        run: python -m ops.challenge --output artifacts/ops/failure_matrix.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a6-offline-evidence
+          path: artifacts/ops
+          if-no-files-found: error
+
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: offline-verification
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: support-copilot:${{ github.sha }}
+          build-args: |
+            SUPPORT_GIT_SHA=${{ github.sha }}
+            SUPPORT_BUILD_TIME=${{ github.event.repository.updated_at }}
+      - name: Container smoke
+        shell: bash
+        run: |
+          docker run --detach --rm --name support-copilot-ci -p 7860:7860 support-copilot:${{ github.sha }}
+          trap 'docker stop support-copilot-ci' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:7860/readyz >/dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:7860/livez
+          curl --fail --silent http://127.0.0.1:7860/readyz
+          curl --fail --silent http://127.0.0.1:7860/version
+          curl --fail --silent --header 'Content-Type: application/json' \
+            --data '{"ticket_id":"CI-SMOKE","ticket_text":"How do I reset my password?"}' \
+            http://127.0.0.1:7860/tickets

@@ -1,10 +1,10 @@
 # Agent Tooling: bounded hybrid workflow
 
-> **Verified baseline**: `c9e1ade chore: pin bounded agent tooling baseline` — clean-room `70 passed`（`git archive c9e1ade` → 全新临时目录 → `py -B -m pytest tests -q`，离线无 API key）。本文件描述 c9e1ade 的真实实现。
+> **Verified baseline**: `c9e1ade chore: pin bounded agent tooling baseline` ? clean-room `70 passed`?`git archive c9e1ade` ? ?????? ? `py -B -m pytest tests -q`???? API key??????? c9e1ade ??????
 
-`SUPPORT_AGENT_MODE=legacy` keeps the existing pipeline. `tool_loop` adds a model-driven, read-only retrieval loop after normalization and the deterministic Risk pre-guard. `SUPPORT_TOOL_BACKEND=local|mcp` selects the protocol adapter; the default remains Legacy + local compatibility.
+`SUPPORT_AGENT_MODE=legacy` keeps the `run_agent` compatibility pipeline. `tool_loop` adds a model-driven, read-only retrieval loop after normalization and the deterministic Risk pre-guard. `SUPPORT_TOOL_BACKEND=local|mcp` selects the protocol adapter; local remains the adapter default and MCP is opt-in. The canonical architecture default is the deterministic `app.runtime.run_a1.run_a1` path; this optional tooling never becomes an authorization source.
 
-**Tool permission**（`agent/tooling.py`, `ToolPermission`）: `read / reversible_write / external_or_irreversible`。当前注册工具全部为 `read`（`search_knowledge_base` / `get_customer_context` / `get_ticket_history`）; code-level 强制（`available_tools()` 只返回 read; `ToolGateway.execute` 非 read → `tool_permission_denied`）。没有 write / side-effect 工具对 agent 开放。
+**Tool permission**?`agent/tooling.py`, `ToolPermission`?: `read / reversible_write / external_or_irreversible`?????????? `read`?`search_knowledge_base` / `get_customer_context` / `get_ticket_history`?; code-level ???`available_tools()` ??? read; `ToolGateway.execute` ? read ? `tool_permission_denied`???? write / side-effect ??? agent ???
 
 ## Boundary
 
@@ -14,7 +14,7 @@ Domain Services are shared. LocalFunction and MCP adapters only perform schema v
 
 ## Loop and failure policy
 
-The run state stores auditable messages, tool events, evidence, counts and a stop reason—never hidden reasoning or credentials. Limits: turns, tool calls, overall time, per-tool time, duplicate calls and output size. Only read tools can receive bounded retries. Failure, timeout, MCP connection loss, insufficient evidence, or a loop limit can only preserve/escalate the formal decision; it cannot unlock `AUTO_REPLY`.
+The run state stores auditable messages, tool events, evidence, counts and a stop reason?never hidden reasoning or credentials. Limits: turns, tool calls, overall time, per-tool time, duplicate calls and output size. Only read tools can receive bounded retries. Failure, timeout, MCP connection loss, insufficient evidence, or a loop limit can only preserve/escalate the formal decision; it cannot unlock `AUTO_REPLY`.
 
 The gateway emits safe component-level codes such as `tool_not_registered`, `tool_permission_denied`, `invalid_tool_arguments`, `tool_timeout`, `tool_execution_failed`, `mcp_tool_not_found`, `mcp_tool_error`, and `mcp_timeout`; it does not store provider tracebacks in the packet or ledger.
 

@@ -1,10 +1,52 @@
 import sys
 import os
 import json
+import logging
 import re
+import time
 sys.stdout.reconfigure(encoding='utf-8')
 
 from dotenv import load_dotenv
+
+
+_logger = logging.getLogger("support_copilot.provider")
+if not _logger.handlers:
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter("%(message)s"))
+    _logger.addHandler(_handler)
+_logger.setLevel(logging.INFO)
+_logger.propagate = False
+_provider_observer = None
+
+
+def set_provider_observer(observer) -> None:
+    global _provider_observer
+    _provider_observer = observer
+
+
+def classify_provider_error(exc: Exception) -> tuple[str, int | None]:
+    """Stable operational taxonomy without logging provider error text."""
+    status = getattr(exc, "status_code", None)
+    name = type(exc).__name__.lower()
+    if isinstance(exc, TimeoutError) or "timeout" in name:
+        return "timeout", status
+    if status == 429 or "ratelimit" in name or "rate_limit" in name:
+        return "rate_limit", status
+    if isinstance(status, int) and status >= 500:
+        return "server_error", status
+    if "connection" in name:
+        return "connection_failure", status
+    if status in {401, 403} or isinstance(exc, (ValueError, KeyError)) or "authentication" in name:
+        return "auth_or_config", status
+    if isinstance(exc, (json.JSONDecodeError, TypeError)):
+        return "invalid_response", status
+    return "unknown", status
+
+
+def _provider_event(event: str, **fields) -> None:
+    _logger.info(json.dumps({"event": event, **fields}, ensure_ascii=False, separators=(",", ":")))
+    if _provider_observer is not None:
+        _provider_observer(event, fields)
 
 
 def _load_provider_config() -> None:
@@ -54,7 +96,7 @@ class LLMRouter:
             )
         return self._groq_client
 
-    # Per-provider timeouts (seconds). DeepSeek is primary — short timeout so Groq fallback
+    # Per-provider timeouts (seconds). DeepSeek is primary ? short timeout so Groq fallback
     # kicks in quickly when the API hangs (common during eval runs).
     _TIMEOUTS = {"deepseek": 30, "groq": 60}
 
@@ -66,7 +108,7 @@ class LLMRouter:
         temperature: float = 0.3,
     ) -> str:
         """
-        Route: DeepSeek → Groq fallback.
+        Route: DeepSeek ? Groq fallback.
         messages: standard OpenAI format [{"role": "system"|"user"|"assistant", "content": "..."}]
         """
         providers = [
@@ -74,7 +116,11 @@ class LLMRouter:
             ("groq",     self._groq,    "llama-3.3-70b-versatile"),
         ]
         last_err = None
-        for name, client_fn, fallback_model in providers:
+        for provider_index, (name, client_fn, fallback_model) in enumerate(providers):
+            if provider_index:
+                _provider_event("provider_fallback", provider=name, fallback_used=True)
+            started = time.monotonic()
+            _provider_event("llm_call_started", provider=name, provider_attempt=1)
             try:
                 client = client_fn()
                 use_model = model if name == "deepseek" else fallback_model
@@ -88,31 +134,65 @@ class LLMRouter:
                 if json_mode:
                     kwargs["response_format"] = {"type": "json_object"}
                 resp = client.chat.completions.create(**kwargs)
-                return resp.choices[0].message.content
+                content = resp.choices[0].message.content
+                if not isinstance(content, str) or not content.strip():
+                    raise TypeError("invalid provider response")
+                _provider_event(
+                    "llm_call_succeeded", provider=name, provider_attempt=1,
+                    fallback_used=provider_index > 0,
+                    latency_ms=round((time.monotonic() - started) * 1000, 2),
+                )
+                return content
             except Exception as e:
-                print(f"[LLM] {name} failed: {e}")
+                error_type, status_code = classify_provider_error(e)
+                _provider_event(
+                    "llm_call_failed", provider=name, provider_attempt=1,
+                    error_type=error_type, status_code=status_code,
+                    retryable=False,
+                    latency_ms=round((time.monotonic() - started) * 1000, 2),
+                )
                 last_err = e
                 continue
-        raise RuntimeError(f"All LLM providers failed. Last error: {last_err}")
+        last_type, _ = classify_provider_error(last_err) if last_err else ("unknown", None)
+        raise RuntimeError(f"All LLM providers failed. Last error type: {last_type}")
 
     def call_with_tools(self, messages: list[dict], tools: list[dict], model: str = "deepseek-chat"):
         """Native OpenAI-compatible function calling; no JSON-in-text emulation."""
         providers = [("deepseek", self._deepseek, "deepseek-chat"), ("groq", self._groq, "llama-3.3-70b-versatile")]
         last_err = None
-        for name, client_fn, fallback_model in providers:
+        for provider_index, (name, client_fn, fallback_model) in enumerate(providers):
+            if provider_index:
+                _provider_event("provider_fallback", provider=name, fallback_used=True)
+            started = time.monotonic()
+            _provider_event("llm_call_started", provider=name, provider_attempt=1, tool_mode=True)
             try:
-                return client_fn().chat.completions.create(
+                response = client_fn().chat.completions.create(
                     model=model if name == "deepseek" else fallback_model,
                     messages=messages, tools=tools, tool_choice="auto", max_tokens=800,
                     temperature=0.2, timeout=self._TIMEOUTS[name],
                 )
+                if not getattr(response, "choices", None):
+                    raise TypeError("invalid provider response")
+                _provider_event(
+                    "llm_call_succeeded", provider=name, provider_attempt=1,
+                    fallback_used=provider_index > 0, tool_mode=True,
+                    latency_ms=round((time.monotonic() - started) * 1000, 2),
+                )
+                return response
             except Exception as exc:
-                print(f"[LLM] {name} native tool call failed: {exc}")
+                error_type, status_code = classify_provider_error(exc)
+                _provider_event(
+                    "llm_call_failed", provider=name, provider_attempt=1,
+                    error_type=error_type, status_code=status_code,
+                    retryable=False, tool_mode=True,
+                    latency_ms=round((time.monotonic() - started) * 1000, 2),
+                )
                 last_err = exc
-        raise RuntimeError(f"All native tool providers failed. Last error: {last_err}")
+        last_type, _ = classify_provider_error(last_err) if last_err else ("unknown", None)
+        raise RuntimeError(f"All native tool providers failed. Last error type: {last_type}")
 
 
-# module-level singleton — import and use directly
+# module-level singleton ? import and use directly
 router = LLMRouter()
 
 

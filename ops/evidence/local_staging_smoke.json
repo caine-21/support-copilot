@@ -1,0 +1,83 @@
+{
+  "suite": "a6-staging-smoke",
+  "base_url": "http://127.0.0.1:8765",
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0
+  },
+  "cases": [
+    {
+      "name": "livez",
+      "status": "PASS",
+      "observed": {
+        "http": 200,
+        "status": "alive"
+      }
+    },
+    {
+      "name": "readyz",
+      "status": "PASS",
+      "observed": {
+        "http": 200,
+        "status": "ready"
+      }
+    },
+    {
+      "name": "version",
+      "status": "PASS",
+      "observed": {
+        "http": 200,
+        "mode": "staging",
+        "git_sha": "worktree-9a94bf2"
+      }
+    },
+    {
+      "name": "safe_ticket",
+      "status": "PASS",
+      "observed": {
+        "http": 201,
+        "decision": "ESCALATE_L1",
+        "grounding_safe": false
+      }
+    },
+    {
+      "name": "hostile_input",
+      "status": "PASS",
+      "observed": {
+        "http": 201,
+        "decision": "ESCALATE_L2"
+      }
+    },
+    {
+      "name": "no_evidence_fail_closed",
+      "status": "PASS",
+      "observed": {
+        "http": 201,
+        "decision": "ESCALATE_L1",
+        "grounding_safe": false
+      }
+    },
+    {
+      "name": "duplicate_ticket",
+      "status": "PASS",
+      "observed": {
+        "http": 409
+      }
+    },
+    {
+      "name": "unauthorized",
+      "status": "PASS",
+      "observed": {
+        "http": 401
+      }
+    },
+    {
+      "name": "admin_surface_hidden",
+      "status": "PASS",
+      "observed": {
+        "http": 404
+      }
+    }
+  ]
+}

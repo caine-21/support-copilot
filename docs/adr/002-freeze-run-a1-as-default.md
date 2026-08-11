@@ -22,7 +22,7 @@ All lanes shared the deterministic authorization gate and recorded zero unsafe A
 
 The canonical default is the deterministic request workflow exposed by `app.runtime.run_a1.run_a1`:
 
-Intent ? Risk Gate ? KB Retrieval ? Grounding ? Authorization ? `AUTO_REPLY | ESCALATE_L1 | ESCALATE_L2`
+Intent → Risk Gate → KB Retrieval → Grounding → Authorization → `AUTO_REPLY | ESCALATE_L1 | ESCALATE_L2`
 
 The authorization source remains deterministic. A model may classify, draft, or request a permitted read, but it cannot bypass the risk, grounding, or business authorization gates.
 

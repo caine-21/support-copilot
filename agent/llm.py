@@ -96,7 +96,7 @@ class LLMRouter:
             )
         return self._groq_client
 
-    # Per-provider timeouts (seconds). DeepSeek is primary ? short timeout so Groq fallback
+    # Per-provider timeouts (seconds). DeepSeek is primary — short timeout so Groq fallback
     # kicks in quickly when the API hangs (common during eval runs).
     _TIMEOUTS = {"deepseek": 30, "groq": 60}
 
@@ -108,7 +108,7 @@ class LLMRouter:
         temperature: float = 0.3,
     ) -> str:
         """
-        Route: DeepSeek ? Groq fallback.
+        Route: DeepSeek → Groq fallback.
         messages: standard OpenAI format [{"role": "system"|"user"|"assistant", "content": "..."}]
         """
         providers = [
@@ -192,7 +192,7 @@ class LLMRouter:
         raise RuntimeError(f"All native tool providers failed. Last error type: {last_type}")
 
 
-# module-level singleton ? import and use directly
+# module-level singleton — import and use directly
 router = LLMRouter()
 
 

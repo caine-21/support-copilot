@@ -1,4 +1,4 @@
-"""Ticket workflow engine: create/run ? query ? review ? idempotent mock action.
+"""Ticket workflow engine: create/run → query → review → idempotent mock action.
 
 Persistence + audit + idempotency live here; the heavy agent stack is only
 imported inside default_decision_fn, so tests inject a fake decision port and
@@ -116,7 +116,7 @@ class TicketWorkflowService:
                     {"status": event.removeprefix("execution_")},
                 )
 
-    # ?? create + run ?????????????????????????????????????????????????????????
+    # ── create + run ─────────────────────────────────────────────────────────
     def create_ticket(self, payload: TicketCreate) -> TicketRecord:
         ticket_id = (payload.ticket_id or f"T-{uuid.uuid4().hex[:8].upper()}")
         self._event("request_received", ticket_id=ticket_id, route="ticket_create")
@@ -126,7 +126,7 @@ class TicketWorkflowService:
 
         try:
             self.repo.get_ticket(ticket_id)
-            raise InvalidTransition(f"ticket {ticket_id} already exists ? duplicate create rejected")
+            raise InvalidTransition(f"ticket {ticket_id} already exists — duplicate create rejected")
         except TicketNotFound:
             pass
 
@@ -156,7 +156,7 @@ class TicketWorkflowService:
                 customer_context=payload.customer_context,
                 ledger=ledger,
             )
-        except Exception as exc:  # decision flow failed ? record failure, never fake success
+        except Exception as exc:  # decision flow failed — record failure, never fake success
             record.workflow_status = WorkflowStatus.FAILED
             record.decision = Decision.UNKNOWN.value
             record.decision_reason = f"decision_flow_error: {exc}"
@@ -246,21 +246,21 @@ class TicketWorkflowService:
         self.repo.update_ticket(record)
         return record
 
-    # ?? query ????????????????????????????????????????????????????????????????
+    # ── query ────────────────────────────────────────────────────────────────
     def get_ticket(self, ticket_id: str) -> TicketRecord:
         return self.repo.get_ticket(ticket_id)
 
     def list_actions(self, ticket_id: str):
         return self.repo.list_actions(ticket_id)
 
-    # ?? review + idempotent action ???????????????????????????????????????????
+    # ── review + idempotent action ───────────────────────────────────────────
     def review_ticket(self, ticket_id: str, req: ReviewRequest) -> ReviewOutcome:
         ticket = self.repo.get_ticket(ticket_id)
 
         if ticket.workflow_status == WorkflowStatus.FAILED:
             raise InvalidTransition("cannot review a failed workflow")
         if ticket.workflow_status != WorkflowStatus.COMPLETED:
-            raise InvalidTransition("workflow not completed ? nothing to review")
+            raise InvalidTransition("workflow not completed — nothing to review")
 
         # Already reviewed: idempotent return, never re-execute the action.
         if ticket.review_status in (ReviewStatus.APPROVED, ReviewStatus.EDITED):
@@ -269,11 +269,11 @@ class TicketWorkflowService:
             return ReviewOutcome(
                 ticket=ticket,
                 action=last,
-                message="already reviewed ? no re-execution",
+                message="already reviewed — no re-execution",
             )
         if ticket.review_status == ReviewStatus.REJECTED:
             return ReviewOutcome(
-                ticket=ticket, message="already rejected ? no action taken"
+                ticket=ticket, message="already rejected — no action taken"
             )
 
         if req.reviewer_action == ReviewerAction.REJECTED:
@@ -285,10 +285,10 @@ class TicketWorkflowService:
                 "review_rejected", ticket_id=ticket_id,
                 action=ticket.decision, review_state=ReviewStatus.REJECTED.value,
             )
-            return ReviewOutcome(ticket=ticket, message="rejected ? no action taken")
+            return ReviewOutcome(ticket=ticket, message="rejected — no action taken")
 
-        # approved / edited ? persist the reviewed payload + SHA-256 binding and
-        # set READY_FOR_EXECUTION. The mock action is NOT executed here ? this is
+        # approved / edited → persist the reviewed payload + SHA-256 binding and
+        # set READY_FOR_EXECUTION. The mock action is NOT executed here — this is
         # the A4 separation of approval from execution. Execution is an explicit
         # resume/executor step (execute_approved_reply) that revalidates state,
         # content integrity, evidence and idempotency.
@@ -313,21 +313,21 @@ class TicketWorkflowService:
         )
         return ReviewOutcome(
             ticket=ticket, action=None,
-            message="approved ? READY_FOR_EXECUTION, mock action pending explicit resume",
+            message="approved — READY_FOR_EXECUTION, mock action pending explicit resume",
         )
 
     def execute_approved_reply(self, ticket_id: str) -> ReviewOutcome:
         """Executor-only: perform the human-approved mock reply for a ticket.
 
         Loads persisted approval state. Never accepts caller-supplied content or
-        an approval flag ? approval, evidence and idempotency all come from the
+        an approval flag — approval, evidence and idempotency all come from the
         server-side persisted ticket/action records.
         """
         ticket = self.repo.get_ticket(ticket_id)
         if ticket.review_status == ReviewStatus.REJECTED:
-            raise InvalidTransition("review rejected ? action not executed")
+            raise InvalidTransition("review rejected — action not executed")
         if ticket.review_status not in (ReviewStatus.APPROVED, ReviewStatus.EDITED):
-            raise InvalidTransition("approval_required ? no persisted human approval")
+            raise InvalidTransition("approval_required — no persisted human approval")
 
         action_type = ticket.action_type or _action_type_for(ticket.decision or "")
         idem_key = self._idempotency_key(ticket.ticket_id, ticket.workflow_version, action_type)
@@ -335,24 +335,24 @@ class TicketWorkflowService:
         if existing is not None and existing.status == ActionStatus.EXECUTED:
             return ReviewOutcome(
                 ticket=ticket, action=existing,
-                message="already executed ? idempotent, adapter not re-invoked",
+                message="already executed — idempotent, adapter not re-invoked",
             )
         if existing is not None and existing.status == ActionStatus.FAILED:
             # Strategy B: a FAILED attempt is a terminal failure state. It is
             # never "already_executed", and an auto retry is NOT re-invoked
             # (the UNIQUE idempotency key cannot hold two attempts). Explicit
             # manual resolution required.
-            raise InvalidTransition("previous_execution_failed ? manual retry required")
+            raise InvalidTransition("previous_execution_failed — manual retry required")
         if existing is not None and existing.status == ActionStatus.IN_PROGRESS:
-            raise InvalidTransition("execution_in_progress_or_unknown ? reconcile before retry")
+            raise InvalidTransition("execution_in_progress_or_unknown — reconcile before retry")
 
         # Approved content binding: what was approved is what may be executed.
         # The caller cannot supply content; the persisted reviewed payload is
         # the source of truth, and its SHA-256 must still match the approved hash.
         if not ticket.approved_payload_hash or not ticket.approved_payload:
-            raise InvalidTransition("stale_approved_draft ? no approved payload bound")
+            raise InvalidTransition("stale_approved_draft — no approved payload bound")
         if self._payload_hash(ticket.approved_payload) != ticket.approved_payload_hash:
-            raise InvalidTransition("stale_approved_draft ? reviewed content was modified after approval")
+            raise InvalidTransition("stale_approved_draft — reviewed content was modified after approval")
 
         self._event(
             "execution_started",
@@ -411,7 +411,7 @@ class TicketWorkflowService:
                 execution_state=ActionStatus.SKIPPED.value,
             )
             raise NoEvidenceGate(
-                f"ticket {ticket.ticket_id} decision=AUTO_REPLY but grounding_safe={ticket.grounding_safe} ? "
+                f"ticket {ticket.ticket_id} decision=AUTO_REPLY but grounding_safe={ticket.grounding_safe} — "
                 "evidence gate blocks reply; missing evidence cannot bypass the gate"
             )
         claimed_record, claimed = self.repo.claim_action(
@@ -424,8 +424,8 @@ class TicketWorkflowService:
             if claimed_record.status == ActionStatus.EXECUTED:
                 return claimed_record
             if claimed_record.status == ActionStatus.FAILED:
-                raise InvalidTransition("previous_execution_failed ? manual retry required")
-            raise InvalidTransition("execution_in_progress_or_unknown ? reconcile before retry")
+                raise InvalidTransition("previous_execution_failed — manual retry required")
+            raise InvalidTransition("execution_in_progress_or_unknown — reconcile before retry")
 
         try:
             if action_type == "create_reply":
@@ -441,7 +441,7 @@ class TicketWorkflowService:
                     reason=ticket.decision_reason or "",
                     evidence=ticket.retrieved_evidence or [],
                 )
-        except Exception as exc:  # adapter failure ? complete the claim as failed
+        except Exception as exc:  # adapter failure → complete the claim as failed
             self.repo.complete_action(
                 idem_key,
                 status=ActionStatus.FAILED,
@@ -469,7 +469,7 @@ class TicketWorkflowService:
         self.repo.update_ticket(ticket)
         return record
 
-    # ?? helpers ??????????????????????????????????????????????????????????????
+    # ── helpers ──────────────────────────────────────────────────────────────
     @staticmethod
     def _idempotency_key(ticket_id: str, workflow_version: int, action_type: str) -> str:
         return f"{ticket_id}:{workflow_version}:{action_type}"

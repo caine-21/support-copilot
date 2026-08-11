@@ -82,7 +82,7 @@ class ExecuteApprovedReplyArgs(BaseModel):
 
     Minimal on purpose: no `approved`, `force`, `review_status` or `reply_text`
     fields. Approval, evidence, integrity and idempotency all come from
-    server-side persisted state ? the caller cannot pass an approval flag.
+    server-side persisted state — the caller cannot pass an approval flag.
     """
     model_config = ConfigDict(extra="forbid")
     ticket_id: str = Field(min_length=1, max_length=128)
@@ -215,7 +215,7 @@ def execute_approved_reply(args: ExecuteApprovedReplyArgs, _: ToolRuntime) -> To
         if "stale_approved_draft" in msg:
             return ToolResult(status=ToolStatus.ERROR, data={}, error_code="stale_approved_draft")
         return ToolResult(status=ToolStatus.ERROR, data={}, error_code="action_not_executable")
-    except Exception as exc:  # noqa: BLE001 ? boundary maps any failure to the envelope
+    except Exception as exc:  # noqa: BLE001 — boundary maps any failure to the envelope
         return ToolResult(status=ToolStatus.ERROR, data={}, error_code=f"action_execution_failed:{type(exc).__name__}")
 
     action = outcome.action
@@ -278,7 +278,7 @@ SPECIALIST_TOOL_ALLOWLISTS: dict[str, list[str]] = {
 
 
 def tools_for_specialist(registry: dict[str, ToolDefinition], specialist: str) -> list[ToolDefinition]:
-    """Discovery view: allowlist ? READ permission. Write tools are never shown."""
+    """Discovery view: allowlist ∩ READ permission. Write tools are never shown."""
     allowed = set(SPECIALIST_TOOL_ALLOWLISTS.get(specialist, ()))
     return [d for d in registry.values() if d.permission == ToolPermission.READ and d.name in allowed]
 
@@ -390,7 +390,7 @@ class MCPToolAdapter:
             params = StdioServerParameters(command=self.command, args=self.args, cwd=self.cwd, env=self.env)
             # The MCP SDK defaults errlog to the parent's sys.stderr; on Windows
             # a child writing non-ASCII server diagnostics ([KB] ...) to that
-            # shared console stream raises EINVAL. Route server logs to NUL ?
+            # shared console stream raises EINVAL. Route server logs to NUL —
             # error semantics still flow via the MCP protocol.
             devnull = open(os.devnull, "w", encoding="utf-8")
             try:

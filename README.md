@@ -1,6 +1,6 @@
 ---
 title: AI Support Triage
-emoji: ??
+emoji: 🎯
 colorFrom: blue
 colorTo: green
 sdk: gradio
@@ -10,7 +10,7 @@ pinned: false
 license: mit
 ---
 
-# Support Copilot ? SaaS Ticket Routing Decision System
+# Support Copilot — SaaS Ticket Routing Decision System
 
 ## One-line pitch
 
@@ -37,7 +37,7 @@ The Dockerfile and Render Blueprint are deployment-ready, but **no remote stagin
 
 Operational references: [Operations](docs/OPERATIONS.md), [Runbook](docs/RUNBOOK.md), [Security review](docs/SECURITY_REVIEW.md), [ADR-003](docs/adr/003-a6-operability-stack.md), and [evidence pack](ops/evidence/).
 
-**Canonical facts / reproducibility:** [`./CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) ? ???????reproducible test baselines?CURRENT/HISTORICAL eval ????????allowed/forbidden claims??
+**Canonical facts / reproducibility:** [`./CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) — 唯一事实口径（reproducible test baselines、CURRENT/HISTORICAL eval 标签、复现命令、allowed/forbidden claims）。
 
 ## Problem
 
@@ -49,7 +49,7 @@ This project treats support automation as a routing and safety decision system, 
 
 ### Default: deterministic `run_a1`
 
-The canonical default is `app.runtime.run_a1.run_a1`: Intent ? Risk Gate ? KB Retrieval ? Grounding ? deterministic Authorization ? `AUTO_REPLY | ESCALATE_L1 | ESCALATE_L2`. Model output can inform the pipeline but cannot authorize itself. Existing CLI, Gradio, and service compatibility surfaces still call the legacy deterministic implementation; they are not a second architecture authority.
+The canonical default is `app.runtime.run_a1.run_a1`: Intent → Risk Gate → KB Retrieval → Grounding → deterministic Authorization → `AUTO_REPLY | ESCALATE_L1 | ESCALATE_L2`. Model output can inform the pipeline but cannot authorize itself. Existing CLI, Gradio, and service compatibility surfaces still call the legacy deterministic implementation; they are not a second architecture authority.
 
 Tool Loop and MCP are optional adapters. Manager + Specialists (A5 Lane C), Multi-Agent Shadow, and the A5 harness are experimental. See [ADR-002](docs/adr/002-freeze-run-a1-as-default.md).
 
@@ -90,9 +90,9 @@ Phase 1 runs independent signal gathering in parallel. Generation and verificati
 
 | Level | Condition | Meaning |
 |---|---|---|
-| `strong` | top KB score ? 0.60 | Direct FAQ match ? safe to auto-reply |
-| `weak`   | top KB score 0.40?0.59 | Related content found ? inform L1, don't auto-reply |
-| `none`   | top KB score < 0.40 | No coverage ? escalate |
+| `strong` | top KB score ≥ 0.60 | Direct FAQ match — safe to auto-reply |
+| `weak`   | top KB score 0.40–0.59 | Related content found — inform L1, don't auto-reply |
+| `none`   | top KB score < 0.40 | No coverage — escalate |
 
 ### 2. Intent Normalization Layer (INL)
 
@@ -113,7 +113,7 @@ This is the current guard against plan-tier and region-specific false-safe answe
 
 The draft reply is decomposed into factual claims. Each claim is checked against the retrieved KB snippets. If the draft exceeds the KB boundary, `AUTO_REPLY` is downgraded to `ESCALATE_L1`.
 
-Grounding authorization is fail-closed: missing, empty, malformed, or failed evidence checks cannot unlock `AUTO_REPLY`; valid strong grounding remains eligible (commit `2c13496`). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) ?6?.
+Grounding authorization is fail-closed: missing, empty, malformed, or failed evidence checks cannot unlock `AUTO_REPLY`; valid strong grounding remains eligible (commit `2c13496`). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6③.
 
 ### 5. Append-only run ledger
 
@@ -135,29 +135,29 @@ The reasoner separates deterministic facts from LLM-inferred assumptions such as
 
 ## Reproducible test baseline
 
-Commit-pinned milestones remain recorded in [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) ?2. The current `dd7ca87` runtime/test files plus this docs-only architecture-freeze diff passed the full offline suite: **196 passed in 242.61s** on 2026-08-10. This is a HEAD-equivalent runtime regression, not a new clean-room commit claim.
+Commit-pinned milestones remain recorded in [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §2. The current `dd7ca87` runtime/test files plus this docs-only architecture-freeze diff passed the full offline suite: **196 passed in 242.61s** on 2026-08-10. This is a HEAD-equivalent runtime regression, not a new clean-room commit claim.
 
 ## A1 Unified Request Runtime (`app/`)
 
-An additive domain facade over the verified `agent.*` modules: unified `IncomingRequest` ? deterministic `Request Router` (channel / intent / risk / context) ? `ContextProjection` ? Support / Knowledge Specialist lanes ? existing grounding + risk + authorization gate ? structured trace. `app/` owns contract, coordination, projection, routing and trace ? never policy.
+An additive domain facade over the verified `agent.*` modules: unified `IncomingRequest` → deterministic `Request Router` (channel / intent / risk / context) → `ContextProjection` → Support / Knowledge Specialist lanes → existing grounding + risk + authorization gate → structured trace. `app/` owns contract, coordination, projection, routing and trace — never policy.
 
-Honest channel boundary: **ticket = SUPPORTED** (full vertical slice); **email / lead = ROUTING_ONLY** (contract + route only, no specialist, no side effect). It is not a three-channel agent. Demo cases and traces: `data/a1_demo_cases.json`; evidence pack: `notes/interview-prep/flagship-projects/a1/`. See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) ?6?.
+Honest channel boundary: **ticket = SUPPORTED** (full vertical slice); **email / lead = ROUTING_ONLY** (contract + route only, no specialist, no side effect). It is not a three-channel agent. Demo cases and traces: `data/a1_demo_cases.json`; evidence pack: `notes/interview-prep/flagship-projects/a1/`. See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6④.
 
 ## MCP tool boundary
 
-Four typed read tools (`search_knowledge_base` / `get_customer_context` / `get_ticket` / `get_ticket_history`) run on either a Local or a real stdio MCP backend with identical business semantics; the A1 Knowledge Specialist uses an injected scoped gateway and never sees the transport. Specialists are capability-withheld: Knowledge sees only `search_knowledge_base`; the server additionally exposes one `EXTERNAL_OR_IRREVERSIBLE` action ? `execute_approved_reply(ticket_id)` ? which is executor-only and reads persisted human approval, evidence and idempotency (a caller cannot pass approval or reply text). All external effects remain mock (`MockTicketActionAdapter`, `sent_mock`). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) ?6?.
+Four typed read tools (`search_knowledge_base` / `get_customer_context` / `get_ticket` / `get_ticket_history`) run on either a Local or a real stdio MCP backend with identical business semantics; the A1 Knowledge Specialist uses an injected scoped gateway and never sees the transport. Specialists are capability-withheld: Knowledge sees only `search_knowledge_base`; the server additionally exposes one `EXTERNAL_OR_IRREVERSIBLE` action — `execute_approved_reply(ticket_id)` — which is executor-only and reads persisted human approval, evidence and idempotency (a caller cannot pass approval or reply text). All external effects remain mock (`MockTicketActionAdapter`, `sent_mock`). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6⑤.
 
 ## Skills
 
-A Skill is not a tool, not a Specialist, and not a policy ? it is a typed, deterministically selected capability package (Prompt/Context/Tool/Policy composition). One skill is currently implemented (`knowledge_lookup`, a deterministic read skill). Selection is deterministic by specialist + intent; skill context is a minimal subset of the Specialist projection, and tool capability is the intersection of Specialist scope and Skill allowed tools (registration and runtime both reject any widening). Skills can never expand capability or grant authorization. See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) ?6?.
+A Skill is not a tool, not a Specialist, and not a policy — it is a typed, deterministically selected capability package (Prompt/Context/Tool/Policy composition). One skill is currently implemented (`knowledge_lookup`, a deterministic read skill). Selection is deterministic by specialist + intent; skill context is a minimal subset of the Specialist projection, and tool capability is the intersection of Specialist scope and Skill allowed tools (registration and runtime both reject any widening). Skills can never expand capability or grant authorization. See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6⑥.
 
 ## HITL / review checkpoint (ticket-only)
 
-Proposal ? persisted review checkpoint (WAITING_FOR_REVIEW) ? human approve / edit / reject ? bound approved payload + SHA-256 hash (READY_FOR_EXECUTION) ? explicit resume/executor ? mock action. **Approval and execution are separated**: `review_ticket(approved)` never executes; only the executor (`execute_approved_reply(ticket_id)`) does, after revalidating review state, approved-content integrity, evidence and idempotency. The checkpoint is SQLite-persisted and survives a new service instance. Ticket-only ? email/lead remain ROUTING_ONLY. See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) ?6?.
+Proposal → persisted review checkpoint (WAITING_FOR_REVIEW) → human approve / edit / reject → bound approved payload + SHA-256 hash (READY_FOR_EXECUTION) → explicit resume/executor → mock action. **Approval and execution are separated**: `review_ticket(approved)` never executes; only the executor (`execute_approved_reply(ticket_id)`) does, after revalidating review state, approved-content integrity, evidence and idempotency. The checkpoint is SQLite-persisted and survives a new service instance. Ticket-only — email/lead remain ROUTING_ONLY. See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6⑦.
 
 ## Historical model-evaluation snapshot (HISTORICAL)
 
-> ?? The table below is a **historical model-evaluation artifact** (`data/reports/report_epistemic-r3.json`): it requires a real provider API key, is non-deterministic, and was **not re-run** as part of the `c9e1ade` clean committed baseline. Cite it as a historical snapshot, not as the current committed result.
+> ⚠️ The table below is a **historical model-evaluation artifact** (`data/reports/report_epistemic-r3.json`): it requires a real provider API key, is non-deterministic, and was **not re-run** as part of the `c9e1ade` clean committed baseline. Cite it as a historical snapshot, not as the current committed result.
 
 Latest checked report: `data/reports/report_epistemic-r3.json`.
 
@@ -181,12 +181,12 @@ The key safety result is not raw accuracy. The main invariants are:
 - **L2 recall must stay 100%**: high-risk tickets cannot be missed.
 - **Unsafe AUTO_REPLY must stay 0%**: no auto-reply without strong grounding.
 
-Deterministic / scripted evaluations that **are** reproducible (no provider): Customer Context Beta `30/30` (provider none, commit `efea70b`) and Multi-Agent Shadow `20/20` (offline scripted). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) ?6.
+Deterministic / scripted evaluations that **are** reproducible (no provider): Customer Context Beta `30/30` (provider none, commit `efea70b`) and Multi-Agent Shadow `20/20` (offline scripted). See [`CANONICAL_FACTS.md`](./CANONICAL_FACTS.md) §6.
 
 ## Stability
 
 - KB search: INL intent-to-FAQ lookup first; hybrid dense + BM25 fallback for unknown intents
-- LLM: DeepSeek (primary) ? Groq llama-3.3-70b-versatile fallback via unified `LLMRouter`
+- LLM: DeepSeek (primary) → Groq llama-3.3-70b-versatile fallback via unified `LLMRouter`
 - Grounding: deterministic score threshold plus claim-level grounding compiler
 - Run evidence: append-only run ledger and structured JSON reports
 

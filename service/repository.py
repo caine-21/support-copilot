@@ -1,6 +1,6 @@
 """SQLite repository for the ticket workflow slice.
 
-Deliberately stdlib-only (sqlite3) ? no ORM, no external services. A ticket row
+Deliberately stdlib-only (sqlite3) — no ORM, no external services. A ticket row
 holds the workflow state; a ticket_actions row is an append-only audit record
 keyed by idempotency_key, which is what makes re-execution impossible.
 """
@@ -75,7 +75,7 @@ class TicketNotFound(Exception):
 
 
 class InvalidTransition(Exception):
-    """Raised on illegal state change (duplicate create, review after action?)."""
+    """Raised on illegal state change (duplicate create, review after action…)."""
 
 
 class NoEvidenceGate(Exception):
@@ -93,7 +93,7 @@ class TicketRepository:
         self._conn.row_factory = sqlite3.Row
         self._conn.executescript(_SCHEMA)
         # Prototype-safe additive migration: existing DBs get the A4 review
-        # checkpoint columns without a manual drop. Idempotent ? each ALTER is
+        # checkpoint columns without a manual drop. Idempotent — each ALTER is
         # skipped if the column already exists.
         for col, ddl in (
             ("approved_payload", "ALTER TABLE tickets ADD COLUMN approved_payload TEXT"),
@@ -119,7 +119,7 @@ class TicketRepository:
         if not required.issubset(cols):
             raise sqlite3.DatabaseError("ticket schema incomplete")
 
-    # ?? tickets ?????????????????????????????????????????????????????????????
+    # ── tickets ─────────────────────────────────────────────────────────────
     def save_ticket(self, record: TicketRecord) -> TicketRecord:
         with self._lock:
             self._conn.execute(
@@ -180,7 +180,7 @@ class TicketRepository:
         record.updated_at = utc_now()
         return self.save_ticket(record)
 
-    # ?? actions (audit + idempotency) ???????????????????????????????????????
+    # ── actions (audit + idempotency) ───────────────────────────────────────
     def get_action_by_key(self, idempotency_key: str) -> Optional[ActionRecord]:
         with self._lock:
             row = self._conn.execute(
@@ -314,7 +314,7 @@ class TicketRepository:
             ).fetchone()
         return self._row_to_action(row)
 
-    # ?? helpers ?????????????????????????????????????????????????????????????
+    # ── helpers ─────────────────────────────────────────────────────────────
     @staticmethod
     def _row_to_ticket(row: sqlite3.Row) -> TicketRecord:
         return TicketRecord(

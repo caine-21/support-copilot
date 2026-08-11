@@ -1,7 +1,7 @@
 """Domain types for the ticket workflow slice.
 
 The decision set mirrors agent/reasoner.py string constants. IMPORTANT: the
-reasoner emits exactly {AUTO_REPLY, ESCALATE_L1, ESCALATE_L2} ? there is no
+reasoner emits exactly {AUTO_REPLY, ESCALATE_L1, ESCALATE_L2} — there is no
 ABSTAIN in the source. UNKNOWN is a service-level fallback for runs where the
 decision flow itself failed (never emitted by the reasoner).
 """
@@ -95,7 +95,7 @@ class ReviewRequest(BaseModel):
 
 
 class TicketRecord(BaseModel):
-    """Persisted state for one ticket workflow (see ?7.3 of the upgrade brief)."""
+    """Persisted state for one ticket workflow (see §7.3 of the upgrade brief)."""
 
     ticket_id: str
     request_payload: dict[str, Any]

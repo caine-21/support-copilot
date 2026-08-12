@@ -1,0 +1,16 @@
+{
+  "exercise": "provider-timeout-and-recovery",
+  "injected_failure": "TimeoutError",
+  "observed": {
+    "failed_workflow_status": "failed",
+    "failed_decision": "UNKNOWN",
+    "classified_error": "provider_timeout"
+  },
+  "recovery": {
+    "workflow_status": "completed",
+    "decision": "AUTO_REPLY",
+    "grounding_safe": true
+  },
+  "secret_leakage": false,
+  "verification": "local-only injected decision double; no Render secret or production provider call"
+}

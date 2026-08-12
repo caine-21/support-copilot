@@ -16,6 +16,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .api import create_app as create_legacy_app
 from .config import DeploymentMode, RuntimeSettings
+from .customer_experience import customer_reply, demo_customer_context, is_human_handoff_request
 from .domain import CustomerTicketRequest, CustomerTicketResponse, TicketCreate
 from .engine import TicketWorkflowService
 from .observability import Telemetry, bind_context, new_request_context
@@ -61,8 +62,10 @@ def _route_label(path: str) -> str:
     return path
 
 
-def _customer_reason(decision: str | None) -> str:
+def _customer_reason(decision: str | None, ticket_text: str = "") -> str:
     """Translate internal routing details into a stable customer-facing explanation."""
+    if is_human_handoff_request(ticket_text):
+        return "已记录人工处理请求；当前公开演示通道暂未连接真人收件箱。"
     return {
         "AUTO_REPLY": "已找到可用的帮助中心依据，可以先参考这条回复。",
         "ESCALATE_L1": "当前依据不足以直接回答，建议人工客服进一步确认。",
@@ -229,7 +232,13 @@ def create_operable_app(
         if not cfg.customer_portal_allowed:
             raise HTTPException(status_code=404, detail="customer portal disabled")
         try:
-            record = svc.create_ticket(TicketCreate(ticket_text=payload.ticket_text, user_id="anonymous-web"))
+            record = svc.create_ticket(
+                TicketCreate(
+                    ticket_text=payload.ticket_text,
+                    user_id="anonymous-web",
+                    customer_context=demo_customer_context(payload.profile.model_dump() if payload.profile else None),
+                )
+            )
         except InvalidTransition as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 
@@ -243,9 +252,9 @@ def create_operable_app(
             ticket_id=record.ticket_id,
             status=record.workflow_status.value,
             decision=decision,
-            reply=record.draft_response,
+            reply=customer_reply(payload.ticket_text, decision, record.draft_response, record.retrieved_evidence),
             grounding_safe=record.grounding_safe,
-            reason=_customer_reason(decision),
+            reason=_customer_reason(decision, payload.ticket_text),
             next_step=next_step,
         )
 

@@ -10,6 +10,7 @@ from app.contracts.incoming_request import Channel, IncomingRequest
 from app.runtime.run_a1 import run_a1
 
 from .config import RuntimeSettings
+from .customer_experience import is_human_handoff_request
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,6 +97,25 @@ def deterministic_decision_fn(
             "trace": [
                 {"event_type": "prompt_injection_detected", "component": "a6_input_guard", "reason_codes": ["prompt_injection_pattern"], "payload": {}},
                 {"event_type": "authorization_decided", "component": "a6_input_guard", "reason_codes": ["human_only"], "payload": {"action": "ESCALATE_L2"}},
+            ],
+            "model_version": "none:deterministic",
+        }
+
+    if is_human_handoff_request(ticket_text):
+        return {
+            "action": "ESCALATE_L1",
+            "reason": "customer_requested_human",
+            "priority": "medium",
+            "intent": "human_handoff",
+            "intent_set": ["human_handoff"],
+            "kb_grounding": [],
+            "grounding": "none",
+            "grounding_check": {"auto_reply_safe": False, "reason_codes": ["customer_requested_human"]},
+            "draft_reply": "",
+            "routing_signals": ["customer_requested_human"],
+            "trace": [
+                {"event_type": "human_handoff_requested", "component": "public_channel", "reason_codes": ["customer_requested_human"], "payload": {}},
+                {"event_type": "authorization_decided", "component": "public_channel", "reason_codes": ["human_only"], "payload": {"action": "ESCALATE_L1"}},
             ],
             "model_version": "none:deterministic",
         }

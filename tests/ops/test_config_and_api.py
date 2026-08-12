@@ -90,6 +90,9 @@ def test_root_exposes_public_service_landing_page(tmp_path):
     assert response.headers["content-type"].startswith("text/html")
     assert "Support Copilot" in response.text
     assert "/customer/tickets" in response.text
+    assert "新建试验会话" in response.text
+    assert "试验档案" in response.text
+    assert "sessionStorage" in response.text
     assert "Bearer" not in response.text
 
 
@@ -156,6 +159,7 @@ def test_customer_portal_answers_chinese_grounded_faq(tmp_path):
     assert body["decision"] == "AUTO_REPLY"
     assert body["grounding_safe"] is True
     assert body["reply"]
+    assert "重置密码" in body["reply"]
     assert body["next_step"] == "customer_can_continue"
 
 
@@ -182,6 +186,30 @@ def test_customer_portal_chinese_prompt_injection_is_human_only(tmp_path):
     assert body["decision"] == "ESCALATE_L2"
     assert body["grounding_safe"] is False
     assert body["next_step"] == "priority_human_review_recommended"
+
+
+def test_customer_portal_human_request_is_explicit_and_not_faked(tmp_path):
+    cfg = settings(
+        SUPPORT_DEPLOYMENT_MODE="staging",
+        SUPPORT_API_TOKEN="test-only-token",
+        ENABLE_CUSTOMER_PORTAL="true",
+    )
+    service = TicketWorkflowService(
+        db_path=str(tmp_path / "human-request.db"),
+        decision_fn=deterministic_decision_fn,
+        enable_ledger=False,
+    )
+    client = TestClient(create_operable_app(settings=cfg, service=service))
+
+    response = client.post(
+        "/customer/tickets",
+        json={"ticket_text": "我希望转人工处理。", "profile": {"plan": "team", "region": "CN", "role": "member"}},
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["decision"] == "ESCALATE_L1"
+    assert "未连接真人收件箱" in body["reply"]
+    assert "未连接真人收件箱" in body["reason"]
 
 
 def test_customer_portal_can_be_disabled_explicitly(tmp_path):

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import datetime as _dt
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -76,12 +76,23 @@ class TicketCreate(BaseModel):
     workflow_version: int = Field(default=1, ge=1)
 
 
+class CustomerDemoProfile(BaseModel):
+    """Non-sensitive, one-session selectors for public experimentation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    plan: Literal["personal", "team", "enterprise"] = "team"
+    region: Literal["US", "EU", "APAC", "CN"] = "US"
+    role: Literal["member", "admin", "owner"] = "member"
+
+
 class CustomerTicketRequest(BaseModel):
     """Minimal public payload for the customer-facing web channel."""
 
     model_config = ConfigDict(extra="forbid")
 
     ticket_text: str = Field(..., min_length=1, max_length=2_000)
+    profile: CustomerDemoProfile | None = None
 
 
 class CustomerTicketResponse(BaseModel):

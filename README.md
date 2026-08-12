@@ -51,13 +51,14 @@ Verified in this working branch:
 
 The service has a public Render staging deployment at
 `https://support-copilot-qiun.onrender.com/`. Release
-`a1ad9826081686fad0d252e5173ba5b63342512b` is live: public liveness,
+`38447c2a3e665fd197e524dd8ec905c7423ad763` is live: public liveness,
 readiness, version identity, request-ID propagation, structured 404/validation
-errors, Chinese FAQ handling, prompt-injection escalation, and honest human-
-escalation behavior passed on 2026-08-12. The deploy workflow trigger reached
-Render successfully, but its first two readiness waits expired while the
-service was still starting; the gate now allows a longer bounded Render cold
-start window. This remains a provider-free, no-send prototype, not a real
+errors, Chinese FAQ handling, the reproduced Chinese prompt-injection
+paraphrase, and honest human-escalation behavior passed on 2026-08-12. The
+deploy workflow trigger reached Render successfully, but its readiness wait
+still expired during the final Free-tier rollout and skipped the workflow smoke;
+direct public HTTP verification passed after the service recovered. This
+remains a provider-free, no-send prototype, not a real
 support-system integration, high-availability service, or real-model
 effectiveness claim.
 

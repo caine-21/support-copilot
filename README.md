@@ -50,12 +50,15 @@ Verified in this working branch:
 - local 32-request burst: `32/32`, p95 `230.77ms`, unsafe automatic actions `0`.
 
 The service has a public Render staging deployment at
-`https://support-copilot-qiun.onrender.com/`. The current public channel is a
-provider-free, no-send prototype: the pre-patch baseline health, readiness,
-Chinese FAQ, validation boundary, and request-ID smoke passed. The
-productionization patch still requires deployment and post-deploy smoke before
-its new logging/error-contract claims are marked production-verified. This is
-not a real support-system integration, high-availability service, or real-model
+`https://support-copilot-qiun.onrender.com/`. Release
+`a1ad9826081686fad0d252e5173ba5b63342512b` is live: public liveness,
+readiness, version identity, request-ID propagation, structured 404/validation
+errors, Chinese FAQ handling, prompt-injection escalation, and honest human-
+escalation behavior passed on 2026-08-12. The deploy workflow trigger reached
+Render successfully, but its first two readiness waits expired while the
+service was still starting; the gate now allows a longer bounded Render cold
+start window. This remains a provider-free, no-send prototype, not a real
+support-system integration, high-availability service, or real-model
 effectiveness claim.
 
 Operational references: [Operations](docs/OPERATIONS.md), [Runbook](docs/RUNBOOK.md), [Security review](docs/SECURITY_REVIEW.md), [ADR-003](docs/adr/003-a6-operability-stack.md), and [evidence pack](ops/evidence/).

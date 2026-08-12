@@ -9,6 +9,7 @@ from service.config import DeploymentMode, RuntimeSettings
 from service.engine import TicketWorkflowService
 from service.observability import Telemetry, bind_context, new_request_context
 from service.operable import create_operable_app
+from service.runtime import deterministic_decision_fn
 from tests._service_helpers import make_fake_decision_fn
 
 
@@ -110,6 +111,29 @@ def test_customer_portal_returns_redacted_safe_contract(tmp_path):
     assert "request_payload" not in body
     assert "retrieved_evidence" not in body
     assert "TypeError" not in (body["reason"] or "")
+
+
+def test_customer_portal_answers_grounded_faq(tmp_path):
+    cfg = settings(
+        SUPPORT_DEPLOYMENT_MODE="staging",
+        SUPPORT_API_TOKEN="test-only-token",
+        ENABLE_CUSTOMER_PORTAL="true",
+    )
+    service = TicketWorkflowService(
+        db_path=str(tmp_path / "grounded-portal.db"),
+        decision_fn=deterministic_decision_fn,
+        enable_ledger=False,
+    )
+    client = TestClient(create_operable_app(settings=cfg, service=service))
+
+    response = client.post("/customer/tickets", json={"ticket_text": "How do I reset my password?"})
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["decision"] == "AUTO_REPLY"
+    assert body["grounding_safe"] is True
+    assert body["reply"]
+    assert body["next_step"] == "customer_can_continue"
 
 
 def test_customer_portal_can_be_disabled_explicitly(tmp_path):

@@ -43,6 +43,17 @@ def run(base_url: str, token: str) -> dict:
     status, body = request(base_url, "GET", "/version")
     check("version", status == 200 and body.get("deployment_mode") == "staging", {"http": status, "mode": body.get("deployment_mode"), "git_sha": body.get("git_sha")})
 
+    status, body = request(base_url, "POST", "/customer/tickets", body={
+        "ticket_text": "How do I reset my password?",
+    })
+    public_keys = {"ticket_id", "status", "decision", "reply", "grounding_safe", "reason", "next_step"}
+    safe_public_response = (
+        status == 201
+        and set(body) == public_keys
+        and not {"request_payload", "retrieved_evidence", "SUPPORT_API_TOKEN"}.intersection(body)
+    )
+    check("customer_portal", safe_public_response, {"http": status, "decision": body.get("decision"), "next_step": body.get("next_step")})
+
     status, body = request(base_url, "POST", "/tickets", token=token, body={
         "ticket_id": ticket_id,
         "ticket_text": "How do I reset my password?",

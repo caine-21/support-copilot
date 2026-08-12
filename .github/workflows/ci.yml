@@ -67,6 +67,10 @@ jobs:
           curl --fail --silent http://127.0.0.1:7860/livez
           curl --fail --silent http://127.0.0.1:7860/readyz
           curl --fail --silent http://127.0.0.1:7860/version
+          curl --fail --silent http://127.0.0.1:7860/ | grep --fixed-strings --quiet '客服对话'
+          curl --fail --silent --header 'Content-Type: application/json' \
+            --data '{"ticket_text":"How do I reset my password?"}' \
+            http://127.0.0.1:7860/customer/tickets
           curl --fail --silent --header 'Content-Type: application/json' \
             --data '{"ticket_id":"CI-SMOKE","ticket_text":"How do I reset my password?"}' \
             http://127.0.0.1:7860/tickets

@@ -33,12 +33,19 @@ ENABLE_ADMIN=false
 ENABLE_DOCS=false
 ```
 
-The optional customer portal is a same-origin web channel at `/`. Set
-`ENABLE_CUSTOMER_PORTAL=true` only when provider calls and executor actions are
-both disabled. The browser calls `/customer/tickets`, which accepts only the
-customer's text and returns a redacted decision/reply contract; it must never
-receive `SUPPORT_API_TOKEN`. This is a beta channel, not a durable production
-conversation system.
+The customer portal is a same-origin web beta at `/`. It defaults on in
+`staging` and remains allowed only when provider calls and executor actions are
+both disabled; set `ENABLE_CUSTOMER_PORTAL=false` to turn it off. The browser
+calls `/customer/tickets`, which accepts only the customer's text and returns a
+redacted decision/reply contract; it must never receive `SUPPORT_API_TOKEN`.
+This is a beta channel, not a durable production conversation system.
+
+The Docker image defaults this flag to `true` for the bounded demo/staging
+container, while `RuntimeSettings` remains fail-closed when run directly from
+the source tree. An explicit environment value still overrides the image
+default. If the deployed service returns `customer portal disabled`, inspect
+the effective Render environment and set `ENABLE_CUSTOMER_PORTAL=true`, then
+redeploy.
 
 Optional release controls:
 

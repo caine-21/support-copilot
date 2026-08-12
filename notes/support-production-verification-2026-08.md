@@ -8,9 +8,9 @@ for the public Render prototype. Claims are labeled by verification level.
 - [Production verified] URL: `https://support-copilot-qiun.onrender.com/`
 - [Production verified before this patch] Render service: `support-copilot`, Docker Web Service, staging mode.
 - [Production verified before this patch] Deployed `/version`: `0.6.0`, `git_sha=unknown`, `deployment_mode=staging`.
-- [Production verified] productionization release `a1ad9826081686fad0d252e5173ba5b63342512b` is live on the public URL.
+- [Production verified] productionization release `38447c2a3e665fd197e524dd8ec905c7423ad763` is live on the public URL.
 - [Production verified] post-deploy public smoke passed on 2026-08-12; the detailed matrix is recorded below.
-- [Known automation gap] the first two `deploy-staging` runs triggered Render successfully but timed out during the five-minute readiness wait; the wait window was extended in the follow-up workflow change.
+- [Known automation gap] the final `deploy-staging` run triggered Render successfully but timed out during the ten-minute readiness wait and skipped workflow smoke; direct public HTTP verification passed after recovery.
 
 ## Production Architecture
 
@@ -46,12 +46,12 @@ boundary.
 
 ## Post-deploy Public Smoke
 
-- [Production verified] `/livez`, `/readyz`, and `/version` returned `200`; `/version.git_sha` matched `a1ad9826081686fad0d252e5173ba5b63342512b`.
+- [Production verified] `/livez`, `/readyz`, and `/version` returned `200`; `/version.git_sha` matched `38447c2a3e665fd197e524dd8ec905c7423ad763`.
 - [Production verified] supplied `X-Request-ID` was echoed on health, version, error, and ticket responses.
 - [Production verified] unknown route returned bounded JSON with `error`, `errorType=not_found`, `requestId`, and `detail`; no framework traceback was exposed.
 - [Production verified] missing field, wrong type, and 2,001-character input returned bounded `422` validation contracts.
 - [Production verified] Chinese refund FAQ returned `201`, `AUTO_REPLY`, and `grounding_safe=true`.
-- [Production verified] Chinese prompt-injection input returned `ESCALATE_L2` with `grounding_safe=false`.
+- [Production verified] reproduced Chinese prompt-injection paraphrase returned `ESCALATE_L2` with `grounding_safe=false`.
 - [Production verified] human-request input returned `ESCALATE_L1` and honestly stated that no live human inbox is connected.
 - [Tested locally, not intentionally exhausted in production] rate limiting returned `429` under the configured 12 requests/minute boundary; no burst was sent to the public free-tier service.
 

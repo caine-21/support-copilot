@@ -20,6 +20,21 @@ It is not a generic support chatbot. The core question is:
 
 > Under what evidence is an AI system allowed to answer a customer automatically?
 
+## Customer Web Beta
+
+The Render staging service now includes a responsive same-origin customer
+portal at `/`. Customers can submit a question without seeing the staging API
+token; `POST /customer/tickets` returns only a redacted decision/reply
+contract. The portal is deliberately bounded: provider calls and executor
+actions remain disabled, and unsupported or weakly grounded questions are
+escalated instead of answered with invented detail.
+
+This is a Web beta, not a durable omnichannel helpdesk. Persistent
+conversations, operator assignment, tenant isolation, and real WeChat/WeCom
+adapters remain the next production gaps. See
+[`docs/PRODUCT_ROADMAP.md`](docs/PRODUCT_ROADMAP.md) and
+[`docs/OPERATIONS.md`](docs/OPERATIONS.md).
+
 ## A6 operational status
 
 The deployable boundary is `service.operable:app`: authenticated staging mode, separate liveness/readiness/version endpoints, JSON events, W3C trace correlation, Prometheus-format metrics, protected bounded traces, body/concurrency/rate/deadline limits, feature kill switches, atomic action claims, Docker/Render configuration, CI gates, rollback runbook, and a 17-case fault challenge.

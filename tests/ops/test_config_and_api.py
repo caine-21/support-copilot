@@ -45,6 +45,7 @@ def test_public_modes_are_fail_safe_by_default():
     staging = settings(SUPPORT_DEPLOYMENT_MODE="staging")
     assert staging.protected_api_ready is False
     assert staging.enable_provider_calls is False
+    assert staging.enable_customer_portal is True
     assert staging.enable_executor is False
 
 
@@ -111,8 +112,15 @@ def test_customer_portal_returns_redacted_safe_contract(tmp_path):
     assert "TypeError" not in (body["reason"] or "")
 
 
-def test_customer_portal_is_disabled_by_default(tmp_path):
-    client, _ = app_client(tmp_path, settings(SUPPORT_DEPLOYMENT_MODE="staging", SUPPORT_API_TOKEN="test-only-token"))
+def test_customer_portal_can_be_disabled_explicitly(tmp_path):
+    client, _ = app_client(
+        tmp_path,
+        settings(
+            SUPPORT_DEPLOYMENT_MODE="staging",
+            SUPPORT_API_TOKEN="test-only-token",
+            ENABLE_CUSTOMER_PORTAL="false",
+        ),
+    )
 
     response = client.post("/customer/tickets", json={"ticket_text": "hello"})
 

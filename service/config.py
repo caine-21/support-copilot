@@ -123,7 +123,10 @@ class RuntimeSettings:
             enable_tool_loop=_flag(env, "ENABLE_TOOL_LOOP", False),
             enable_multi_agent_shadow=_flag(env, "ENABLE_MULTI_AGENT_SHADOW", False),
             enable_public_demo=_flag(env, "ENABLE_PUBLIC_DEMO", False),
-            enable_customer_portal=_flag(env, "ENABLE_CUSTOMER_PORTAL", False),
+            # Staging is the intended bounded web-beta surface. The portal is
+            # still blocked whenever provider calls or executor actions are on,
+            # and an explicit false remains the operator override.
+            enable_customer_portal=_flag(env, "ENABLE_CUSTOMER_PORTAL", mode is DeploymentMode.STAGING),
             enable_executor=_flag(env, "ENABLE_EXECUTOR", executor_default),
             enable_fault_injection=_flag(env, "ENABLE_FAULT_INJECTION", False),
             enable_admin=_flag(env, "ENABLE_ADMIN", False),

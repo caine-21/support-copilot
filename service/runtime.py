@@ -35,7 +35,7 @@ class _DeterministicKnowledgeGateway:
 
     backend = "local-deterministic"
 
-    def execute(self, _call_id, tool_name, raw_arguments, _runtime, _turn_index, _retry_count=0):
+    def execute(self, _call_id, tool_name, raw_arguments, _runtime, turn_index, _retry_count=0):
         from agent import kb
         from agent.tooling import ToolResult, ToolStatus
 

@@ -8,7 +8,9 @@ for the public Render prototype. Claims are labeled by verification level.
 - [Production verified] URL: `https://support-copilot-qiun.onrender.com/`
 - [Production verified before this patch] Render service: `support-copilot`, Docker Web Service, staging mode.
 - [Production verified before this patch] Deployed `/version`: `0.6.0`, `git_sha=unknown`, `deployment_mode=staging`.
-- [Not verified yet] This productionization patch's deploy commit and post-deploy smoke.
+- [Production verified] productionization release `a1ad9826081686fad0d252e5173ba5b63342512b` is live on the public URL.
+- [Production verified] post-deploy public smoke passed on 2026-08-12; the detailed matrix is recorded below.
+- [Known automation gap] the first two `deploy-staging` runs triggered Render successfully but timed out during the five-minute readiness wait; the wait window was extended in the follow-up workflow change.
 
 ## Production Architecture
 
@@ -39,8 +41,19 @@ boundary.
 ## Local Gates
 
 - [Tested locally] `py -m pytest tests/ops/test_productionization.py tests/ops/test_config_and_api.py tests/ops/test_provider_and_idempotency.py tests/ops/test_failure_matrix.py tests/ops/test_regression_candidate.py -q -p no:cacheprovider` → 28 passed.
-- [To run before merge] full `py -m pytest tests -q -p no:cacheprovider`.
-- [To run before merge] `py scripts/check_text_integrity.py --all-text`.
+- [Verified in CI] full `py -m pytest tests -q -p no:cacheprovider` -> `226 passed`.
+- [Verified locally] `py scripts/check_text_integrity.py --all-text` -> pass for 11 changed files.
+
+## Post-deploy Public Smoke
+
+- [Production verified] `/livez`, `/readyz`, and `/version` returned `200`; `/version.git_sha` matched `a1ad9826081686fad0d252e5173ba5b63342512b`.
+- [Production verified] supplied `X-Request-ID` was echoed on health, version, error, and ticket responses.
+- [Production verified] unknown route returned bounded JSON with `error`, `errorType=not_found`, `requestId`, and `detail`; no framework traceback was exposed.
+- [Production verified] missing field, wrong type, and 2,001-character input returned bounded `422` validation contracts.
+- [Production verified] Chinese refund FAQ returned `201`, `AUTO_REPLY`, and `grounding_safe=true`.
+- [Production verified] Chinese prompt-injection input returned `ESCALATE_L2` with `grounding_safe=false`.
+- [Production verified] human-request input returned `ESCALATE_L1` and honestly stated that no live human inbox is connected.
+- [Tested locally, not intentionally exhausted in production] rate limiting returned `429` under the configured 12 requests/minute boundary; no burst was sent to the public free-tier service.
 
 ## Failure Exercise
 
@@ -67,8 +80,12 @@ boundary.
 - [Implemented] provider calls and executor actions remain disabled on the public web path.
 - [Known limitation] logs, metrics, SQLite, and traces are process-local on Render Free; no durable audit or cross-instance guarantee.
 
-## Verdict Before Deployment
+## Current Verification Boundary
 
-`PARTIAL` until this patch is merged, deployed, and the post-deploy smoke plus
-version identity are recorded. Do not call this enterprise-grade,
-high-availability, or a real customer-service integration.
+`PASS` for the bounded public prototype productionization scope. Structured
+request telemetry and error contracts are implemented, covered by local tests
+and CI, and exercised through public HTTP behavior. Render dashboard log search
+was not independently queried because no Render API credential is configured in
+the repository workflow; do not claim durable, cross-instance observability.
+Do not call this enterprise-grade, high-availability, or a real
+customer-service integration.

@@ -90,13 +90,14 @@ _RULES: list[tuple[list[str], str, str, bool]] = [
     # "reimburse" removed: substring-matches "reimbursement" (T-001 latent bug).
     # Use verb phrases only: "reimburse me", "will reimburse", "get reimbursed".
     (["refund", "money back", "reimburse me", "will reimburse", "get reimbursed",
-      "get my money", "charge back"],
+      "get my money", "charge back", "退款", "退钱", "退费", "钱退回"],
      "refund_eligibility", "refund eligibility and policy", False),
 
     # Payment methods
     (["payment method", "payment option", "accepted payment", "how to pay",
       "what payment", "which payment", "support payment", "credit card accepted",
-      "pay for subscription"],
+      "pay for subscription", "支付方式", "付款方式", "怎么付款", "如何付款",
+      "支持什么支付"],
      "payment_methods", "accepted payment methods", False),
 
     # Plan change — BEFORE cancel_subscription; requires entity validation
@@ -124,7 +125,9 @@ _RULES: list[tuple[list[str], str, str, bool]] = [
     (["reset password", "reset my password", "forgot password", "change password",
       "resetting my", "resetting the", "resetting your",
       "can't log in", "cannot log in", "locked out", "lost password",
-      "forgot my password", "forgot the password"],
+      "forgot my password", "forgot the password", "重置密码", "重设密码",
+      "忘记密码", "找回密码", "修改密码", "登录不了", "登陆不了",
+      "无法登录", "无法登陆", "进不去账号"],
      "password_reset", "password reset / login recovery", False),
 
     # Data export
@@ -132,7 +135,8 @@ _RULES: list[tuple[list[str], str, str, bool]] = [
       "export workspace", "bulk export", "export documents",
       "export a space", "export the space", "export as pdf", "export as zip",
       "export to pdf", "export to zip", "export a whole", "export entire",
-      "download the space", "space as pdf"],
+      "download the space", "space as pdf", "导出数据", "导出全部数据",
+      "下载数据", "导出工作区", "导出空间", "导出文档"],
      "data_export", "export data / documents", False),
 
     # Permission levels
@@ -210,7 +214,8 @@ _RULES: list[tuple[list[str], str, str, bool]] = [
 
     # Invoice download
     (["invoice", "receipt", "billing history", "download invoice",
-      "tax receipt", "vat invoice"],
+      "tax receipt", "vat invoice", "发票", "账单下载", "下载发票",
+      "下载账单", "账单历史"],
      "invoice_download", "invoice download / billing history", False),
 
     # SSO broken / not working — BEFORE sso_setup (more specific; same exclusive group)

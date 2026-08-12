@@ -31,8 +31,10 @@ jobs:
           BASE_URL: ${{ vars.STAGING_BASE_URL }}
         run: |
           test -n "$BASE_URL"
-          for attempt in {1..60}; do
-            if curl --fail --silent "$BASE_URL/readyz" >/dev/null; then exit 0; fi
+          # Render Free cold starts and image pulls can exceed five minutes.
+          # Keep the deploy gate bounded, but allow a reasonable startup window.
+          for attempt in {1..120}; do
+            if curl --fail --silent --show-error --connect-timeout 10 --max-time 20 "$BASE_URL/readyz" >/dev/null; then exit 0; fi
             sleep 5
           done
           exit 1

@@ -11,7 +11,9 @@ import time
 from collections import defaultdict, deque
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .api import create_app as create_legacy_app
@@ -19,7 +21,7 @@ from .config import DeploymentMode, RuntimeSettings
 from .customer_experience import customer_reply, demo_customer_context, is_human_handoff_request
 from .domain import CustomerTicketRequest, CustomerTicketResponse, TicketCreate
 from .engine import TicketWorkflowService
-from .observability import Telemetry, bind_context, new_request_context
+from .observability import Telemetry, bind_context, current_request_id, new_request_context
 from .public_ui import PUBLIC_LANDING_PAGE as PUBLIC_PORTAL_PAGE
 from .repository import InvalidTransition
 from .runtime import readiness, runtime_decision_fn, version_payload
@@ -74,6 +76,34 @@ def _customer_reason(decision: str | None, ticket_text: str = "") -> str:
     }.get(decision, "系统没有足够依据直接回答，建议人工客服处理。")
 
 
+def _error_response(status_code: int, error_type: str, message: str) -> JSONResponse:
+    """Keep public operational failures deterministic and safe to diagnose."""
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "error": message,
+            "errorType": error_type,
+            "requestId": current_request_id(),
+            "detail": message,
+        },
+    )
+
+
+def _http_error_type(status_code: int) -> str:
+    return {
+        401: "auth",
+        403: "auth",
+        404: "not_found",
+        409: "conflict",
+        413: "request_too_large",
+        422: "validation",
+        429: "rate_limit",
+        502: "provider_unavailable",
+        503: "service_unavailable",
+        504: "request_timeout",
+    }.get(status_code, "internal" if status_code >= 500 else "http_error")
+
+
 def create_operable_app(
     *,
     settings: RuntimeSettings | None = None,
@@ -95,6 +125,23 @@ def create_operable_app(
     app.state.settings = cfg
     app.state.telemetry = ops
     app.state.ticket_service = svc
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
+        ops.metrics.inc("support_request_error_count_total", {"error_type": "validation"})
+        return _error_response(422, "validation", "request validation failed")
+
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(_request: Request, exc: HTTPException) -> JSONResponse:
+        error_type = _http_error_type(exc.status_code)
+        ops.metrics.inc("support_request_error_count_total", {"error_type": error_type})
+        return _error_response(exc.status_code, error_type, "request could not be completed")
+
+    @app.exception_handler(StarletteHTTPException)
+    async def starlette_http_exception_handler(_request: Request, exc: StarletteHTTPException) -> JSONResponse:
+        error_type = _http_error_type(exc.status_code)
+        ops.metrics.inc("support_request_error_count_total", {"error_type": error_type})
+        return _error_response(exc.status_code, error_type, "request could not be completed")
 
     if cfg.enable_provider_calls:
         from agent.llm import set_provider_observer
@@ -140,22 +187,22 @@ def create_operable_app(
     def authorize(path: str, method: str, authorization: str | None) -> JSONResponse | None:
         if path.startswith("/ops/") or path == "/metrics":
             if not cfg.enable_admin:
-                return JSONResponse(status_code=404, content={"detail": "not found"})
+                return _error_response(404, "not_found", "request could not be completed")
             if not cfg.admin_token:
-                return JSONResponse(status_code=503, content={"detail": "admin authentication not configured"})
+                return _error_response(503, "auth", "request could not be completed")
             if not _bearer(authorization, cfg.admin_token):
-                return JSONResponse(status_code=401, content={"detail": "authentication required"})
+                return _error_response(401, "auth", "request could not be completed")
             return None
         if not path.startswith("/tickets") or cfg.deployment_mode is DeploymentMode.LOCAL:
             return None
         if cfg.public_ticket_allowed() and path == "/tickets" and method == "POST":
             return None
         if not cfg.api_token:
-            return JSONResponse(status_code=503, content={"detail": "api authentication not configured"})
+            return _error_response(503, "auth", "request could not be completed")
         if not _bearer(authorization, cfg.api_token):
-            return JSONResponse(status_code=401, content={"detail": "authentication required"})
+            return _error_response(401, "auth", "request could not be completed")
         if cfg.deployment_mode is DeploymentMode.DEMO and path.endswith("/review"):
-            return JSONResponse(status_code=403, content={"detail": "review endpoint disabled in demo mode"})
+            return _error_response(403, "auth", "request could not be completed")
         return None
 
     @app.middleware("http")
@@ -182,10 +229,10 @@ def create_operable_app(
                     too_large = True
             if too_large:
                 ops.metrics.inc("support_request_error_count_total", {"error_type": "request_too_large"})
-                response = JSONResponse(status_code=413, content={"detail": "request body too large"})
+                response = _error_response(413, "request_too_large", "request body too large")
             elif path in {"/tickets", "/customer/tickets"} and request.method == "POST" and cfg.deployment_mode is not DeploymentMode.LOCAL and not await limiter.allow(request.client.host if request.client else "unknown"):
                 ops.metrics.inc("support_request_error_count_total", {"error_type": "rate_limit"})
-                response = JSONResponse(status_code=429, content={"detail": "demo rate limit exceeded"})
+                response = _error_response(429, "rate_limit", "demo rate limit exceeded")
             else:
                 acquired = False
                 try:
@@ -194,14 +241,17 @@ def create_operable_app(
                         acquired = True
                     except TimeoutError:
                         ops.metrics.inc("support_request_error_count_total", {"error_type": "concurrency_limit"})
-                        response = JSONResponse(status_code=503, content={"detail": "service concurrency limit reached"})
+                        response = _error_response(503, "service_unavailable", "service concurrency limit reached")
                     else:
-                        ops.event("http_request_received", route=route_label)
+                        ops.event("http_request_received", method=request.method, path=request.url.path, route=route_label)
                         try:
                             response = await asyncio.wait_for(call_next(request), timeout=cfg.request_timeout_seconds)
                         except TimeoutError:
                             ops.metrics.inc("support_request_error_count_total", {"error_type": "request_timeout"})
-                            response = JSONResponse(status_code=504, content={"detail": "request deadline exceeded"})
+                            response = _error_response(504, "request_timeout", "request deadline exceeded")
+                        except Exception:
+                            ops.metrics.inc("support_request_error_count_total", {"error_type": "internal"})
+                            response = _error_response(500, "internal", "internal server error")
                 finally:
                     if acquired:
                         concurrency.release()
@@ -216,7 +266,17 @@ def create_operable_app(
         outcome = "success" if response.status_code < 500 else "error"
         ops.metrics.inc("support_request_count_total", {"route": route_label, "status": outcome})
         ops.metrics.observe("support_request_latency_ms", latency_ms, {"route": route_label})
-        ops.event("request_completed", route=route_label, latency_ms=latency_ms, execution_state=str(response.status_code))
+        error_type = _http_error_type(response.status_code) if response.status_code >= 400 else None
+        ops.event(
+            "request_completed",
+            method=request.method,
+            path=request.url.path,
+            route=route_label,
+            status_code=response.status_code,
+            latency_ms=latency_ms,
+            error_type=error_type,
+            execution_state=str(response.status_code),
+        )
         return response
 
     @app.get("/livez")

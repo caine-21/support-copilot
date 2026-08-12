@@ -14,7 +14,7 @@ license: mit
 
 ## One-line pitch
 
-Support Copilot is an **A6 Operable Beta (local verified, deployment ready)** for AI support triage: it classifies SaaS customer tickets, retrieves KB evidence, drafts grounded replies, and decides whether the ticket is eligible for `AUTO_REPLY` or must be routed to `ESCALATE_L1` / `ESCALATE_L2`.
+Support Copilot is an **A6 operable public prototype** for AI support triage: it classifies SaaS customer tickets, retrieves KB evidence, drafts grounded replies, and decides whether the ticket is eligible for `AUTO_REPLY` or must be routed to `ESCALATE_L1` / `ESCALATE_L2`.
 
 It is not a generic support chatbot. The core question is:
 
@@ -43,13 +43,20 @@ Verified in this working branch:
 
 - pre-A6 full offline baseline: `196 passed`; Customer Context Beta `30/30`; Multi-Agent Shadow `20/20` (synthetic/scripted evidence boundaries still apply),
 - historical A6 local evidence: `213 passed` (preserved as a historical artifact),
-- current PR #1 GitHub Actions verification: `234 passed`; failure matrix `17/17`; unsafe automatic actions `0`; text integrity, container build, and container smoke all PASS,
-- A6 operations tests: `17 passed`,
+- current full regression: `226 passed`; failure matrix `17/17`; unsafe automatic actions `0`,
+- productionization tests: structured error contract, request log fields, release identity fallback, and failure/recovery exercise PASS,
 - fault matrix: `17/17`, unsafe automatic actions `0`,
 - local staging Uvicorn HTTP smoke: `9/9`,
 - local 32-request burst: `32/32`, p95 `230.77ms`, unsafe automatic actions `0`.
 
-The Dockerfile and Render Blueprint are deployment-ready, but **no remote staging resource was created and no remote smoke was run**. The local Docker build/run was blocked because this host's Docker Desktop Linux engine could not start; CI now gates image build and container smoke. This is not production, not a real support-system integration, and not a real-model effectiveness claim.
+The service has a public Render staging deployment at
+`https://support-copilot-qiun.onrender.com/`. The current public channel is a
+provider-free, no-send prototype: the pre-patch baseline health, readiness,
+Chinese FAQ, validation boundary, and request-ID smoke passed. The
+productionization patch still requires deployment and post-deploy smoke before
+its new logging/error-contract claims are marked production-verified. This is
+not a real support-system integration, high-availability service, or real-model
+effectiveness claim.
 
 Operational references: [Operations](docs/OPERATIONS.md), [Runbook](docs/RUNBOOK.md), [Security review](docs/SECURITY_REVIEW.md), [ADR-003](docs/adr/003-a6-operability-stack.md), and [evidence pack](ops/evidence/).
 

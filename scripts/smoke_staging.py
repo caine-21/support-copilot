@@ -11,7 +11,15 @@ import urllib.request
 from pathlib import Path
 
 
-def request(base_url: str, method: str, path: str, *, token: str | None = None, body: dict | None = None):
+def request_with_headers(
+    base_url: str,
+    method: str,
+    path: str,
+    *,
+    token: str | None = None,
+    request_id: str | None = None,
+    body: dict | None = None,
+):
     headers = {"Accept": "application/json"}
     data = None
     if body is not None:
@@ -19,14 +27,21 @@ def request(base_url: str, method: str, path: str, *, token: str | None = None, 
         headers["Content-Type"] = "application/json"
     if token:
         headers["Authorization"] = f"Bearer {token}"
+    if request_id:
+        headers["X-Request-ID"] = request_id
     req = urllib.request.Request(base_url.rstrip("/") + path, method=method, headers=headers, data=data)
     try:
         with urllib.request.urlopen(req, timeout=20) as response:
             raw = response.read().decode("utf-8")
-            return response.status, json.loads(raw) if raw else {}
+            return response.status, json.loads(raw) if raw else {}, dict(response.headers.items())
     except urllib.error.HTTPError as exc:
         raw = exc.read().decode("utf-8")
-        return exc.code, json.loads(raw) if raw else {}
+        return exc.code, json.loads(raw) if raw else {}, dict(exc.headers.items())
+
+
+def request(base_url: str, method: str, path: str, *, token: str | None = None, body: dict | None = None):
+    status, payload, _headers = request_with_headers(base_url, method, path, token=token, body=body)
+    return status, payload
 
 
 def run(base_url: str, token: str) -> dict:
@@ -43,7 +58,8 @@ def run(base_url: str, token: str) -> dict:
     status, body = request(base_url, "GET", "/version")
     check("version", status == 200 and body.get("deployment_mode") == "staging", {"http": status, "mode": body.get("deployment_mode"), "git_sha": body.get("git_sha")})
 
-    status, body = request(base_url, "POST", "/customer/tickets", body={
+    smoke_request_id = f"smoke-request-{int(time.time())}"
+    status, body, headers = request_with_headers(base_url, "POST", "/customer/tickets", request_id=smoke_request_id, body={
         "ticket_text": "How do I reset my password?",
     })
     public_keys = {"ticket_id", "status", "decision", "reply", "grounding_safe", "reason", "next_step"}
@@ -53,6 +69,15 @@ def run(base_url: str, token: str) -> dict:
         and not {"request_payload", "retrieved_evidence", "SUPPORT_API_TOKEN"}.intersection(body)
     )
     check("customer_portal", safe_public_response, {"http": status, "decision": body.get("decision"), "next_step": body.get("next_step")})
+    check("request_id", headers.get("X-Request-ID") == smoke_request_id and body.get("ticket_id"), {"http": status, "request_id": headers.get("X-Request-ID")})
+
+    for name, invalid_body in (
+        ("validation_missing", {}),
+        ("validation_type", {"ticket_text": 123}),
+        ("validation_oversize", {"ticket_text": "x" * 2_001}),
+    ):
+        status, body = request(base_url, "POST", "/customer/tickets", body=invalid_body)
+        check(name, status == 422 and body.get("errorType") == "validation" and bool(body.get("requestId")), {"http": status, "error_type": body.get("errorType"), "request_id": bool(body.get("requestId"))})
 
     status, body = request(base_url, "POST", "/tickets", token=token, body={
         "ticket_id": ticket_id,

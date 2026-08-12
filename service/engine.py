@@ -28,6 +28,7 @@ from .repository import (
     TicketNotFound,
     TicketRepository,
 )
+from .observability import classify_exception
 
 # Decision port: (ticket_text, ticket_id, user_id, customer_context, ledger) -> result dict
 DecisionFn = Callable[..., dict[str, Any]]
@@ -168,7 +169,7 @@ class TicketWorkflowService:
                 ticket_id=ticket_id,
                 level="ERROR",
                 route="canonical_workflow",
-                error_type=type(exc).__name__,
+                error_type=classify_exception(exc),
                 execution_state=WorkflowStatus.FAILED.value,
             )
             return record

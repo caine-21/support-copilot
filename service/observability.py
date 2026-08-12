@@ -57,6 +57,28 @@ def bind_ticket(ticket_id: str) -> None:
     _ticket_id.set(ticket_id)
 
 
+def current_request_id() -> str:
+    """Return the request id bound by the operational middleware."""
+    return _request_id.get()
+
+
+def classify_exception(exc: Exception) -> str:
+    """Map infrastructure failures to a small, stable operational taxonomy."""
+    status = getattr(exc, "status_code", None)
+    name = type(exc).__name__.lower()
+    if isinstance(exc, TimeoutError) or "timeout" in name:
+        return "provider_timeout"
+    if status == 429 or "ratelimit" in name or "rate_limit" in name:
+        return "provider_rate_limit"
+    if isinstance(status, int) and status >= 500:
+        return "provider_unavailable"
+    if status in {401, 403} or "authentication" in name:
+        return "auth"
+    if isinstance(exc, (ValueError, TypeError, json.JSONDecodeError)):
+        return "invalid_response"
+    return "internal"
+
+
 def hash_identifier(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
 
@@ -159,7 +181,7 @@ class MetricRegistry:
 
 class Telemetry:
     _COMMON_FIELDS = (
-        "route", "intent", "action", "grounding_level", "provider", "model",
+        "method", "path", "status_code", "route", "intent", "action", "grounding_level", "provider", "model",
         "provider_attempt", "fallback_used", "tool_calls", "latency_ms", "error_type",
         "review_state", "execution_state", "model_version", "prompt_version",
         "policy_version", "kb_version",

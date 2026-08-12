@@ -110,10 +110,14 @@ class RuntimeSettings:
         if not allowed_hosts:
             raise ValueError("SUPPORT_ALLOWED_HOSTS must contain at least one host")
 
+        git_sha = env.get("SUPPORT_GIT_SHA")
+        if not git_sha or git_sha.strip().lower() == "unknown":
+            git_sha = env.get("RENDER_GIT_COMMIT")
+
         return cls(
             deployment_mode=mode,
             app_version=_metadata(env.get("SUPPORT_APP_VERSION"), "0.6.0"),
-            git_sha=_metadata(env.get("SUPPORT_GIT_SHA"), "unknown"),
+            git_sha=_metadata(git_sha, "unknown"),
             build_time=_metadata(env.get("SUPPORT_BUILD_TIME"), "unknown"),
             schema_version="2",
             policy_version=_metadata(env.get("SUPPORT_POLICY_VERSION"), "authorization-v4"),

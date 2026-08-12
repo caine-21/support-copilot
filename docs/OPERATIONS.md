@@ -20,6 +20,27 @@ Public/demo and the checked-in staging Blueprint are no-send systems. They use t
 - `GET /health`: legacy compatibility only; do not use it as a deployment gate.
 - `GET /metrics` and `GET /ops/traces/{trace_id}`: hidden unless `ENABLE_ADMIN=true`, then require `SUPPORT_ADMIN_TOKEN`.
 
+## Error and request observability contract
+
+Every response receives `X-Request-ID`; a valid client-supplied value is
+reused, otherwise the service generates one. Validation, authentication,
+rate-limit, timeout, and internal failures return a bounded JSON shape:
+
+```json
+{
+  "error": "request validation failed",
+  "errorType": "validation",
+  "requestId": "req-..."
+}
+```
+
+The `request_completed` JSON event includes `method`, `path`, `status_code`,
+`route`, `request_id`, and `latency_ms`. User ticket text, authorization
+headers, provider keys, and draft content are redacted before logs or bounded
+trace storage. Provider failures use the small taxonomy
+`provider_timeout`, `provider_rate_limit`, `provider_unavailable`, `auth`,
+`invalid_response`, and `internal`.
+
 ## Required staging configuration
 
 ```text
@@ -99,6 +120,12 @@ Provider mode makes at most one DeepSeek call and, after failure, one Groq call.
 py -B -m pytest tests -q -p no:cacheprovider
 py -B -m ops.challenge --output ops\evidence\failure_matrix.json
 py -B scripts\smoke_staging.py --base-url <url> --output artifacts\ops\staging_smoke.json
+py -B scripts\failure_recovery.py --output artifacts\ops\failure_recovery.json
 ```
+
+`failure_recovery.py` is a local-only exercise. It injects one provider
+timeout into a decision double, verifies a failed `UNKNOWN` workflow and then
+verifies a provider-free grounded request after recovery. It never changes
+Render secrets or sends an intentional failure to the public service.
 
 Load thresholds for the checked in harness are error rate below 1%, p95 below 2 seconds, and zero unsafe `AUTO_REPLY`. `ops/load/k6.js` is for a real staging URL; the committed local evidence uses a 32-request in-process burst.

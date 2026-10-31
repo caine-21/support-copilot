@@ -33,10 +33,10 @@ def request_with_headers(
     try:
         with urllib.request.urlopen(req, timeout=20) as response:
             raw = response.read().decode("utf-8")
-            return response.status, json.loads(raw) if raw else {}, dict(response.headers.items())
+            return response.status, json.loads(raw) if raw else {}, response.headers
     except urllib.error.HTTPError as exc:
         raw = exc.read().decode("utf-8")
-        return exc.code, json.loads(raw) if raw else {}, dict(exc.headers.items())
+        return exc.code, json.loads(raw) if raw else {}, exc.headers
 
 
 def request(base_url: str, method: str, path: str, *, token: str | None = None, body: dict | None = None):

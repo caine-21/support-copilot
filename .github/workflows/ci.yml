@@ -51,10 +51,23 @@ jobs:
           context: .
           push: false
           load: true
+          pull: true
+          no-cache: true
           tags: support-copilot:${{ github.sha }}
           build-args: |
             SUPPORT_GIT_SHA=${{ github.sha }}
             SUPPORT_BUILD_TIME=${{ github.event.repository.updated_at }}
+      - name: Container certificate package checks
+        shell: bash
+        run: |
+          docker run --rm --entrypoint sh support-copilot:${{ github.sha }} -ec '
+            python --version
+            python -m pip --version
+            python -m pip check
+            dpkg-query -W ca-certificates
+            dpkg --compare-versions "$(dpkg-query -W -f="\${Version}" ca-certificates)" ge 20250419+deb13u1
+            python -c "import sys, certifi, pip; assert sys.version_info >= (3, 12, 16); assert tuple(map(int, certifi.__version__.split(\".\"))) >= (2026, 10, 19); assert tuple(map(int, pip.__version__.split(\".\"))) >= (26, 2, 2); print(\"certifi\", certifi.__version__, certifi.where())"
+          '
       - name: Container smoke
         shell: bash
         run: |

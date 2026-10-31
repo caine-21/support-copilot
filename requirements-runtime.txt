@@ -4,3 +4,5 @@ pydantic==2.13.3
 openai==2.36.0
 python-dotenv==1.2.2
 mcp==2.0.0
+# Minimum compatible CA bundle after the eMudhra incident (Render advisory).
+certifi>=2026.10.19

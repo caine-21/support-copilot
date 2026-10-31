@@ -1,4 +1,11 @@
-FROM python:3.12.11-slim
+FROM python:3.12.16-slim-trixie
+
+# Docker runtimes must refresh their own system trust store (DSA-6572-1).
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge '20250419+deb13u1' \
+    && update-ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG SUPPORT_GIT_SHA=unknown
 ARG SUPPORT_BUILD_TIME=unknown
@@ -18,7 +25,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 COPY requirements-runtime.txt ./
-RUN pip install --no-cache-dir --requirement requirements-runtime.txt
+# pip vendors a separate CA bundle; updating application certifi is insufficient.
+RUN python -m pip install --no-cache-dir --upgrade 'pip>=26.2.2' \
+    && python -m pip install --no-cache-dir --requirement requirements-runtime.txt \
+    && python -m pip check
 
 COPY . .
 RUN mkdir -p /app/data/service && chown -R 1000:1000 /app
